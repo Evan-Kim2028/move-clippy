@@ -500,7 +500,7 @@ mod full {
         file_map: &MappedFiles,
         info: &TypingProgramInfo,
     ) -> Result<()> {
-        for (_mident, minfo) in info.modules.key_cloned_iter() {
+        for (mident, minfo) in info.modules.key_cloned_iter() {
             match minfo.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -551,7 +551,7 @@ mod full {
         file_map: &MappedFiles,
         info: &TypingProgramInfo,
     ) -> Result<()> {
-        for (_mident, minfo) in info.modules.key_cloned_iter() {
+        for (mident, minfo) in info.modules.key_cloned_iter() {
             match minfo.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -658,7 +658,7 @@ mod full {
                 let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
                     continue;
                 };
-                let anchor = fdef.loc.start() as usize;
+                let anchor = loc.start() as usize;
 
                 let suggested = &name[4..];
                 push_diag(
@@ -691,7 +691,7 @@ mod full {
         file_map: &MappedFiles,
         prog: &T::Program,
     ) -> Result<()> {
-        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
             match mdef.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -706,7 +706,7 @@ mod full {
                     .parameters
                     .iter()
                     .filter(|(_, var, _ty)| {
-                        let name = var.value.name.value().as_str();
+                        let name = var.value.name.as_str();
                         name.ends_with("_cap")
                             || name.ends_with("Cap")
                             || name == "cap"
@@ -735,8 +735,9 @@ mod full {
                             continue;
                         };
                         let anchor = loc.start() as usize;
-                        let func_name = fname.value().as_str();
-                        let cap_name = cap_var.value.name.value().as_str();
+                        let func_name_sym = fname.value();
+                        let func_name = func_name_sym.as_str();
+                        let cap_name = cap_var.value.name.as_str();
 
                         push_diag(
                             out,
@@ -777,20 +778,20 @@ mod full {
             T::UnannotatedExp_::Move { var: v, .. } => v.value.id == var.value.id,
             T::UnannotatedExp_::BorrowLocal(_, v) => v.value.id == var.value.id,
             
-            // Recursive cases
+            // Recursive cases - arguments is now Box<Exp>
             T::UnannotatedExp_::ModuleCall(call) => {
-                call.arguments.iter().any(|arg| check_var_used_in_exp(arg, var))
-            }
-            T::UnannotatedExp_::VarCall(_, args) => {
-                args.iter().any(|arg| check_var_used_in_exp(arg, var))
+                check_var_used_in_exp(&call.arguments, var)
             }
             T::UnannotatedExp_::Builtin(_, args) => {
-                args.iter().any(|arg| check_var_used_in_exp(arg, var))
+                check_var_used_in_exp(args, var)
             }
             T::UnannotatedExp_::Vector(_, _, _, args) => {
-                args.iter().any(|arg| check_var_used_in_exp(arg, var))
+                check_var_used_in_exp(args, var)
             }
             T::UnannotatedExp_::Pack(_, _, _, fields) => {
+                fields.iter().any(|(_, _, (_, (_, exp)))| check_var_used_in_exp(exp, var))
+            }
+            T::UnannotatedExp_::PackVariant(_, _, _, _, fields) => {
                 fields.iter().any(|(_, _, (_, (_, exp)))| check_var_used_in_exp(exp, var))
             }
             T::UnannotatedExp_::ExpList(items) => {
@@ -806,10 +807,10 @@ mod full {
             T::UnannotatedExp_::BinopExp(left, _, _, right) => {
                 check_var_used_in_exp(left, var) || check_var_used_in_exp(right, var)
             }
-            T::UnannotatedExp_::IfElse(cond, then_e, else_e) => {
+            T::UnannotatedExp_::IfElse(cond, then_e, else_e_opt) => {
                 check_var_used_in_exp(cond, var)
                     || check_var_used_in_exp(then_e, var)
-                    || check_var_used_in_exp(else_e, var)
+                    || else_e_opt.as_ref().map_or(false, |else_e| check_var_used_in_exp(else_e, var))
             }
             T::UnannotatedExp_::While(_, cond, body) => {
                 check_var_used_in_exp(cond, var) || check_var_used_in_exp(body, var)
@@ -818,21 +819,32 @@ mod full {
             T::UnannotatedExp_::Block((_, seq)) => {
                 seq.iter().any(|item| check_var_used_in_seq_item(item, var))
             }
+            T::UnannotatedExp_::NamedBlock(_, (_, seq)) => {
+                seq.iter().any(|item| check_var_used_in_seq_item(item, var))
+            }
             T::UnannotatedExp_::Assign(_, _, rhs) => check_var_used_in_exp(rhs, var),
             T::UnannotatedExp_::Mutate(lhs, rhs) => {
                 check_var_used_in_exp(lhs, var) || check_var_used_in_exp(rhs, var)
             }
             T::UnannotatedExp_::Return(inner) => check_var_used_in_exp(inner, var),
             T::UnannotatedExp_::Abort(inner) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::Give(_, inner) => check_var_used_in_exp(inner, var),
             T::UnannotatedExp_::Cast(inner, _) => check_var_used_in_exp(inner, var),
             T::UnannotatedExp_::Annotate(inner, _) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::Match(scrutinee, arms) => {
+                check_var_used_in_exp(scrutinee, var)
+                    || arms.value.iter().any(|arm| check_var_used_in_exp(&arm.value.rhs, var))
+            }
+            T::UnannotatedExp_::VariantMatch(scrutinee, _, arms) => {
+                check_var_used_in_exp(scrutinee, var)
+                    || arms.iter().any(|(_, rhs)| check_var_used_in_exp(rhs, var))
+            }
             
             // Base cases that don't use variables
             T::UnannotatedExp_::Unit { .. }
             | T::UnannotatedExp_::Value(_)
             | T::UnannotatedExp_::Constant(_, _)
-            | T::UnannotatedExp_::Break
-            | T::UnannotatedExp_::Continue
+            | T::UnannotatedExp_::Continue(_)
             | T::UnannotatedExp_::UnresolvedError
             | T::UnannotatedExp_::ErrorConstant { .. } => false,
             
@@ -851,7 +863,7 @@ mod full {
         file_map: &MappedFiles,
         prog: &T::Program,
     ) -> Result<()> {
-        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
             match mdef.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -861,7 +873,8 @@ mod full {
 
             // Look for init functions
             for (fname, fdef) in mdef.functions.key_cloned_iter() {
-                let func_name = fname.value().as_str();
+                let func_name_sym = fname.value();
+                let func_name = func_name_sym.as_str();
                 if func_name != "init" {
                     continue;
                 }
@@ -909,8 +922,10 @@ mod full {
     ) {
         match &exp.exp.value {
             T::UnannotatedExp_::ModuleCall(call) => {
-                let module_name = call.module.value.module.value().as_str();
-                let func_name = call.name.value().as_str();
+                let module_sym = call.module.value.module.value();
+                let module_name = module_sym.as_str();
+                let func_sym = call.name.value();
+                let func_name = func_sym.as_str();
                 
                 // Check for transfer::public_share_object or transfer::share_object
                 if module_name == "transfer" 
@@ -942,20 +957,20 @@ mod full {
                     }
                 }
 
-                // Recurse into arguments
-                for arg in &call.arguments {
-                    check_metadata_share_in_exp(arg, out, settings, file_map, func_loc);
-                }
+                // Recurse into arguments (now Box<Exp>)
+                check_metadata_share_in_exp(&call.arguments, out, settings, file_map, func_loc);
             }
             T::UnannotatedExp_::Block((_, seq)) => {
                 for item in seq.iter() {
                     check_metadata_share_in_seq_item(item, out, settings, file_map, func_loc);
                 }
             }
-            T::UnannotatedExp_::IfElse(cond, then_e, else_e) => {
+            T::UnannotatedExp_::IfElse(cond, then_e, else_e_opt) => {
                 check_metadata_share_in_exp(cond, out, settings, file_map, func_loc);
                 check_metadata_share_in_exp(then_e, out, settings, file_map, func_loc);
-                check_metadata_share_in_exp(else_e, out, settings, file_map, func_loc);
+                if let Some(else_e) = else_e_opt {
+                    check_metadata_share_in_exp(else_e, out, settings, file_map, func_loc);
+                }
             }
             _ => {}
         }
@@ -971,7 +986,7 @@ mod full {
         file_map: &MappedFiles,
         prog: &T::Program,
     ) -> Result<()> {
-        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
             match mdef.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -1030,9 +1045,18 @@ mod full {
         // Look for assert!(var != 0, ...) or assert!(var > 0, ...)
         if let T::UnannotatedExp_::Builtin(builtin, args) = &exp.exp.value {
             let builtin_str = format!("{:?}", builtin);
-            if builtin_str.contains("Assert") && !args.is_empty() {
-                // Check if the condition is a comparison with 0
-                if let Some(first_arg) = args.first() {
+            if builtin_str.contains("Assert") {
+                // args is Box<Exp> - extract first argument from ExpList if present
+                let first_arg = if let T::UnannotatedExp_::ExpList(items) = &args.exp.value {
+                    items.first().and_then(|item| match item {
+                        T::ExpListItem::Single(e, _) => Some(e),
+                        _ => None,
+                    })
+                } else {
+                    Some(args.as_ref())
+                };
+                
+                if let Some(first_arg) = first_arg {
                     if let T::UnannotatedExp_::BinopExp(left, op, _, right) = &first_arg.exp.value {
                         let op_str = format!("{:?}", op);
                         // Check for != 0 or > 0
@@ -1125,9 +1149,7 @@ mod full {
                 check_division_in_exp(right, validated_vars, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::ModuleCall(call) => {
-                for arg in &call.arguments {
-                    check_division_in_exp(arg, validated_vars, out, settings, file_map, func_name);
-                }
+                check_division_in_exp(&call.arguments, validated_vars, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Block((_, seq)) => {
                 let mut local_validated = validated_vars.clone();
@@ -1135,10 +1157,12 @@ mod full {
                     check_division_in_seq_item(item, &mut local_validated, out, settings, file_map, func_name);
                 }
             }
-            T::UnannotatedExp_::IfElse(cond, then_e, else_e) => {
+            T::UnannotatedExp_::IfElse(cond, then_e, else_e_opt) => {
                 check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
                 check_division_in_exp(then_e, validated_vars, out, settings, file_map, func_name);
-                check_division_in_exp(else_e, validated_vars, out, settings, file_map, func_name);
+                if let Some(else_e) = else_e_opt {
+                    check_division_in_exp(else_e, validated_vars, out, settings, file_map, func_name);
+                }
             }
             _ => {}
         }
@@ -1158,7 +1182,7 @@ mod full {
         file_map: &MappedFiles,
         prog: &T::Program,
     ) -> Result<()> {
-        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
             match mdef.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -1207,10 +1231,14 @@ mod full {
             }
             T::SequenceItem_::Bind(bindings, _, exp) => {
                 // Track bindings of price-related variables
-                for (_, var) in bindings.value.iter() {
-                    let var_name = var.value.name.value().as_str().to_lowercase();
-                    if var_name.contains("price") {
-                        // This variable is price-related, will need validation
+                // bindings.value is Vec<Spanned<LValue_>> - iterate over it
+                for lvalue in bindings.value.iter() {
+                    // LValue_ has different variants - we need to check if it's a Var
+                    if let T::LValue_::Var { var, .. } = &lvalue.value {
+                        let var_name = var.value.name.as_str().to_lowercase();
+                        if var_name.contains("price") {
+                            // This variable is price-related, will need validation
+                        }
                     }
                 }
                 check_oracle_price_in_exp(exp, validated_prices, out, settings, file_map, func_name);
@@ -1223,8 +1251,18 @@ mod full {
     fn check_for_price_validation(exp: &T::Exp, validated_prices: &mut std::collections::HashSet<u16>) {
         if let T::UnannotatedExp_::Builtin(builtin, args) = &exp.exp.value {
             let builtin_str = format!("{:?}", builtin);
-            if builtin_str.contains("Assert") && !args.is_empty() {
-                if let Some(first_arg) = args.first() {
+            if builtin_str.contains("Assert") {
+                // args is Box<Exp> - extract first argument from ExpList if present
+                let first_arg = if let T::UnannotatedExp_::ExpList(items) = &args.exp.value {
+                    items.first().and_then(|item| match item {
+                        T::ExpListItem::Single(e, _) => Some(e),
+                        _ => None,
+                    })
+                } else {
+                    Some(args.as_ref())
+                };
+                
+                if let Some(first_arg) = first_arg {
                     if let T::UnannotatedExp_::BinopExp(left, op, _, right) = &first_arg.exp.value {
                         let op_str = format!("{:?}", op);
                         // Check for > 0 or != 0 comparisons
@@ -1271,9 +1309,7 @@ mod full {
                 check_oracle_price_in_exp(right, validated_prices, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::ModuleCall(call) => {
-                for arg in &call.arguments {
-                    check_oracle_price_in_exp(arg, validated_prices, out, settings, file_map, func_name);
-                }
+                check_oracle_price_in_exp(&call.arguments, validated_prices, out, settings, file_map, func_name);
             }
             _ => {}
         }
@@ -1329,7 +1365,7 @@ mod full {
             ("bag", "remove"),
         ];
 
-        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
             match mdef.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -1371,8 +1407,10 @@ mod full {
             T::SequenceItem_::Seq(exp) => {
                 // If a Seq item is a function call, its return value is discarded
                 if let T::UnannotatedExp_::ModuleCall(call) = &exp.exp.value {
-                    let module_name = call.module.value.module.value().as_str();
-                    let call_name = call.name.value().as_str();
+                    let module_sym = call.module.value.module.value();
+                    let module_name = module_sym.as_str();
+                    let call_sym = call.name.value();
+                    let call_name = call_sym.as_str();
 
                     for (mod_pattern, fn_pattern) in important_fns {
                         if module_name == *mod_pattern && call_name == *fn_pattern {
@@ -1422,10 +1460,12 @@ mod full {
                     check_unused_return_in_seq_item(item, important_fns, out, settings, file_map, func_name);
                 }
             }
-            T::UnannotatedExp_::IfElse(cond, then_e, else_e) => {
+            T::UnannotatedExp_::IfElse(cond, then_e, else_e_opt) => {
                 check_unused_return_in_exp(cond, important_fns, out, settings, file_map, func_name);
                 check_unused_return_in_exp(then_e, important_fns, out, settings, file_map, func_name);
-                check_unused_return_in_exp(else_e, important_fns, out, settings, file_map, func_name);
+                if let Some(else_e) = else_e_opt {
+                    check_unused_return_in_exp(else_e, important_fns, out, settings, file_map, func_name);
+                }
             }
             _ => {}
         }
@@ -1445,7 +1485,7 @@ mod full {
         file_map: &MappedFiles,
         prog: &T::Program,
     ) -> Result<()> {
-        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
             match mdef.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -1455,14 +1495,15 @@ mod full {
 
             for (fname, fdef) in mdef.functions.key_cloned_iter() {
                 // Skip non-public functions
-                let is_public = matches!(fdef.visibility, T::Visibility::Public(_));
+                let is_public = matches!(fdef.visibility, E::Visibility::Public(_));
                 if !is_public {
                     continue;
                 }
 
                 // Skip entry functions (they have different authorization model)
-                let func_name_str = fname.value().as_str();
-                if func_name_str == "init" {
+                let func_name_sym = fname.value();
+                let func_name = func_name_sym.as_str();
+                if func_name == "init" {
                     continue;
                 }
 
@@ -1477,7 +1518,7 @@ mod full {
 
                 // Check if function has a capability parameter
                 let has_cap_param = fdef.signature.parameters.iter().any(|(_, var, _)| {
-                    let name = var.value.name.value().as_str();
+                    let name = var.value.name.as_str();
                     name.ends_with("_cap")
                         || name.ends_with("Cap")
                         || name == "cap"
@@ -1486,11 +1527,11 @@ mod full {
                 });
 
                 // Also check if function name suggests it's a getter (not modification)
-                let is_getter = func_name_str.starts_with("get_")
-                    || func_name_str.starts_with("is_")
-                    || func_name_str.starts_with("has_")
-                    || func_name_str.starts_with("check_")
-                    || func_name_str.starts_with("view_");
+                let is_getter = func_name.starts_with("get_")
+                    || func_name.starts_with("is_")
+                    || func_name.starts_with("has_")
+                    || func_name.starts_with("check_")
+                    || func_name.starts_with("view_");
 
                 if !has_cap_param && !is_getter {
                     let loc = fdef.loc;
@@ -1508,7 +1549,7 @@ mod full {
                         contents.as_ref(),
                         anchor,
                         format!(
-                            "Public function `{func_name_str}` modifies state (has &mut parameter) \
+                            "Public function `{func_name}` modifies state (has &mut parameter) \
                              but has no capability parameter for access control. \
                              Consider adding an AdminCap or similar to restrict access."
                         ),

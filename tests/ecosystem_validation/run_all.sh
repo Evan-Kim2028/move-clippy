@@ -16,14 +16,14 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Build move-clippy in release mode for speed
-echo -e "${YELLOW}Building move-clippy in release mode...${NC}"
-cd "$SCRIPT_DIR/../.."
-cargo build --release
+# NOTE: Semantic lints (--mode full) require --features full at build time.
+# Now that compilation issues are fixed, running full mode for semantic lint validation.
+LINT_MODE="full"
 
-# NOTE: Semantic lints (--mode full) require --features full at build time
-# and currently have compilation issues. Running fast lints only for now.
-LINT_MODE="fast"
+# Build with full feature for semantic lints
+echo -e "${YELLOW}Building move-clippy with full features...${NC}"
+cd "$SCRIPT_DIR/../.."
+cargo build --release --features full
 
 # Repository list (simple arrays instead of associative)
 REPOS=(

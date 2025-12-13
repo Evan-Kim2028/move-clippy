@@ -1,0 +1,3966 @@
+[
+  {
+    "lint": "modern_method_syntax",
+    "total": 1242,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 192,
+        "column": 34,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `assets.borrow_mut(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 210,
+        "column": 25,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `assets.borrow_mut(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 234,
+        "column": 34,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `assets.borrow_mut(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 249,
+        "column": 25,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `assets.borrow_mut(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 335,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow_mut(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 344,
+        "column": 19,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow_mut(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 394,
+        "column": 35,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `deposited_assets.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 395,
+        "column": 34,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `supported_assets_table.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 422,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 447,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 528,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `user_positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 530,
+        "column": 29,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `perpetuals_table.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 564,
+        "column": 25,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 623,
+        "column": 35,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `assets.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 671,
+        "column": 14,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 687,
+        "column": 21,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `assets.borrow_mut(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 781,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 801,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 822,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 911,
+        "column": 27,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `perpetuals_table.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 977,
+        "column": 13,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.is_empty(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 992,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 1025,
+        "column": 28,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `positions.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 1053,
+        "column": 25,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `perpetuals_table.borrow(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 1084,
+        "column": 18,
+        "level": "warning",
+        "lint": "modern_method_syntax",
+        "message": "Prefer method syntax: `leverage.borrow(...)`"
+      }
+    ]
+  },
+  {
+    "lint": "prefer_vector_methods",
+    "total": 746,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 271,
+        "column": 13,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `isolated_positions.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 317,
+        "column": 13,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `assets.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 816,
+        "column": 31,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `positions.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 1242,
+        "column": 13,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `applied_funding.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/constants.move",
+        "row": 184,
+        "column": 9,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `types.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/constants.move",
+        "row": 185,
+        "column": 9,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `types.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/constants.move",
+        "row": 186,
+        "column": 9,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `types.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/constants.move",
+        "row": 187,
+        "column": 9,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `types.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 740,
+        "column": 21,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `bytes.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 836,
+        "column": 21,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `perpetuals.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 903,
+        "column": 15,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `accounts.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 913,
+        "column": 19,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `funding_applied.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 1125,
+        "column": 21,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `hashes.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 1149,
+        "column": 21,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `hashes.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 1200,
+        "column": 13,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `complete_data_bytes.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 1203,
+        "column": 17,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `bytes.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 1207,
+        "column": 13,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `complete_data_bytes.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 174,
+        "column": 17,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `cross_positions.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 1686,
+        "column": 9,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `current_isolated_assets.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 2081,
+        "column": 12,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `market_funding_rates.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 2098,
+        "column": 9,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `perpetuals.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 2099,
+        "column": 9,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `oracle_prices.push_back(...)`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 3086,
+        "column": 24,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `makers_target_ids.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 3578,
+        "column": 30,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `max_notion_at_open.length()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/margining_engine.move",
+        "row": 193,
+        "column": 13,
+        "level": "warning",
+        "lint": "prefer_vector_methods",
+        "message": "Prefer method syntax: `initial_positions.length()`"
+      }
+    ]
+  },
+  {
+    "lint": "redundant_self_import",
+    "total": 543,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_oracle/sources/oracle.move",
+        "row": 13,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bcs_handler.move",
+        "row": 11,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/perpetual.move",
+        "row": 11,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 12,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signed_number.move",
+        "row": 11,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_coin.move",
+        "row": 2,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_data_store.move",
+        "row": 2,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_data_store.move",
+        "row": 6,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 2,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 5,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_signature.move",
+        "row": 2,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 2,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 5,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 7,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 9,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 12,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/data_source.move",
+        "row": 2,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/data_source.move",
+        "row": 6,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/deserialize.move",
+        "row": 2,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/deserialize.move",
+        "row": 9,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/event.move",
+        "row": 2,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+        "row": 11,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+        "row": 15,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+        "row": 18,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+        "row": 19,
+        "column": 5,
+        "level": "warning",
+        "lint": "redundant_self_import",
+        "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+      }
+    ]
+  },
+  {
+    "lint": "modern_module_syntax",
+    "total": 426,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 9,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/events.move",
+        "row": 2,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/flow_limiter.move",
+        "row": 2,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 2,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/oracle.move",
+        "row": 2,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/partner.move",
+        "row": 2,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/position.move",
+        "row": 2,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/rewards.move",
+        "row": 2,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_oracle/sources/oracle.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_stdlib/sources/math.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/full_math_u128.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/full_math_u64.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/math_u128.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/math_u256.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/math_u64.move",
+        "row": 1,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 10,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/admin.move",
+        "row": 10,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bank.move",
+        "row": 10,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bcs_handler.move",
+        "row": 10,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/constants.move",
+        "row": 10,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 10,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/errors.move",
+        "row": 10,
+        "column": 1,
+        "level": "warning",
+        "lint": "modern_module_syntax",
+        "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+      }
+    ]
+  },
+  {
+    "lint": "empty_vector_literal",
+    "total": 305,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 125,
+        "column": 25,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<address>` over `vector::empty<address>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 126,
+        "column": 21,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<DepositedAsset>` over `vector::empty<DepositedAsset>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 127,
+        "column": 30,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<Position>` over `vector::empty<Position>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 128,
+        "column": 33,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<Position>` over `vector::empty<Position>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 270,
+        "column": 38,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<Position>` over `vector::empty<Position>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 308,
+        "column": 26,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<DepositedAsset>` over `vector::empty<DepositedAsset>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 1129,
+        "column": 31,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<FundingApplied>` over `vector::empty<FundingApplied>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 1145,
+        "column": 34,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<Position>` over `vector::empty<Position>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/constants.move",
+        "row": 182,
+        "column": 21,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<String>` over `vector::empty<String>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 1061,
+        "column": 26,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<address>` over `vector::empty<address>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 1194,
+        "column": 35,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 1685,
+        "column": 39,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<DepositedAsset>` over `vector::empty<DepositedAsset>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 2077,
+        "column": 22,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<String>` over `vector::empty<String>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 2078,
+        "column": 25,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<u64>` over `vector::empty<u64>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 101,
+        "column": 28,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<PayloadKeys>` over `vector::empty<PayloadKeys>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 122,
+        "column": 28,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<PayloadKeys>` over `vector::empty<PayloadKeys>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 148,
+        "column": 28,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<PayloadKeys>` over `vector::empty<PayloadKeys>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 174,
+        "column": 28,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<PayloadKeys>` over `vector::empty<PayloadKeys>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 196,
+        "column": 28,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<PayloadKeys>` over `vector::empty<PayloadKeys>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 216,
+        "column": 28,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<PayloadKeys>` over `vector::empty<PayloadKeys>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 264,
+        "column": 30,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 337,
+        "column": 31,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 338,
+        "column": 32,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 404,
+        "column": 28,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 136,
+        "column": 29,
+        "level": "warning",
+        "lint": "empty_vector_literal",
+        "message": "Prefer `vector<u64>` over `vector::empty<u64>()`"
+      }
+    ]
+  },
+  {
+    "lint": "event_suffix",
+    "total": 254,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/oracle.move",
+        "row": 12,
+        "column": 19,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `PriceIdentifier` should end with `Event` suffix (e.g., `PriceIdentifierEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/rewards.move",
+        "row": 47,
+        "column": 19,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `ClaimableReward` should end with `Event` suffix (e.g., `ClaimableRewardEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_oracle/sources/oracle.move",
+        "row": 51,
+        "column": 19,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `AlternatePriceIdentifier` should end with `Event` suffix (e.g., `AlternatePriceIdentifierEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_oracle/sources/oracle.move",
+        "row": 62,
+        "column": 19,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `PriceInfo` should end with `Event` suffix (e.g., `PriceInfoEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_stdlib/sources/math.move",
+        "row": 8,
+        "column": 19,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `Number` should end with `Event` suffix (e.g., `NumberEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 14,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I128` should end with `Event` suffix (e.g., `I128Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 11,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I32` should end with `Event` suffix (e.g., `I32Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 11,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I64` should end with `Event` suffix (e.g., `I64Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/specs-bv/sources/i128.move",
+        "row": 6,
+        "column": 15,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I128` should end with `Event` suffix (e.g., `I128Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/specs-bv/sources/i32.move",
+        "row": 6,
+        "column": 15,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I32` should end with `Event` suffix (e.g., `I32Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/specs-bv/sources/i64.move",
+        "row": 6,
+        "column": 15,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I64` should end with `Event` suffix (e.g., `I64Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/specs-bv/sources/i128.move",
+        "row": 6,
+        "column": 15,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I128` should end with `Event` suffix (e.g., `I128Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/specs-bv/sources/i32.move",
+        "row": 6,
+        "column": 15,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I32` should end with `Event` suffix (e.g., `I32Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/specs-bv/sources/i64.move",
+        "row": 6,
+        "column": 15,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `I64` should end with `Event` suffix (e.g., `I64Event`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 40,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `TradeFee` should end with `Event` suffix (e.g., `TradeFeeEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 78,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `Position` should end with `Event` suffix (e.g., `PositionEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 102,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `DepositedAsset` should end with `Event` suffix (e.g., `DepositedAssetEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bank.move",
+        "row": 36,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `Asset` should end with `Event` suffix (e.g., `AssetEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bcs_handler.move",
+        "row": 24,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `Trade` should end with `Event` suffix (e.g., `TradeEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bcs_handler.move",
+        "row": 33,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `Deposit` should end with `Event` suffix (e.g., `DepositEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bcs_handler.move",
+        "row": 45,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `OperatorUpdate` should end with `Event` suffix (e.g., `OperatorUpdateEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 54,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `AssetBankDeposit` should end with `Event` suffix (e.g., `AssetBankDepositEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 65,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `Deposit` should end with `Event` suffix (e.g., `DepositEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 91,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `Withdraw` should end with `Event` suffix (e.g., `WithdrawEvent`)"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 103,
+        "column": 12,
+        "level": "warning",
+        "lint": "event_suffix",
+        "message": "Event struct `PerpetualUpdate` should end with `Event` suffix (e.g., `PerpetualUpdateEvent`)"
+      }
+    ]
+  },
+  {
+    "lint": "merge_test_attributes",
+    "total": 227,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 254,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 269,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 284,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 354,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 360,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 412,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 418,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 443,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i128.move",
+        "row": 461,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 217,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 232,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 247,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 307,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 313,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 353,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 359,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 384,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i32.move",
+        "row": 402,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 217,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 232,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 247,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 307,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 313,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 353,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-integer/sources/i64.move",
+        "row": 359,
+        "column": 5,
+        "level": "warning",
+        "lint": "merge_test_attributes",
+        "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+      }
+    ]
+  },
+  {
+    "lint": "abilities_order",
+    "total": 149,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/oracle.move",
+        "row": 16,
+        "column": 26,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has key, store`. Found: `has store, key`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/oracle.move",
+        "row": 22,
+        "column": 29,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has key, store`. Found: `has store, key`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/position.move",
+        "row": 36,
+        "column": 31,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has key, store`. Found: `has store, key`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/position.move",
+        "row": 43,
+        "column": 28,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has key, store`. Found: `has store, key`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_oracle/sources/oracle.move",
+        "row": 47,
+        "column": 28,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has key, store`. Found: `has store, key`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_oracle/sources/oracle.move",
+        "row": 51,
+        "column": 44,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has drop, copy, store`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_oracle/sources/oracle.move",
+        "row": 53,
+        "column": 26,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has key, store`. Found: `has store, key`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alphafi_oracle/sources/oracle.move",
+        "row": 62,
+        "column": 29,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 40,
+        "column": 21,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 102,
+        "column": 27,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 110,
+        "column": 27,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bank.move",
+        "row": 36,
+        "column": 18,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 66,
+        "column": 22,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has drop, store`. Found: `has store, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 135,
+        "column": 19,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/perpetual.move",
+        "row": 102,
+        "column": 24,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/perpetual.move",
+        "row": 112,
+        "column": 22,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signed_number.move",
+        "row": 17,
+        "column": 19,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/acl.move",
+        "row": 17,
+        "column": 19,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, drop, copy`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/config.move",
+        "row": 54,
+        "column": 20,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 27,
+        "column": 27,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 67,
+        "column": 20,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/position.move",
+        "row": 58,
+        "column": 25,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, drop, copy`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/position.move",
+        "row": 74,
+        "column": 27,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has drop, copy, store`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/position_snapshot.move",
+        "row": 24,
+        "column": 29,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, drop, copy`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/token/dividends/sources/dividend.move",
+        "row": 79,
+        "column": 30,
+        "level": "warning",
+        "lint": "abilities_order",
+        "message": "Abilities should be ordered: `has drop, store`. Found: `has store, drop`"
+      }
+    ]
+  },
+  {
+    "lint": "unbounded_vector_growth",
+    "total": 134,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 258,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `get_positions_vector` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 278,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `set_authorized_user` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 303,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `get_assets_vector` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 562,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `update_account` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/constants.move",
+        "row": 180,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `get_supported_operators` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/data_store.move",
+        "row": 945,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `authorize_liquidator` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 99,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `verify_withdrawal_signature` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 120,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `verify_order_signature` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 146,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `verify_authorize_account_signature` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 172,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `verify_adjust_margin_signature` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 194,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `verify_adjust_leverage_signature` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 214,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `verify_close_position_signature` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/signature.move",
+        "row": 398,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `add_intent_bytes_and_hash` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_funding.move",
+        "row": 336,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `should_fail_to_apply_funding_rate_to_a_non_existent_account` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 35,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `create_test_perpetual` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 424,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `test_perpetual_with_isolated_only_true` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 471,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `test_perpetual_with_different_fees` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 625,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `test_perpetual_with_min_values` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 1400,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `create_test_perpetual_for_errors` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 1719,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `test_set_max_allowed_oi_open_below_minimum_fails` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 1731,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `test_set_max_allowed_oi_open_above_maximum_fails` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 1993,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `should_fail_to_create_perpetual_different_step_size_and_min_trade_qty` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_perpetual.move",
+        "row": 2041,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `should_fail_to_create_perpetual_invalid_trading_start_time` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_trade.move",
+        "row": 54,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `trade` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_utils.move",
+        "row": 516,
+        "column": 5,
+        "level": "warning",
+        "lint": "unbounded_vector_growth",
+        "message": "Function `create_perpetual` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+      }
+    ]
+  },
+  {
+    "lint": "admin_cap_position",
+    "total": 113,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 139,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PositionCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 158,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PositionCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 176,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PositionCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 195,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PositionCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 236,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PositionCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 253,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PositionCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 288,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PositionCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 187,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PoolCreationCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 197,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PoolCreationCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/partner.move",
+        "row": 183,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PartnerCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool.move",
+        "row": 691,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&ProtocolFeeCollectCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool_creator.move",
+        "row": 15,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PoolCreationCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool_creator.move",
+        "row": 33,
+        "column": 9,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&PoolCreationCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 134,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MaintainerCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 178,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 200,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 222,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 245,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 291,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&SupplierCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 333,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&SupplierCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 417,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 432,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 455,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_registry.move",
+        "row": 153,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_registry.move",
+        "row": 176,
+        "column": 5,
+        "level": "warning",
+        "lint": "admin_cap_position",
+        "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+      }
+    ]
+  },
+  {
+    "lint": "unnecessary_public_entry",
+    "total": 107,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/exchange.move",
+        "row": 47,
+        "column": 1,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/test_coin.move",
+        "row": 34,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/test_coin.move",
+        "row": 42,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/admin.move",
+        "row": 40,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/admin.move",
+        "row": 66,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/gateway.move",
+        "row": 48,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/gateway.move",
+        "row": 83,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/gateway.move",
+        "row": 115,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/gateway.move",
+        "row": 148,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/gateway.move",
+        "row": 174,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/gateway.move",
+        "row": 201,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/gateway.move",
+        "row": 228,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/token/dividends/sources/router.move",
+        "row": 15,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/token/dividends/sources/router.move",
+        "row": 27,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/token/dividends/sources/router.move",
+        "row": 37,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/token/dividends/sources/router.move",
+        "row": 49,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/token/dividends/sources/router.move",
+        "row": 53,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/limit-order/sources/order.move",
+        "row": 206,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/limit-order/sources/order.move",
+        "row": 226,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/limit-order/sources/order.move",
+        "row": 250,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/limit-order/sources/order.move",
+        "row": 334,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/limit-order/sources/order.move",
+        "row": 346,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/lp_burn/sources/lp_burn.move",
+        "row": 66,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/lp_burn/sources/lp_burn.move",
+        "row": 84,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/stable_farming/sources/router.move",
+        "row": 23,
+        "column": 5,
+        "level": "warning",
+        "lint": "unnecessary_public_entry",
+        "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+      }
+    ]
+  },
+  {
+    "lint": "public_mut_tx_context",
+    "total": 105,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/admin.move",
+        "row": 73,
+        "column": 14,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-spot/sources/admin.move",
+        "row": 92,
+        "column": 14,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/config.move",
+        "row": 158,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/config.move",
+        "row": 172,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/config.move",
+        "row": 184,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/config.move",
+        "row": 198,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 132,
+        "column": 89,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 136,
+        "column": 92,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 140,
+        "column": 88,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 144,
+        "column": 91,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 152,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/factory.move",
+        "row": 161,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/partner.move",
+        "row": 154,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool.move",
+        "row": 675,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool.move",
+        "row": 707,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool.move",
+        "row": 730,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool.move",
+        "row": 747,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool.move",
+        "row": 764,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool.move",
+        "row": 781,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/cetus_clmm/sources/pool.move",
+        "row": 796,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/stable_farming/sources/pool.move",
+        "row": 340,
+        "column": 13,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/cetus-clmm/sui/stable_farming/sources/router.move",
+        "row": 169,
+        "column": 15,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_manager.move",
+        "row": 188,
+        "column": 10,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_manager.move",
+        "row": 200,
+        "column": 10,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_manager.move",
+        "row": 217,
+        "column": 10,
+        "level": "warning",
+        "lint": "public_mut_tx_context",
+        "message": "TxContext parameters should use `&mut TxContext`"
+      }
+    ]
+  },
+  {
+    "lint": "explicit_self_assignments",
+    "total": 80,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+        "row": 510,
+        "column": 9,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+        "row": 510,
+        "column": 24,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+        "row": 177,
+        "column": 9,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+        "row": 177,
+        "column": 19,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+        "row": 267,
+        "column": 17,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+        "row": 267,
+        "column": 26,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+        "row": 1266,
+        "column": 9,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 4 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+        "row": 1266,
+        "column": 19,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 4 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+        "row": 209,
+        "column": 9,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+        "row": 209,
+        "column": 19,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+        "row": 231,
+        "column": 9,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+        "row": 231,
+        "column": 19,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol/sources/referral/borrow_referral.move",
+        "row": 229,
+        "column": 9,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol/sources/referral/borrow_referral.move",
+        "row": 229,
+        "column": 24,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 60,
+        "column": 13,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 7 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 60,
+        "column": 35,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 7 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 61,
+        "column": 21,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+        "row": 61,
+        "column": 28,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance.move",
+        "row": 41,
+        "column": 13,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance.move",
+        "row": 41,
+        "column": 43,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_instruction.move",
+        "row": 62,
+        "column": 13,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_instruction.move",
+        "row": 62,
+        "column": 35,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/wormhole/sources/governance_message.move",
+        "row": 110,
+        "column": 13,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/wormhole/sources/governance_message.move",
+        "row": 110,
+        "column": 27,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/wormhole/sources/publish_message.move",
+        "row": 156,
+        "column": 13,
+        "level": "warning",
+        "lint": "explicit_self_assignments",
+        "message": "Use `..` to ignore 4 fields instead of explicit `: _` bindings"
+      }
+    ]
+  },
+  {
+    "lint": "constant_naming",
+    "total": 61,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 29,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrNotEnoughCollateral`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 31,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrTooMuchBorrow`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 33,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrIsolatedMarketBorrowWithOther`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 35,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrNotEligbleForLiquidation`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 37,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrInvalidProtocolVersion`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 39,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrHotPotatoPositionMismatch`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 41,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrMarketNotActive`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 43,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrInvalidMarketID`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 45,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrCannotDepositToBorrowedMarket`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 47,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrCannotBorrowFromDepositedMarket`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 49,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrInvalidCollateralAmount`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 51,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrInvalidBorrowAmount`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 53,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrInvalidRepayAmount`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 55,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrInvalidPromiseCoinType`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 57,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrSuiMarketNotFound`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 59,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrDepositLimitExceeded`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 16,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrMarketNotRefreshed`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 18,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrNotEnoughTokensToBorrow`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 20,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrCoinTypeMisMatched`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 22,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrNotEnoughLiquidity`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 24,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrXTokenRatioDecreased`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 26,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrBorrowLimitExceeded`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 28,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrInvalidBorrowLimitPercentage`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 30,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrCouldNotFulfillPromise`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/market.move",
+        "row": 32,
+        "column": 11,
+        "level": "warning",
+        "lint": "constant_naming",
+        "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `ErrCouldNotFulfillPromiseFee`"
+      }
+    ]
+  },
+  {
+    "lint": "hardcoded_address",
+    "total": 50,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_authorized_account.move",
+        "row": 18,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `get_authorize_account_struct` contains hardcoded address `@0x63d9a65220318469fb169034d8a011eae3f014fed2a1f8c006183e2ece3c3975`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 13,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_successfully_deposit_to_asset_bank` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 38,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_successfully_update_account_deposited_amount_in_internal_bank` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 63,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_successfully_remove_tainted_deposit_from_asset_bank` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 124,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_successfully_withdraw_from_bank` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 164,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_withdraw_from_bank_as_withdraw_amount_is_greater_than_available_account_balance` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 196,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_withdraw_as_ids_version_mismatch` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 230,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_withdraw_as_eds_version_mismatch` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 264,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_withdraw_as_signer_does_not_have_permission_for_account` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_bank.move",
+        "row": 295,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_withdraw_as_withdrawal_request_is_too_old` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_funding.move",
+        "row": 43,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `apply_funding_rate_payload` contains hardcoded address `@0x63d9a65220318469fb169034d8a011eae3f014fed2a1f8c006183e2ece3c3975`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_funding.move",
+        "row": 336,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_apply_funding_rate_to_a_non_existent_account` contains hardcoded address `@0x96a165bd1b1300884471e09bb49bca6195029ef39b2ff5a4dd63e5a19249d084`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_liquidations.move",
+        "row": 29,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `liquidate_order` contains hardcoded address `@0x63d9a65220318469fb169034d8a011eae3f014fed2a1f8c006183e2ece3c3975`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 290,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_successfully_authorize_and_unauthorize_liquidator` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 334,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_authorize_and_unauthorize_liquidator_due_to_ids_version_mismatch` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 380,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_authorize_and_unauthorize_liquidator_due_to_payload_lifespan_greater_than_max_allowed_lifespan` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 407,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_authorize_and_unauthorize_liquidator_due_to_payload_type_is_invalid` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 451,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_authorize_and_unauthorize_liquidator_due_to_target_ids_is_invalid` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 495,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_successfully_set_an_account_fee_tier` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 528,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_set_an_account_fee_tier_due_to_ids_version_mismatch` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 563,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_set_an_account_fee_tier_due_to_payload_lifespan_greater_than_max_allowed_lifespan` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 596,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_set_an_account_fee_tier_due_to_payload_type_is_invalid` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 629,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_set_an_account_fee_tier_due_to_target_ids_is_invalid` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 662,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_successfully_set_an_account_type` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_operator_controlled_methods.move",
+        "row": 693,
+        "column": 5,
+        "level": "warning",
+        "lint": "hardcoded_address",
+        "message": "Function `should_fail_to_set_an_account_type_due_to_ids_version_mismatch` contains hardcoded address `@0x80c3d285c2fe5ccacd1a2fbc1fc757cbeab5134f1ef1e97803fe653e041c88aa`. Consider using a constant or configuration parameter for flexibility."
+      }
+    ]
+  },
+  {
+    "lint": "pure_function_transfer",
+    "total": 49,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bank.move",
+        "row": 319,
+        "column": 9,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_manager.move",
+        "row": 314,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_manager.move",
+        "row": 342,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 156,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool/protocol_fees.move",
+        "row": 92,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_registry.move",
+        "row": 583,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_registry.move",
+        "row": 720,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+        "row": 406,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+        "row": 1764,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+        "row": 1765,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+        "row": 340,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 658,
+        "column": 9,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 660,
+        "column": 9,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 673,
+        "column": 9,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 674,
+        "column": 9,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 675,
+        "column": 9,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 720,
+        "column": 9,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 722,
+        "column": 9,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/margin_liquidation/sources/liquidation_vault.move",
+        "row": 79,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+        "row": 196,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+        "row": 132,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+        "row": 151,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/coin_decimals_registry/sources/coin_decimals_registry.move",
+        "row": 47,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol/sources/referral/borrow_referral.move",
+        "row": 299,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol/sources/user/open_obligation.move",
+        "row": 91,
+        "column": 5,
+        "level": "warning",
+        "lint": "pure_function_transfer",
+        "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+      }
+    ]
+  },
+  {
+    "lint": "unchecked_coin_split",
+    "total": 20,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 399,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `withdraw_referral_fees` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 414,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `admin_withdraw_default_referral_fees` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 452,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `withdraw_protocol_fees` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+        "row": 58,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `settle_balance_manager` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+        "row": 135,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `withdraw_deep_to_burn` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/vault/vault_tests.move",
+        "row": 225,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `borrow_flashloan_incorrect_return_base_e` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/vault/vault_tests.move",
+        "row": 263,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `borrow_flashloan_incorrect_return_quote_e` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol/sources/obligation/obligation.move",
+        "row": 150,
+        "column": 3,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `withdraw_collateral` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/wormhole/sources/resources/fee_collector.move",
+        "row": 48,
+        "column": 5,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `withdraw_balance` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/wormhole/sources/resources/fee_collector.move",
+        "row": 48,
+        "column": 5,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `withdraw_balance` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/balance_bag.move",
+        "row": 39,
+        "column": 3,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `split` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/steamm/contracts/steamm/sources/bank/bank.move",
+        "row": 1333,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `withdraw_for_testing` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/steamm/contracts/steamm/sources/pool/pool.move",
+        "row": 1099,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `mut_reserve_a` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/steamm/contracts/steamm/sources/pool/pool.move",
+        "row": 1112,
+        "column": 1,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `mut_reserve_b` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/sources/liquidity_mining.move",
+        "row": 248,
+        "column": 5,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `cancel_pool_reward` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/sources/reserve.move",
+        "row": 1374,
+        "column": 5,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `fulfill_liquidity_request` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/sources/reserve.move",
+        "row": 1642,
+        "column": 5,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `withdraw_ctokens` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/sources/staker.move",
+        "row": 271,
+        "column": 5,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `unstake_n_sui` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend-liquid-staking/contracts/sources/storage.move",
+        "row": 338,
+        "column": 5,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `split_from_sui_pool` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend-liquid-staking/contracts/sources/storage.move",
+        "row": 517,
+        "column": 5,
+        "level": "warning",
+        "lint": "unchecked_coin_split",
+        "message": "Function `split_from_inactive_stake` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+      }
+    ]
+  },
+  {
+    "lint": "manual_loop_iteration",
+    "total": 13,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_manager.move",
+        "row": 1061,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_below.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_manager.move",
+        "row": 1068,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_above.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 595,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices_below.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 635,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices_above.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 787,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices_below.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 833,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices_above.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 1252,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices_below.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 1288,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices_above.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 1416,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices_below.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 1452,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices_above.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 2701,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/tests/tpsl_tests.move",
+        "row": 2846,
+        "column": 5,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `trigger_prices.do_ref!(|e| ...)` instead of manual while loop with index"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend-liquid-staking/contracts/tests/test_utils.move",
+        "row": 17,
+        "column": 9,
+        "level": "warning",
+        "lint": "manual_loop_iteration",
+        "message": "Consider `stakes.do_ref!(|e| ...)` instead of manual while loop with index"
+      }
+    ]
+  },
+  {
+    "lint": "missing_witness_drop",
+    "total": 12,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_utils.move",
+        "row": 29,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `USDC` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/tests/test_utils.move",
+        "row": 30,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `SUI` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 15,
+        "column": 1,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `SPAM` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 16,
+        "column": 1,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `USDC` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+        "row": 17,
+        "column": 1,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `USDT` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/tests/obligation_tests.move",
+        "row": 23,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `TEST_MARKET` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/tests/obligation_tests.move",
+        "row": 25,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `TEST_SUI` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/tests/obligation_tests.move",
+        "row": 27,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `TEST_USDC` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/tests/obligation_tests.move",
+        "row": 29,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `TEST_USDT` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/tests/obligation_tests.move",
+        "row": 31,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `TEST_ETH` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/tests/obligation_tests.move",
+        "row": 33,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `TEST_AUSD` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/suilend/tests/reserve_tests.move",
+        "row": 24,
+        "column": 5,
+        "level": "warning",
+        "lint": "missing_witness_drop",
+        "message": "Struct `TEST_LM` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+      }
+    ]
+  },
+  {
+    "lint": "excessive_token_abilities",
+    "total": 8,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/account.move",
+        "row": 102,
+        "column": 5,
+        "level": "warning",
+        "lint": "excessive_token_abilities",
+        "message": "Struct `DepositedAsset` appears to be a token/asset but has both `copy` and `drop` abilities. This enables infinite duplication. Assets should only have `key` and `store`. See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/bank.move",
+        "row": 36,
+        "column": 5,
+        "level": "warning",
+        "lint": "excessive_token_abilities",
+        "message": "Struct `Asset` appears to be a token/asset but has both `copy` and `drop` abilities. This enables infinite duplication. Assets should only have `key` and `store`. See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 35,
+        "column": 5,
+        "level": "warning",
+        "lint": "excessive_token_abilities",
+        "message": "Struct `AssetSupported` appears to be a token/asset but has both `copy` and `drop` abilities. This enables infinite duplication. Assets should only have `key` and `store`. See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 41,
+        "column": 5,
+        "level": "warning",
+        "lint": "excessive_token_abilities",
+        "message": "Struct `AssetSynced` appears to be a token/asset but has both `copy` and `drop` abilities. This enables infinite duplication. Assets should only have `key` and `store`. See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 54,
+        "column": 5,
+        "level": "warning",
+        "lint": "excessive_token_abilities",
+        "message": "Struct `AssetBankDeposit` appears to be a token/asset but has both `copy` and `drop` abilities. This enables infinite duplication. Assets should only have `key` and `store`. See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/bluefin-pro/sources/events.move",
+        "row": 78,
+        "column": 5,
+        "level": "warning",
+        "lint": "excessive_token_abilities",
+        "message": "Struct `TaintedAssetRemoved` appears to be a token/asset but has both `copy` and `drop` abilities. This enables infinite duplication. Assets should only have `key` and `store`. See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook_margin/sources/margin_pool.move",
+        "row": 98,
+        "column": 1,
+        "level": "warning",
+        "lint": "excessive_token_abilities",
+        "message": "Struct `AssetSupplied` appears to be a token/asset but has both `copy` and `drop` abilities. This enables infinite duplication. Assets should only have `key` and `store`. See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/coin_decimals_registry/sources/coin_decimals_registry.move",
+        "row": 23,
+        "column": 3,
+        "level": "warning",
+        "lint": "excessive_token_abilities",
+        "message": "Struct `CoinDecimalsRegistered` appears to be a token/asset but has both `copy` and `drop` abilities. This enables infinite duplication. Assets should only have `key` and `store`. See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes"
+      }
+    ]
+  },
+  {
+    "lint": "shared_capability",
+    "total": 8,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+        "row": 69,
+        "column": 9,
+        "level": "warning",
+        "lint": "shared_capability",
+        "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/wormhole/sources/setup.move",
+        "row": 80,
+        "column": 9,
+        "level": "warning",
+        "lint": "shared_capability",
+        "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+        "row": 69,
+        "column": 9,
+        "level": "warning",
+        "lint": "shared_capability",
+        "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/BTC.move",
+        "row": 41,
+        "column": 5,
+        "level": "warning",
+        "lint": "shared_capability",
+        "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/ETH.move",
+        "row": 41,
+        "column": 5,
+        "level": "warning",
+        "lint": "shared_capability",
+        "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDC.move",
+        "row": 41,
+        "column": 5,
+        "level": "warning",
+        "lint": "shared_capability",
+        "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDT.move",
+        "row": 41,
+        "column": 5,
+        "level": "warning",
+        "lint": "shared_capability",
+        "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/wormhole/sources/setup.move",
+        "row": 80,
+        "column": 9,
+        "level": "warning",
+        "lint": "shared_capability",
+        "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+      }
+    ]
+  },
+  {
+    "lint": "droppable_hot_potato",
+    "total": 4,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/alphalend/alpha_lending/sources/alpha_lending.move",
+        "row": 116,
+        "column": 5,
+        "level": "warning",
+        "lint": "droppable_hot_potato",
+        "message": "Struct `LpPositionBorrowHotPotato` appears to be a hot potato but has `drop` ability. Hot potatoes must have no abilities to enforce consumption. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol/sources/obligation/obligation.move",
+        "row": 47,
+        "column": 3,
+        "level": "warning",
+        "lint": "droppable_hot_potato",
+        "message": "Struct `ObligationOwnership` appears to be a hot potato but has `drop` ability. Hot potatoes must have no abilities to enforce consumption. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol/sources/obligation/obligation_collaterals.move",
+        "row": 13,
+        "column": 3,
+        "level": "warning",
+        "lint": "droppable_hot_potato",
+        "message": "Struct `ObligationCollaterals` appears to be a hot potato but has `drop` ability. Hot potatoes must have no abilities to enforce consumption. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol/sources/obligation/obligation_debts.move",
+        "row": 15,
+        "column": 3,
+        "level": "warning",
+        "lint": "droppable_hot_potato",
+        "message": "Struct `ObligationDebts` appears to be a hot potato but has `drop` ability. Hot potatoes must have no abilities to enforce consumption. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/"
+      }
+    ]
+  },
+  {
+    "lint": "single_step_ownership_transfer",
+    "total": 4,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std/sources/aggregator.move",
+        "row": 265,
+        "column": 5,
+        "level": "warning",
+        "lint": "single_step_ownership_transfer",
+        "message": "Function `set_authority` appears to implement single-step ownership transfer. This is dangerous - a typo in the new address permanently locks out admin access. Consider implementing a two-step pattern: 1) propose_admin sets pending_admin, 2) accept_admin requires the new admin to confirm."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+        "row": 265,
+        "column": 5,
+        "level": "warning",
+        "lint": "single_step_ownership_transfer",
+        "message": "Function `set_authority` appears to implement single-step ownership transfer. This is dangerous - a typo in the new address permanently locks out admin access. Consider implementing a two-step pattern: 1) propose_admin sets pending_admin, 2) accept_admin requires the new admin to confirm."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+        "row": 265,
+        "column": 5,
+        "level": "warning",
+        "lint": "single_step_ownership_transfer",
+        "message": "Function `set_authority` appears to implement single-step ownership transfer. This is dangerous - a typo in the new address permanently locks out admin access. Consider implementing a two-step pattern: 1) propose_admin sets pending_admin, 2) accept_admin requires the new admin to confirm."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std/sources/aggregator.move",
+        "row": 265,
+        "column": 5,
+        "level": "warning",
+        "lint": "single_step_ownership_transfer",
+        "message": "Function `set_authority` appears to implement single-step ownership transfer. This is dangerous - a typo in the new address permanently locks out admin access. Consider implementing a two-step pattern: 1) propose_admin sets pending_admin, 2) accept_admin requires the new admin to confirm."
+      }
+    ]
+  },
+  {
+    "lint": "prefer_to_string",
+    "total": 3,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/steamm/contracts/steamm/sources/quoters/omm_v2.move",
+        "row": 935,
+        "column": 1,
+        "level": "warning",
+        "lint": "prefer_to_string",
+        "message": "Prefer `b\"...\".to_string()` over `std::string::utf8(b\"...\")`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/steamm/contracts/steamm/tests/quoters/omm_v2_tests.move",
+        "row": 4,
+        "column": 1,
+        "level": "warning",
+        "lint": "prefer_to_string",
+        "message": "Prefer `b\"...\".to_string()` over `std::string::utf8(b\"...\")`"
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/steamm/contracts/steamm/tests/utils/utils.move",
+        "row": 11,
+        "column": 1,
+        "level": "warning",
+        "lint": "prefer_to_string",
+        "message": "Prefer `b\"...\".to_string()` over `std::string::utf8(b\"...\")`"
+      }
+    ]
+  },
+  {
+    "lint": "stale_oracle_price",
+    "total": 2,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+        "row": 374,
+        "column": 21,
+        "level": "warning",
+        "lint": "stale_oracle_price",
+        "message": "Using `get_price_unsafe` may return stale/outdated oracle prices. Consider using `get_price_no_older_than` with an appropriate max age to ensure price freshness. See: Pyth documentation."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+        "row": 374,
+        "column": 21,
+        "level": "warning",
+        "lint": "stale_oracle_price",
+        "message": "Using `get_price_unsafe` may return stale/outdated oracle prices. Consider using `get_price_no_older_than` with an appropriate max age to ensure price freshness. See: Pyth documentation."
+      }
+    ]
+  },
+  {
+    "lint": "suspicious_overflow_check",
+    "total": 2,
+    "samples": [
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/steamm/contracts/steamm/sources/math/fixed_point64.move",
+        "row": 301,
+        "column": 1,
+        "level": "warning",
+        "lint": "suspicious_overflow_check",
+        "message": "Function `checked_mul` appears to implement manual overflow checking with bit shifts. Manual overflow checks are error-prone (see Cetus $223M hack). Consider: 1) Using built-in checked arithmetic, 2) Adding extensive tests, 3) Getting this code audited."
+      },
+      {
+        "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/steamm/contracts/steamm/sources/math/fixed_point64.move",
+        "row": 332,
+        "column": 1,
+        "level": "warning",
+        "lint": "suspicious_overflow_check",
+        "message": "Function `checked_div` appears to implement manual overflow checking with bit shifts. Manual overflow checks are error-prone (see Cetus $223M hack). Consider: 1) Using built-in checked arithmetic, 2) Adding extensive tests, 3) Getting this code audited."
+      }
+    ]
+  }
+]
