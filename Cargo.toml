@@ -16,13 +16,16 @@ tree-sitter-move = { git = "https://github.com/tzakian/tree-sitter-move", rev = 
 # Optional (future) semantic analysis via Mysten's Move fork snapshot
 move-compiler = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
 move-ir-types = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
+move-package = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
 
 [features]
 default = []
 full = [
     "move-compiler",
     "move-ir-types",
+    "move-package",
 ]
 
 [dev-dependencies]
 insta = "1.44.3"
+tempfile = "3.23.0"

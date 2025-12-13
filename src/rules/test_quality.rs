@@ -1,5 +1,6 @@
 use crate::diagnostics::Span;
 use crate::lint::{LintCategory, LintContext, LintDescriptor, LintRule};
+use crate::suppression;
 use tree_sitter::Node;
 
 use super::util::{
@@ -21,18 +22,23 @@ impl LintRule for MergeTestAttributesLint {
     }
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        let mut attrs: Vec<(usize, usize)> = Vec::new();
+        let mut attrs: Vec<(usize, usize, usize)> = Vec::new();
         walk(root, &mut |node| {
             let t = slice(source, node).trim();
             if t.starts_with("#[") && t.ends_with(']') {
-                attrs.push((node.start_byte(), node.end_byte()));
+                let anchor = suppression::anchor_item_start_byte(node);
+                attrs.push((node.start_byte(), node.end_byte(), anchor));
             }
         });
 
-        attrs.sort_by_key(|(start, _end)| *start);
+        attrs.sort_by_key(|(start, _end, _anchor)| *start);
         for pair in attrs.windows(2) {
-            let (a_start, a_end) = pair[0];
-            let (b_start, b_end) = pair[1];
+            let (a_start, a_end, a_anchor) = pair[0];
+            let (b_start, b_end, b_anchor) = pair[1];
+
+            if a_anchor != b_anchor {
+                continue;
+            }
 
             let a_text = source.get(a_start..a_end).unwrap_or("");
             let b_text = source.get(b_start..b_end).unwrap_or("");
@@ -52,8 +58,9 @@ impl LintRule for MergeTestAttributesLint {
                 end: position_from_byte_offset(source, b_end),
             };
 
-            ctx.report(
+            ctx.report_span_with_anchor(
                 self.descriptor(),
+                a_anchor,
                 span,
                 "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`",
             );

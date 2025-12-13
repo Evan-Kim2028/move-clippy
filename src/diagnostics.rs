@@ -1,9 +1,12 @@
+use crate::level::LintLevel;
 use crate::lint::LintDescriptor;
 use tree_sitter::Range;
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
     pub lint: &'static LintDescriptor,
+    pub level: LintLevel,
+    pub file: Option<String>,
     pub span: Span,
     pub message: String,
     pub help: Option<String>,

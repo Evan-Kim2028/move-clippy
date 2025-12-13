@@ -1,0 +1,2 @@
+[lints]
+disabled = ["prefer_vector_methods"]

@@ -1,0 +1,2 @@
+[lints]
+prefer_vector_methods = "error"

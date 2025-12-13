@@ -1,10 +1,9 @@
-use crate::diagnostics::Span;
 use crate::lint::{LintCategory, LintContext, LintDescriptor, LintRule};
 use tree_sitter::Node;
 
 use super::util::{
-    compact_ws, is_simple_ident, parse_ref_ident, parse_ref_mut_ident, slice, split_args, split_call,
-    walk,
+    compact_ws, is_simple_ident, parse_ref_ident, parse_ref_mut_ident, slice, split_args,
+    split_call, walk,
 };
 
 pub struct ModernModuleSyntaxLint;
@@ -43,9 +42,9 @@ impl LintRule for ModernModuleSyntaxLint {
             };
 
             if is_legacy_block {
-                ctx.report(
+                ctx.report_node(
                     self.descriptor(),
-                    Span::from_range(node.range()),
+                    node,
                     "Use Move 2024 module label syntax: `module pkg::mod;`",
                 );
             }
@@ -89,9 +88,9 @@ impl LintRule for PreferVectorMethodsLint {
                     return;
                 };
 
-                ctx.report(
+                ctx.report_node(
                     self.descriptor(),
-                    Span::from_range(node.range()),
+                    node,
                     format!("Prefer method syntax: `{receiver}.push_back(...)`"),
                 );
             } else if callee == "vector::length" {
@@ -105,9 +104,9 @@ impl LintRule for PreferVectorMethodsLint {
                     return;
                 };
 
-                ctx.report(
+                ctx.report_node(
                     self.descriptor(),
-                    Span::from_range(node.range()),
+                    node,
                     format!("Prefer method syntax: `{receiver}.length()`"),
                 );
             }
@@ -158,9 +157,9 @@ impl LintRule for ModernMethodSyntaxLint {
                 return;
             }
 
-            ctx.report(
+            ctx.report_node(
                 self.descriptor(),
-                Span::from_range(node.range()),
+                node,
                 format!("Prefer method syntax: `{receiver}.{method}()`"),
             );
         });

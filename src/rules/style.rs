@@ -1,4 +1,3 @@
-use crate::diagnostics::Span;
 use crate::lint::{LintCategory, LintContext, LintDescriptor, LintRule};
 use tree_sitter::Node;
 
@@ -37,9 +36,9 @@ impl LintRule for RedundantSelfImportLint {
                 .collect();
 
             if items.len() == 1 && items[0] == "Self" {
-                ctx.report(
+                ctx.report_node(
                     self.descriptor(),
-                    Span::from_range(node.range()),
+                    node,
                     "Redundant `{Self}` import; prefer `use pkg::mod;`",
                 );
             }
@@ -70,9 +69,9 @@ impl LintRule for PreferToStringLint {
             let text = slice(source, node);
             let compact = compact_ws(text);
             if compact == "usestd::string::utf8;" || compact == "usestd::string::{utf8};" {
-                ctx.report(
+                ctx.report_node(
                     self.descriptor(),
-                    Span::from_range(node.range()),
+                    node,
                     "Prefer `b\"...\".to_string()` over `std::string::utf8(b\"...\")`",
                 );
             }

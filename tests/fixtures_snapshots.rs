@@ -6,8 +6,12 @@ fn format_diags(diags: &[move_clippy::diagnostics::Diagnostic]) -> String {
         .iter()
         .map(|d| {
             format!(
-                "{}:{}:{}: {}",
-                d.lint.name, d.span.start.row, d.span.start.column, d.message
+                "{}:{}:{}: {}: {}",
+                d.lint.name,
+                d.span.start.row,
+                d.span.start.column,
+                d.level.as_str(),
+                d.message
             )
         })
         .collect();
@@ -21,7 +25,7 @@ fn merge_test_attributes_positive() {
     let src = include_str!("fixtures/merge_test_attributes/positive.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###"merge_test_attributes:3:1: Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"###);
+    assert_snapshot!(format_diags(&diags), @r###"merge_test_attributes:3:1: warning: Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"###);
 }
 
 #[test]
@@ -50,7 +54,7 @@ fn prefer_to_string_positive() {
     let diags = engine.lint_source(src).expect("linting should succeed");
     assert_snapshot!(
         format_diags(&diags),
-        @r###"prefer_to_string:3:1: Prefer `b"...".to_string()` over `std::string::utf8(b"...")`"###
+        @r###"prefer_to_string:3:1: warning: Prefer `b"...".to_string()` over `std::string::utf8(b"...")`"###
     );
 }
 
@@ -62,7 +66,7 @@ fn prefer_to_string_positive_brace() {
     let diags = engine.lint_source(src).expect("linting should succeed");
     assert_snapshot!(
         format_diags(&diags),
-        @r###"prefer_to_string:3:1: Prefer `b"...".to_string()` over `std::string::utf8(b"...")`"###
+        @r###"prefer_to_string:3:1: warning: Prefer `b"...".to_string()` over `std::string::utf8(b"...")`"###
     );
 }
 
@@ -84,8 +88,8 @@ fn prefer_vector_methods_positive() {
     assert_snapshot!(
         format_diags(&diags),
         @r###"
-prefer_vector_methods:5:5: Prefer method syntax: `v.push_back(...)`
-prefer_vector_methods:6:14: Prefer method syntax: `v.length()`
+prefer_vector_methods:5:5: warning: Prefer method syntax: `v.push_back(...)`
+prefer_vector_methods:6:14: warning: Prefer method syntax: `v.length()`
 "###
     );
 }
@@ -100,6 +104,15 @@ fn prefer_vector_methods_negative_no_refs() {
 }
 
 #[test]
+fn prefer_vector_methods_suppressed_allow_attribute() {
+    let engine = create_default_engine();
+    let src = include_str!("fixtures/prefer_vector_methods/positive_suppressed.move");
+
+    let diags = engine.lint_source(src).expect("linting should succeed");
+    assert_snapshot!(format_diags(&diags), @r###""###);
+}
+
+#[test]
 fn modern_method_syntax_positive() {
     let engine = create_default_engine();
     let src = include_str!("fixtures/modern_method_syntax/positive.move");
@@ -108,9 +121,9 @@ fn modern_method_syntax_positive() {
     assert_snapshot!(
         format_diags(&diags),
         @r###"
-modern_method_syntax:4:14: Prefer method syntax: `ctx.sender()`
-modern_method_syntax:5:5: Prefer method syntax: `id.delete()`
-modern_method_syntax:6:14: Prefer method syntax: `paid.into_balance()`
+modern_method_syntax:4:14: warning: Prefer method syntax: `ctx.sender()`
+modern_method_syntax:5:5: warning: Prefer method syntax: `id.delete()`
+modern_method_syntax:6:14: warning: Prefer method syntax: `paid.into_balance()`
 "###
     );
 }

@@ -1,6 +1,8 @@
 use crate::diagnostics::{Diagnostic, Span};
-use anyhow::{anyhow, Result};
-use std::collections::HashSet;
+use crate::level::LintLevel;
+use crate::suppression;
+use anyhow::{Result, anyhow};
+use std::collections::{HashMap, HashSet};
 use tree_sitter::Node;
 
 #[derive(Debug, Clone, Copy)]
@@ -36,15 +38,40 @@ pub trait LintRule: Send + Sync {
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>);
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct LintSettings {
+    levels: HashMap<String, LintLevel>,
+}
+
+impl LintSettings {
+    pub fn with_config_levels(mut self, levels: HashMap<String, LintLevel>) -> Self {
+        self.levels.extend(levels);
+        self
+    }
+
+    pub fn disable(mut self, disabled: impl IntoIterator<Item = String>) -> Self {
+        for name in disabled {
+            self.levels.insert(name, LintLevel::Allow);
+        }
+        self
+    }
+
+    pub fn level_for(&self, lint_name: &str) -> LintLevel {
+        self.levels.get(lint_name).copied().unwrap_or_default()
+    }
+}
+
 pub struct LintContext<'src> {
     source: &'src str,
+    settings: LintSettings,
     diagnostics: Vec<Diagnostic>,
 }
 
 impl<'src> LintContext<'src> {
-    pub fn new(source: &'src str) -> Self {
+    pub fn new(source: &'src str, settings: LintSettings) -> Self {
         Self {
             source,
+            settings,
             diagnostics: Vec::new(),
         }
     }
@@ -55,8 +82,69 @@ impl<'src> LintContext<'src> {
         span: Span,
         message: impl Into<String>,
     ) {
+        let level = self.settings.level_for(lint.name);
+        if level == LintLevel::Allow {
+            return;
+        }
+
         self.diagnostics.push(Diagnostic {
             lint,
+            level,
+            file: None,
+            span,
+            message: message.into(),
+            help: None,
+            suggestion: None,
+        });
+    }
+
+    pub fn report_node(
+        &mut self,
+        lint: &'static LintDescriptor,
+        node: Node,
+        message: impl Into<String>,
+    ) {
+        let level = self.settings.level_for(lint.name);
+        if level == LintLevel::Allow {
+            return;
+        }
+
+        let anchor_start = suppression::anchor_item_start_byte(node);
+        if suppression::is_suppressed_at(self.source, anchor_start, lint.name) {
+            return;
+        }
+
+        self.diagnostics.push(Diagnostic {
+            lint,
+            level,
+            file: None,
+            span: Span::from_range(node.range()),
+            message: message.into(),
+            help: None,
+            suggestion: None,
+        });
+    }
+
+    pub fn report_span_with_anchor(
+        &mut self,
+        lint: &'static LintDescriptor,
+        anchor_start_byte: usize,
+        span: Span,
+        message: impl Into<String>,
+    ) {
+        let level = self.settings.level_for(lint.name);
+        if level == LintLevel::Allow {
+            return;
+        }
+
+        if suppression::is_suppressed_at(self.source, anchor_start_byte, lint.name) {
+            return;
+        }
+
+        self.diagnostics.push(Diagnostic {
+            lint,
+            level,
+            file: None,
             span,
             message: message.into(),
             help: None,
@@ -68,9 +156,36 @@ impl<'src> LintContext<'src> {
         self.source
     }
 
+    pub fn settings(&self) -> &LintSettings {
+        &self.settings
+    }
+
     pub fn into_diagnostics(self) -> Vec<Diagnostic> {
         self.diagnostics
     }
+}
+
+pub const FAST_LINT_NAMES: &[&str] = &[
+    "modern_module_syntax",
+    "redundant_self_import",
+    "prefer_to_string",
+    "prefer_vector_methods",
+    "modern_method_syntax",
+    "merge_test_attributes",
+];
+
+pub const SEMANTIC_LINT_NAMES: &[&str] = &["capability_naming", "event_naming", "getter_naming"];
+
+pub fn is_semantic_lint(name: &str) -> bool {
+    SEMANTIC_LINT_NAMES.iter().any(|n| *n == name)
+}
+
+pub fn all_known_lints() -> HashSet<&'static str> {
+    FAST_LINT_NAMES
+        .iter()
+        .copied()
+        .chain(SEMANTIC_LINT_NAMES.iter().copied())
+        .collect()
 }
 
 pub struct LintRegistry {
@@ -109,19 +224,14 @@ impl LintRegistry {
             .with_rule(crate::rules::MergeTestAttributesLint)
     }
 
-    pub fn default_rules_filtered(only: &[String], skip: &[String]) -> Result<Self> {
-        let known: HashSet<&'static str> = [
-            "modern_module_syntax",
-            "redundant_self_import",
-            "prefer_to_string",
-            "prefer_vector_methods",
-            "modern_method_syntax",
-            "merge_test_attributes",
-        ]
-        .into_iter()
-        .collect();
+    pub fn default_rules_filtered(
+        only: &[String],
+        skip: &[String],
+        disabled: &[String],
+    ) -> Result<Self> {
+        let known = all_known_lints();
 
-        for n in only.iter().chain(skip.iter()) {
+        for n in only.iter().chain(skip.iter()).chain(disabled.iter()) {
             if !known.contains(n.as_str()) {
                 return Err(anyhow!("unknown lint: {n}"));
             }
@@ -133,9 +243,21 @@ impl LintRegistry {
             Some(only.iter().map(|s| s.as_str()).collect())
         };
         let skip_set: HashSet<&str> = skip.iter().map(|s| s.as_str()).collect();
+        let disabled_set: HashSet<&str> = disabled.iter().map(|s| s.as_str()).collect();
 
         let include = |name: &'static str| {
-            only_set.as_ref().map_or(true, |s| s.contains(name)) && !skip_set.contains(name)
+            let selected =
+                only_set.as_ref().map_or(true, |s| s.contains(name)) && !skip_set.contains(name);
+            if !selected {
+                return false;
+            }
+
+            // Config-disabled lints are excluded unless explicitly selected.
+            if disabled_set.contains(name) {
+                return only_set.as_ref().map_or(false, |s| s.contains(name));
+            }
+
+            true
         };
 
         let mut reg = Self::new();

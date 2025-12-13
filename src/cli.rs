@@ -39,6 +39,20 @@ pub struct LintArgs {
     #[arg(value_name = "PATH")]
     pub paths: Vec<PathBuf>,
 
+    /// Lint mode.
+    #[arg(long, value_enum, default_value_t = LintMode::Fast)]
+    pub mode: LintMode,
+
+    /// Treat the inputs as belonging to a Move package and use this path as the package root.
+    ///
+    /// If omitted, full mode will attempt to infer a package root from the first PATH.
+    #[arg(long, value_name = "PATH")]
+    pub package: Option<PathBuf>,
+
+    /// Path to a move-clippy.toml config file. If omitted, move-clippy searches parent directories.
+    #[arg(long, value_name = "FILE")]
+    pub config: Option<PathBuf>,
+
     /// Output format.
     #[arg(long, value_enum, default_value_t = OutputFormat::Pretty)]
     pub format: OutputFormat,
@@ -54,6 +68,12 @@ pub struct LintArgs {
     /// Exit with code 1 if any diagnostics are emitted.
     #[arg(long)]
     pub deny_warnings: bool,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum LintMode {
+    Fast,
+    Full,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]

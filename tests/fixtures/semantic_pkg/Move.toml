@@ -1,0 +1,6 @@
+[package]
+name = "semantic_pkg"
+edition = "2024"
+
+[addresses]
+semantic_pkg = "0x0"
