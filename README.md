@@ -29,3 +29,4 @@ cargo run --features full -- lint --mode full --package path/to/Move/package
 - Design notes live in `../notes/move-clippy/`, especially:
   - `04-focused-roadmap.md` for immediate milestones
   - `06-semantic-analysis-path.md` for analysis approach
+- Developer docs now live under `docs/` (see `docs/DEVELOPMENT.md` and `docs/STABILITY.md`).

@@ -12,7 +12,7 @@ use tree_sitter::Node;
 /// Classification of lint rules by stability level.
 ///
 /// New rules start in `Preview` and graduate to `Stable` after meeting
-/// promotion criteria (see STABILITY.md).
+/// promotion criteria (see docs/STABILITY.md).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum RuleGroup {
     /// Battle-tested rules with minimal false positives.
@@ -120,6 +120,9 @@ pub enum LintCategory {
     Naming,
     TestQuality,
     Suspicious,
+    /// Security-critical lints that detect potential vulnerabilities.
+    /// These are based on real audit findings and published security research.
+    Security,
 }
 
 impl LintCategory {
@@ -130,6 +133,7 @@ impl LintCategory {
             LintCategory::Naming => "naming",
             LintCategory::TestQuality => "test_quality",
             LintCategory::Suspicious => "suspicious",
+            LintCategory::Security => "security",
         }
     }
 }
@@ -386,6 +390,9 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     "event_suffix",
     "empty_vector_literal",
     "typed_abort_code",
+    // Security lints (audit-backed, see docs/SECURITY_LINTS.md)
+    "droppable_hot_potato",
+    "excessive_token_abilities",
     // Preview lints (require --preview flag)
     "pure_function_transfer",
     "unsafe_arithmetic",
@@ -407,6 +414,9 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
     "public_random",
     "missing_key",
     "freezing_capability",
+    // Security semantic lints (audit-backed, see docs/SECURITY_LINTS.md)
+    "unfrozen_coin_metadata",
+    "unused_capability_param",
 ];
 
 pub fn is_semantic_lint(name: &str) -> bool {
@@ -521,6 +531,9 @@ impl LintRegistry {
             .with_rule(crate::rules::EventSuffixLint)
             .with_rule(crate::rules::EmptyVectorLiteralLint)
             .with_rule(crate::rules::TypedAbortCodeLint)
+            // Security lints (audit-backed)
+            .with_rule(crate::rules::DroppableHotPotatoLint)
+            .with_rule(crate::rules::ExcessiveTokenAbilitiesLint)
             // Preview lints (only included when preview mode enabled)
             .with_rule(crate::rules::PureFunctionTransferLint)
             .with_rule(crate::rules::UnsafeArithmeticLint)
@@ -649,6 +662,13 @@ impl LintRegistry {
                 "typed_abort_code" => {
                     reg = reg.with_rule(crate::rules::TypedAbortCodeLint);
                 }
+                // Security lints (audit-backed)
+                "droppable_hot_potato" => {
+                    reg = reg.with_rule(crate::rules::DroppableHotPotatoLint);
+                }
+                "excessive_token_abilities" => {
+                    reg = reg.with_rule(crate::rules::ExcessiveTokenAbilitiesLint);
+                }
                 // Preview lints
                 "pure_function_transfer" => {
                     reg = reg.with_rule(crate::rules::PureFunctionTransferLint);
@@ -694,7 +714,10 @@ fn get_lint_group(name: &str) -> RuleGroup {
         // Additional stable lints
         | "event_suffix"
         | "empty_vector_literal"
-        | "typed_abort_code" => RuleGroup::Stable,
+        | "typed_abort_code"
+        // Security lints (audit-backed, stable)
+        | "droppable_hot_potato"
+        | "excessive_token_abilities" => RuleGroup::Stable,
 
         // Preview lints (higher FP risk, require --preview flag)
         | "pure_function_transfer"

@@ -1,7 +1,6 @@
 use crate::diagnostics::Diagnostic;
 use crate::error::{ClippyResult, MoveClippyError};
 use crate::lint::{FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup};
-use crate::rules::modernization::{PUBLIC_MUT_TX_CONTEXT, UNNECESSARY_PUBLIC_ENTRY};
 use std::path::Path;
 
 /// Semantic lints that rely on Move compiler typing information.
@@ -104,6 +103,88 @@ pub static FREEZING_CAPABILITY: LintDescriptor = LintDescriptor {
     fix: FixDescriptor::none(),
 };
 
+// ============================================================================
+// Security Semantic Lints (audit-backed)
+// ============================================================================
+
+/// Detects CoinMetadata being shared instead of frozen.
+///
+/// # Security References
+///
+/// - **MoveBit (2023-07-07)**: "The metadata in Coin should be frozen"
+///   URL: https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html
+///   Verified: 2025-12-13 (Still valid - fundamental Sui coin pattern)
+///
+/// # Why This Matters
+///
+/// If CoinMetadata is shared instead of frozen, the admin can modify
+/// the token's name, symbol, and other metadata after creation.
+/// This can confuse users and enable phishing attacks.
+///
+/// # Example (Bad)
+///
+/// ```move
+/// public fun init(witness: MY_TOKEN, ctx: &mut TxContext) {
+///     let (treasury, metadata) = coin::create_currency(...);
+///     transfer::public_share_object(metadata);  // BAD - can be modified!
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun init(witness: MY_TOKEN, ctx: &mut TxContext) {
+///     let (treasury, metadata) = coin::create_currency(...);
+///     transfer::public_freeze_object(metadata);  // GOOD - immutable forever
+/// }
+/// ```
+pub static UNFROZEN_COIN_METADATA: LintDescriptor = LintDescriptor {
+    name: "unfrozen_coin_metadata",
+    category: LintCategory::Security,
+    description: "CoinMetadata should be frozen, not shared (see: MoveBit 2023)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+};
+
+/// Detects capability parameters that are passed but never used.
+///
+/// # Security References
+///
+/// - **SlowMist (2024-09-10)**: "Permission Vulnerability Audit"
+///   URL: https://github.com/slowmist/Sui-MOVE-Smart-Contract-Auditing-Primer
+///   Verified: 2025-12-13 (Section 8: "Privileged functions must have privileged objects involved")
+///
+/// # Why This Matters
+///
+/// If a capability is passed to a function but never used, it indicates
+/// that the access control check is missing. Anyone can call the function
+/// by passing any capability object.
+///
+/// # Example (Bad)
+///
+/// ```move
+/// // Cap is passed but never checked - anyone can call this!
+/// public fun admin_action(_cap: &AdminCap, pool: &mut Pool) {
+///     pool.value = 0;
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun admin_action(cap: &AdminCap, pool: &mut Pool) {
+///     assert!(cap.pool_id == object::id(pool), WRONG_CAP);  // Actually use the cap!
+///     pool.value = 0;
+/// }
+/// ```
+pub static UNUSED_CAPABILITY_PARAM: LintDescriptor = LintDescriptor {
+    name: "unused_capability_param",
+    category: LintCategory::Security,
+    description: "Capability parameter is unused, indicating missing access control (see: SlowMist 2024)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+};
+
 static DESCRIPTORS: &[&LintDescriptor] = &[
     &CAPABILITY_NAMING,
     &EVENT_NAMING,
@@ -117,6 +198,9 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &PUBLIC_RANDOM,
     &MISSING_KEY,
     &FREEZING_CAPABILITY,
+    // Security semantic lints
+    &UNFROZEN_COIN_METADATA,
+    &UNUSED_CAPABILITY_PARAM,
 ];
 
 /// Return descriptors for all semantic lints.
@@ -135,6 +219,7 @@ mod full {
     use crate::diagnostics::Span;
     use crate::instrument_block;
     use crate::level::LintLevel;
+    use crate::rules::modernization::{PUBLIC_MUT_TX_CONTEXT, UNNECESSARY_PUBLIC_ENTRY};
     use crate::suppression;
     type Result<T> = ClippyResult<T>;
     use move_compiler::editions::Flavor;

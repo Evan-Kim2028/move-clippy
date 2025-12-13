@@ -4,6 +4,7 @@ pub mod patterns;
 
 pub mod conventions;
 pub mod modernization;
+pub mod security;
 pub mod style;
 pub mod test_quality;
 
@@ -17,6 +18,9 @@ pub use modernization::{
     PureFunctionTransferLint, UnnecessaryPublicEntryLint, UnsafeArithmeticLint,
     WhileTrueToLoopLint,
 };
+
+// Security lints (audit-backed)
+pub use security::{DroppableHotPotatoLint, ExcessiveTokenAbilitiesLint};
 
 // Style lints
 pub use style::{
