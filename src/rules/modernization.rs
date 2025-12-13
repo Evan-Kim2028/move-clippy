@@ -1,3 +1,4 @@
+use crate::diagnostics::Span;
 use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
 use tree_sitter::Node;
 
@@ -9,6 +10,7 @@ use super::util::{
     compact_ws, is_simple_ident, parse_ref_ident, parse_ref_mut_ident, slice, split_args,
     split_call, walk,
 };
+use crate::diagnostics::{Applicability, Suggestion};
 
 // ============================================================================
 // EqualityInAssertLint - P1 (Near-Zero FP)
@@ -534,7 +536,7 @@ static WHILE_TRUE_TO_LOOP: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer `loop { ... }` over `while (true) { ... }`",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Replace `while (true)` with `loop`"),
 };
 
 impl LintRule for WhileTrueToLoopLint {
@@ -551,11 +553,46 @@ impl LintRule for WhileTrueToLoopLint {
                 return;
             };
             if slice(source, cond).trim() == "true" {
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    "Use `loop { ... }` for infinite loops instead of `while (true)`",
-                );
+                // Find the "while" keyword and condition part to replace with "loop"
+                // The while_expression should start with "while" and have a condition
+                let node_text = slice(source, node);
+                
+                // Find where the condition ends (look for opening brace or body)
+                let Some(body_start) = node_text.find('{') else {
+                    ctx.report_node(
+                        self.descriptor(),
+                        node,
+                        "Use `loop { ... }` for infinite loops instead of `while (true)`".to_string(),
+                    );
+                    return;
+                };
+                
+                // Replace "while (true)" part with "loop"
+                // Find the byte offsets
+                let node_start = node.start_byte();
+                let _replacement_end = node_start + body_start;
+                
+                // Create a diagnostic with suggestion
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: "Use `loop { ... }` for infinite loops instead of `while (true)`".to_string(),
+                    help: Some("Replace with `loop`".to_string()),
+                    suggestion: Some(Suggestion {
+                        message: "Replace `while (true)` with `loop`".to_string(),
+                        replacement: format!("loop {}", &node_text[body_start..]),
+                        applicability: Applicability::MachineApplicable,
+                    }),
+                };
+                
+                // Check for suppression
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                    return;
+                }
+                
+                ctx.report_diagnostic(diagnostic);
             }
         });
     }

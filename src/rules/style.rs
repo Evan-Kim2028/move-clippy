@@ -1,3 +1,4 @@
+use crate::diagnostics::{Applicability, Span, Suggestion};
 use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
 use tree_sitter::Node;
 
@@ -14,7 +15,7 @@ static ABILITIES_ORDER: LintDescriptor = LintDescriptor {
     category: LintCategory::Style,
     description: "Struct abilities should be ordered: key, copy, drop, store",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Reorder abilities to canonical order"),
 };
 
 /// The canonical order of abilities per Sui Move conventions
@@ -83,15 +84,35 @@ fn check_abilities_order(
         let mut sorted = abilities.clone();
         sorted.sort_by_key(|a| ABILITY_ORDER.iter().position(|&x| x == *a).unwrap_or(99));
 
-        ctx.report_node(
-            lint,
-            node,
-            format!(
-                "Abilities should be ordered: `has {}`. Found: `has {}`",
-                sorted.join(", "),
-                abilities.join(", ")
-            ),
+        let replacement = format!("has {}", sorted.join(", "));
+        let message = format!(
+            "Abilities should be ordered: `has {}`. Found: `has {}`",
+            sorted.join(", "),
+            abilities.join(", ")
         );
+
+        // Check for suppression before creating diagnostic
+        let node_start = node.start_byte();
+        if crate::suppression::is_suppressed_at(source, node_start, lint.name) {
+            return;
+        }
+
+        // Create diagnostic with machine-applicable suggestion
+        let diagnostic = crate::diagnostics::Diagnostic {
+            lint,
+            level: ctx.settings().level_for(lint.name),
+            file: None,
+            span: Span::from_range(node.range()),
+            message,
+            help: Some(format!("Reorder to `{}`", replacement)),
+            suggestion: Some(Suggestion {
+                message: format!("Reorder abilities to `{}`", replacement),
+                replacement,
+                applicability: Applicability::MachineApplicable,
+            }),
+        };
+
+        ctx.report_diagnostic(diagnostic);
     }
 }
 
@@ -363,16 +384,33 @@ impl LintRule for EmptyVectorLiteralLint {
                     None
                 };
 
-                let suggestion = match type_param {
+                let replacement = match type_param {
                     Some(tp) => format!("vector{}", tp),
                     None => "vector[]".to_string(),
                 };
 
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    format!("Prefer `{}` over `{}`", suggestion, text.trim()),
-                );
+                // Check for suppression before creating diagnostic
+                let node_start = node.start_byte();
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                    return;
+                }
+
+                // Create diagnostic with machine-applicable suggestion
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: format!("Prefer `{}` over `{}`", replacement, text.trim()),
+                    help: Some(format!("Replace with `{}`", replacement)),
+                    suggestion: Some(Suggestion {
+                        message: format!("Replace `{}` with `{}`", text.trim(), replacement),
+                        replacement: replacement.clone(),
+                        applicability: Applicability::MachineApplicable,
+                    }),
+                };
+
+                ctx.report_diagnostic(diagnostic);
             }
         });
     }
@@ -682,7 +720,7 @@ static UNNEEDED_RETURN: LintDescriptor = LintDescriptor {
     category: LintCategory::Style,
     description: "Avoid trailing `return` statements; let the final expression return implicitly",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Remove `return` keyword"),
 };
 
 impl LintRule for UnneededReturnLint {
@@ -690,24 +728,71 @@ impl LintRule for UnneededReturnLint {
         &UNNEEDED_RETURN
     }
 
-    fn check(&self, root: Node, _source: &str, ctx: &mut LintContext<'_>) {
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
         walk(root, &mut |node| {
             if node.kind() != "function_definition" {
                 return;
             }
-            let Some(body) = node.child_by_field_name("body") else {
+            
+            // Find the function body block
+            // Try field name first, then iterate children
+            let body = node.child_by_field_name("body")
+                .or_else(|| {
+                    let mut cursor = node.walk();
+                    node.children(&mut cursor)
+                        .find(|c| c.kind() == "block")
+                });
+            
+            let Some(body) = body else {
                 return;
             };
+            
             if body.kind() != "block" {
                 return;
             }
 
             if let Some(ret) = trailing_return_expression(body) {
-                ctx.report_node(
-                    self.descriptor(),
-                    ret,
-                    "Remove `return`; the last expression in a block already returns implicitly",
-                );
+                // Extract the expression after "return"
+                let ret_text = slice(source, ret);
+                
+                // The return expression looks like "return expr" or "return expr;"
+                // We want to extract just "expr"
+                let replacement = if let Some(stripped) = ret_text.strip_prefix("return") {
+                    let expr = stripped.trim();
+                    // Remove trailing semicolon if present (it's part of block_item, not return_expression)
+                    expr.trim_end_matches(';').trim().to_string()
+                } else {
+                    // Fallback: just report without fix
+                    ctx.report_node(
+                        self.descriptor(),
+                        ret,
+                        "Remove `return`; the last expression in a block already returns implicitly",
+                    );
+                    return;
+                };
+
+                // Check for suppression
+                let node_start = ret.start_byte();
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                    return;
+                }
+
+                // Create diagnostic with machine-applicable suggestion
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(ret.range()),
+                    message: "Remove `return`; the last expression in a block already returns implicitly".to_string(),
+                    help: Some(format!("Replace with `{}`", replacement)),
+                    suggestion: Some(Suggestion {
+                        message: "Remove `return` keyword".to_string(),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    }),
+                };
+
+                ctx.report_diagnostic(diagnostic);
             }
         });
     }

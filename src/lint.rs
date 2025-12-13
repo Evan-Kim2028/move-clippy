@@ -321,6 +321,11 @@ impl<'src> LintContext<'src> {
         });
     }
 
+    /// Report a diagnostic directly (for cases that need custom suggestions).
+    pub fn report_diagnostic(&mut self, diagnostic: Diagnostic) {
+        self.diagnostics.push(diagnostic);
+    }
+
     pub fn report_span_with_anchor(
         &mut self,
         lint: &'static LintDescriptor,

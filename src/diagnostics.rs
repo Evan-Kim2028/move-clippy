@@ -23,7 +23,7 @@ pub struct Suggestion {
 }
 
 /// Applicability of an automated suggestion.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Applicability {
     MachineApplicable,
     MaybeIncorrect,
