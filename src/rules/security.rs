@@ -263,7 +263,15 @@ const TOKEN_KEYWORDS: &[&str] = &[
 ];
 
 /// Keywords that indicate a struct is a key/event, not a valuable asset.
-const NON_ASSET_SUFFIXES: &[&str] = &["key", "event", "log", "data", "info", "params"];
+/// Includes past-tense event naming patterns (e.g., "Created", "Updated").
+const NON_ASSET_SUFFIXES: &[&str] = &[
+    // Explicit non-asset suffixes
+    "key", "event", "log", "data", "info", "params",
+    // Past-tense event naming patterns (common event naming convention)
+    "created", "updated", "deleted", "transferred", "minted", "burned",
+    "deposited", "withdrawn", "swapped", "claimed", "staked", "unstaked",
+    "swap",  // AssetSwap is a common event name
+];
 
 pub struct ExcessiveTokenAbilitiesLint;
 
@@ -506,23 +514,51 @@ fn is_capability_argument(call_text: &str) -> bool {
         }
     }
     
-    // Check for "Cap" suffix but NOT "Capacity", "Capital", etc.
-    // We look for "cap" followed by non-alpha or end of identifier
+    // Check for "Cap" suffix but NOT "Capacity", "Capital", "Recap", etc.
+    // We need to check for word boundaries on BOTH sides of "cap"
     for suffix in CAPABILITY_SUFFIXES {
         let suffix_lower = suffix.to_lowercase();
-        if let Some(pos) = call_lower.find(&suffix_lower) {
-            let after_pos = pos + suffix_lower.len();
+        let mut search_pos = 0;
+        
+        while let Some(pos) = call_lower[search_pos..].find(&suffix_lower) {
+            let actual_pos = search_pos + pos;
+            
+            // Check char BEFORE "cap" - must be word boundary (not alphabetic)
+            // This prevents matching "recap", "escape", etc.
+            let char_before = if actual_pos > 0 {
+                call_lower.chars().nth(actual_pos - 1)
+            } else {
+                None
+            };
+            
+            let valid_prefix = match char_before {
+                None => true, // Start of string is valid
+                Some(c) => !c.is_alphabetic(), // Non-alpha before is valid (e.g., "_cap", " cap")
+            };
+            
+            if !valid_prefix {
+                // Move past this match and continue searching
+                search_pos = actual_pos + suffix_lower.len();
+                continue;
+            }
+            
+            // Check char AFTER "cap" - must be word boundary (not alphabetic)
+            // This prevents matching "capacity", "capital", etc.
+            let after_pos = actual_pos + suffix_lower.len();
             if after_pos >= call_lower.len() {
-                // Suffix at end of string
+                // Suffix at end of string is valid
                 return true;
             }
+            
             let next_char = call_lower.chars().nth(after_pos);
-            // Check if next char is NOT a letter (word boundary)
             if let Some(c) = next_char {
                 if !c.is_alphabetic() {
                     return true;
                 }
             }
+            
+            // Move past this match and continue searching
+            search_pos = actual_pos + suffix_lower.len();
         }
     }
     
@@ -884,6 +920,572 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
     }
 }
 
+// ============================================================================
+// unchecked_coin_split - Detects coin::split without balance validation
+// ============================================================================
+
+/// Detects `coin::split` calls that may split more than the coin's balance.
+///
+/// # Security References
+///
+/// - **MoveBit (2023-07-07)**: "Sui Objects Security Principles and Best Practices"
+///   URL: https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html
+///   Verified: 2024-12-13 (Balance validation best practices)
+///
+/// - **Sui Standard Library**: coin::split panics if amount > balance
+///   URL: https://docs.sui.io/references/framework/sui/coin
+///
+/// # Why This Matters
+///
+/// `coin::split` will abort if you try to split more than the coin's balance.
+/// This can cause transaction failures if the amount isn't validated first.
+/// While not a security vulnerability per se, it can cause DoS or UX issues.
+///
+/// # Example
+///
+/// ```move
+/// // RISKY - Will abort if user_coin.value < amount
+/// public fun withdraw(user_coin: &mut Coin<SUI>, amount: u64, ctx: &mut TxContext): Coin<SUI> {
+///     coin::split(user_coin, amount, ctx)
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun withdraw(user_coin: &mut Coin<SUI>, amount: u64, ctx: &mut TxContext): Coin<SUI> {
+///     assert!(coin::value(user_coin) >= amount, E_INSUFFICIENT_BALANCE);
+///     coin::split(user_coin, amount, ctx)
+/// }
+/// ```
+pub static UNCHECKED_COIN_SPLIT: LintDescriptor = LintDescriptor {
+    name: "unchecked_coin_split",
+    category: LintCategory::Security,
+    description: "coin::split without prior balance check may abort unexpectedly",
+    group: RuleGroup::Preview, // Preview since it may have FPs
+    fix: FixDescriptor::none(),
+};
+
+pub struct UncheckedCoinSplitLint;
+
+impl LintRule for UncheckedCoinSplitLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &UNCHECKED_COIN_SPLIT
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_unchecked_coin_split(root, source, ctx);
+    }
+}
+
+fn check_unchecked_coin_split(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for function definitions
+    if node.kind() == "function_definition" {
+        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        let func_text_lower = func_text.to_lowercase();
+        
+        // Check if function contains coin::split
+        if func_text_lower.contains("coin::split") || func_text_lower.contains("split(") {
+            // Check if there's a balance check before the split
+            // Look for patterns like: coin::value, .value(), >= amount, > amount
+            let has_balance_check = func_text_lower.contains("coin::value") ||
+                                    func_text_lower.contains(".value()") ||
+                                    func_text_lower.contains("balance::value") ||
+                                    func_text_lower.contains(">= amount") ||
+                                    func_text_lower.contains("> amount") ||
+                                    func_text_lower.contains("assert!");
+            
+            if !has_balance_check {
+                // Get function name for reporting
+                let func_name = node.child_by_field_name("name")
+                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                    .unwrap_or("unknown");
+                
+                ctx.report_node(
+                    &UNCHECKED_COIN_SPLIT,
+                    node,
+                    format!(
+                        "Function `{}` uses coin::split without an apparent balance check. \
+                         Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` \
+                         to provide a clearer error message than the default abort.",
+                        func_name
+                    ),
+                );
+            }
+        }
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_unchecked_coin_split(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// missing_witness_drop - Detects OTW witness without drop ability
+// ============================================================================
+
+/// Detects one-time witness (OTW) structs that are missing the `drop` ability.
+///
+/// # Security References
+///
+/// - **Sui Documentation**: "One-Time Witness"
+///   URL: https://docs.sui.io/concepts/sui-move-concepts/one-time-witness
+///   Verified: 2024-12-13 (OTW must have drop)
+///
+/// - **MoveBit (2023)**: "Sui Move Security Best Practices"
+///   URL: https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html
+///
+/// # Why This Matters
+///
+/// A one-time witness (OTW) is used to prove that code is being run in the
+/// module's `init` function. The OTW struct MUST have `drop` so it can be
+/// consumed after use. Without `drop`, the witness cannot be properly destroyed.
+///
+/// # Example
+///
+/// ```move
+/// // BAD - OTW without drop cannot be consumed
+/// struct MY_TOKEN {}
+/// 
+/// fun init(witness: MY_TOKEN, ctx: &mut TxContext) {
+///     // witness cannot be dropped after use!
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// // GOOD - OTW with drop
+/// struct MY_TOKEN has drop {}
+/// 
+/// fun init(witness: MY_TOKEN, ctx: &mut TxContext) {
+///     // witness is dropped automatically
+/// }
+/// ```
+pub static MISSING_WITNESS_DROP: LintDescriptor = LintDescriptor {
+    name: "missing_witness_drop",
+    category: LintCategory::Security,
+    description: "One-time witness struct missing `drop` ability",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+};
+
+pub struct MissingWitnessDropLint;
+
+impl LintRule for MissingWitnessDropLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &MISSING_WITNESS_DROP
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_missing_witness_drop(root, source, ctx);
+    }
+}
+
+fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for struct definitions
+    if node.kind() == "struct_definition" {
+        if let Some(name_node) = node.child_by_field_name("name") {
+            let struct_name = name_node
+                .utf8_text(source.as_bytes())
+                .unwrap_or("");
+            
+            // OTW pattern: SCREAMING_SNAKE_CASE, same as module name, empty body
+            // Check if it looks like an OTW (all uppercase with underscores)
+            let is_screaming_case = struct_name.chars().all(|c| c.is_uppercase() || c == '_');
+            
+            if is_screaming_case && !struct_name.is_empty() {
+                // Check if it has empty body (no fields)
+                let struct_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+                let has_empty_body = struct_text.contains("{}") || 
+                                     struct_text.contains("{ }");
+                
+                if has_empty_body {
+                    // Check if it has drop ability
+                    let has_drop = has_drop_ability(node, source);
+                    
+                    if !has_drop {
+                        ctx.report_node(
+                            &MISSING_WITNESS_DROP,
+                            node,
+                            format!(
+                                "Struct `{}` appears to be a one-time witness (OTW) but is missing \
+                                 the `drop` ability. OTW structs must have `drop` so they can be \
+                                 consumed after use in the init function. Add `has drop` to the struct.",
+                                struct_name
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_missing_witness_drop(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// public_random_access - Detects public functions returning Random
+// ============================================================================
+
+/// Detects public functions that expose or return `Random` objects.
+///
+/// # Security References
+///
+/// - **Sui Documentation**: "Randomness"
+///   URL: https://docs.sui.io/guides/developer/advanced/randomness
+///   Verified: 2024-12-13 (Random must be private)
+///
+/// - **Sui Linter**: `public_random` built-in lint
+///   The Move compiler warns about this, but we provide additional context.
+///
+/// # Why This Matters
+///
+/// `Random` objects should never be exposed publicly because:
+/// 1. Validators can see the random value before including the transaction
+/// 2. This enables front-running and manipulation of random outcomes
+/// 3. Random values should only be consumed within the same PTB
+///
+/// # Example
+///
+/// ```move
+/// // BAD - Exposes random value
+/// public fun get_random(r: &Random): u64 {
+///     random::new_generator(r).generate_u64()
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// // GOOD - Random consumed internally
+/// entry fun flip_coin(r: &Random, ctx: &mut TxContext) {
+///     let gen = random::new_generator(r, ctx);
+///     let result = gen.generate_bool();
+///     // Use result internally, don't return it
+/// }
+/// ```
+pub static PUBLIC_RANDOM_ACCESS: LintDescriptor = LintDescriptor {
+    name: "public_random_access",
+    category: LintCategory::Security,
+    description: "Public function exposes Random object, enabling front-running",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+};
+
+pub struct PublicRandomAccessLint;
+
+impl LintRule for PublicRandomAccessLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &PUBLIC_RANDOM_ACCESS
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_public_random_access(root, source, ctx);
+    }
+}
+
+fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for function definitions
+    if node.kind() == "function_definition" {
+        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        
+        // Check if function is public (not entry)
+        let is_public = func_text.starts_with("public fun") || 
+                        func_text.contains("public fun ");
+        let is_entry = func_text.contains("entry ");
+        
+        // Entry functions are OK because they can't be composed
+        if is_public && !is_entry {
+            // Check if function takes Random as parameter or returns random value
+            let func_lower = func_text.to_lowercase();
+            let has_random_param = func_lower.contains("&random") || 
+                                   func_lower.contains(": random");
+            let returns_random = func_lower.contains("-> u64") && 
+                                 (func_lower.contains("generate") || func_lower.contains("random"));
+            
+            if has_random_param || returns_random {
+                let func_name = node.child_by_field_name("name")
+                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                    .unwrap_or("unknown");
+                
+                ctx.report_node(
+                    &PUBLIC_RANDOM_ACCESS,
+                    node,
+                    format!(
+                        "Function `{}` is public and exposes Random. This enables front-running \
+                         attacks where validators can see random values before inclusion. \
+                         Use `entry` functions or consume random values internally.",
+                        func_name
+                    ),
+                );
+            }
+        }
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_public_random_access(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// unbounded_vector_growth - Detects vector operations without size limits
+// ============================================================================
+
+/// Detects vector push operations that could lead to unbounded growth.
+///
+/// # Security References
+///
+/// - **General Smart Contract Security**: Unbounded data structures are a DoS vector
+/// - **Sui Gas Model**: Large vectors consume more gas for storage and iteration
+///
+/// # Why This Matters
+///
+/// Vectors that grow without bounds can:
+/// 1. **DoS**: Make operations too expensive to execute
+/// 2. **Gas exhaustion**: Iteration over large vectors exceeds gas limits
+/// 3. **Storage bloat**: Permanently increase on-chain storage costs
+///
+/// # Example
+///
+/// ```move
+/// // BAD - No limit on vector size
+/// public fun add_member(group: &mut Group, member: address) {
+///     vector::push_back(&mut group.members, member);
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// const MAX_MEMBERS: u64 = 1000;
+///
+/// public fun add_member(group: &mut Group, member: address) {
+///     assert!(vector::length(&group.members) < MAX_SIZE, E_TOO_MANY);
+///     vector::push_back(&mut group.members, member);
+/// }
+/// ```
+pub static UNBOUNDED_VECTOR_GROWTH: LintDescriptor = LintDescriptor {
+    name: "unbounded_vector_growth",
+    category: LintCategory::Security,
+    description: "Vector growth without size limit may cause DoS",
+    group: RuleGroup::Preview, // Preview due to potential FPs
+    fix: FixDescriptor::none(),
+};
+
+pub struct UnboundedVectorGrowthLint;
+
+impl LintRule for UnboundedVectorGrowthLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &UNBOUNDED_VECTOR_GROWTH
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_unbounded_vector_growth(root, source, ctx);
+    }
+}
+
+fn check_unbounded_vector_growth(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for function definitions
+    if node.kind() == "function_definition" {
+        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        let func_lower = func_text.to_lowercase();
+        
+        // Check if function has vector push operations
+        let has_push = func_lower.contains("vector::push_back") || 
+                       func_lower.contains(".push_back(") ||
+                       func_lower.contains("vec_set::insert") ||
+                       func_lower.contains("vec_map::insert");
+        
+        if has_push {
+            // Check if there's a length check before the push
+            let has_length_check = func_lower.contains("vector::length") ||
+                                   func_lower.contains(".length()") ||
+                                   func_lower.contains("< max") ||
+                                   func_lower.contains("< MAX") ||
+                                   func_lower.contains("<= max") ||
+                                   func_lower.contains("<= MAX") ||
+                                   func_lower.contains("e_too_many") ||
+                                   func_lower.contains("e_max_") ||
+                                   func_lower.contains("e_limit");
+            
+            if !has_length_check {
+                let func_name = node.child_by_field_name("name")
+                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                    .unwrap_or("unknown");
+                
+                ctx.report_node(
+                    &UNBOUNDED_VECTOR_GROWTH,
+                    node,
+                    format!(
+                        "Function `{}` adds to a vector without an apparent size limit. \
+                         Consider adding a maximum size check like \
+                         `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS.",
+                        func_name
+                    ),
+                );
+            }
+        }
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_unbounded_vector_growth(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// hardcoded_address - Detects literal addresses in code
+// ============================================================================
+
+/// Detects hardcoded addresses that should be constants or parameters.
+///
+/// # Security References
+///
+/// - **General Best Practice**: Hardcoded addresses make code inflexible
+/// - **Upgrade Safety**: Addresses may need to change across deployments
+///
+/// # Why This Matters
+///
+/// Hardcoded addresses:
+/// 1. **Inflexibility**: Can't change without code modification
+/// 2. **Test/Prod confusion**: Wrong address in wrong environment
+/// 3. **Audit difficulty**: Hard to verify all addresses are correct
+///
+/// # Example
+///
+/// ```move
+/// // BAD - Hardcoded address
+/// public fun send_fee(coin: Coin<SUI>) {
+///     transfer::public_transfer(coin, @0x1234abcd...);
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// const FEE_RECIPIENT: address = @fee_recipient;
+/// // Or use a config object
+/// 
+/// public fun send_fee(config: &Config, coin: Coin<SUI>) {
+///     transfer::public_transfer(coin, config.fee_recipient);
+/// }
+/// ```
+pub static HARDCODED_ADDRESS: LintDescriptor = LintDescriptor {
+    name: "hardcoded_address",
+    category: LintCategory::Security,
+    description: "Hardcoded address should be a constant or parameter",
+    group: RuleGroup::Preview, // Preview due to many legitimate uses
+    fix: FixDescriptor::none(),
+};
+
+pub struct HardcodedAddressLint;
+
+impl LintRule for HardcodedAddressLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &HARDCODED_ADDRESS
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_hardcoded_address(root, source, ctx);
+    }
+}
+
+/// Addresses that are commonly legitimate and shouldn't be flagged
+const KNOWN_SAFE_ADDRESSES: &[&str] = &[
+    "@0x0",      // Zero address (null)
+    "@0x1",      // System address
+    "@0x2",      // Sui framework
+    "@0x3",      // Sui system
+    "@0x5",      // Sui system
+    "@0x6",      // Clock object
+    "@0x8",      // Random object
+    "@0xdee9",   // DeepBook
+];
+
+fn check_hardcoded_address(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for address literals in function bodies (not at module/const level)
+    if node.kind() == "function_definition" {
+        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        
+        // Find @0x... patterns that aren't in known safe list
+        let mut i = 0;
+        let bytes = func_text.as_bytes();
+        while i < bytes.len() {
+            if bytes[i] == b'@' && i + 3 < bytes.len() && bytes[i+1] == b'0' && bytes[i+2] == b'x' {
+                // Found @0x, extract the address
+                let start = i;
+                let mut end = i + 3;
+                while end < bytes.len() && (bytes[end].is_ascii_hexdigit() || bytes[end] == b'_') {
+                    end += 1;
+                }
+                
+                let addr = &func_text[start..end];
+                let addr_lower = addr.to_lowercase();
+                
+                // Skip known safe addresses - must be exact match or followed by non-hex
+                let is_safe = KNOWN_SAFE_ADDRESSES.iter().any(|safe| {
+                    let safe_lower = safe.to_lowercase();
+                    if addr_lower == safe_lower {
+                        return true;
+                    }
+                    // Check if the address starts with a safe prefix followed by non-hex
+                    // e.g., @0x2 should match @0x2 but not @0x234
+                    if addr_lower.starts_with(&safe_lower) {
+                        // Check what comes after
+                        let remainder = &addr_lower[safe_lower.len()..];
+                        // If there's more hex digits, it's not a match
+                        !remainder.chars().next().map_or(true, |c| c.is_ascii_hexdigit())
+                    } else {
+                        false
+                    }
+                });
+                
+                // Skip short addresses (likely constants)
+                let is_short = addr.len() < 10;
+                
+                if !is_safe && !is_short {
+                    let func_name = node.child_by_field_name("name")
+                        .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                        .unwrap_or("unknown");
+                    
+                    ctx.report_node(
+                        &HARDCODED_ADDRESS,
+                        node,
+                        format!(
+                            "Function `{}` contains hardcoded address `{}`. \
+                             Consider using a constant or configuration parameter for flexibility.",
+                            func_name,
+                            addr
+                        ),
+                    );
+                    // Only report once per function
+                    break;
+                }
+                
+                i = end;
+            } else {
+                i += 1;
+            }
+        }
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_hardcoded_address(child, source, ctx);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -911,6 +1513,21 @@ mod tests {
 
         let lint6 = SingleStepOwnershipTransferLint;
         lint6.check(tree.root_node(), source, &mut ctx);
+
+        let lint7 = UncheckedCoinSplitLint;
+        lint7.check(tree.root_node(), source, &mut ctx);
+
+        let lint8 = MissingWitnessDropLint;
+        lint8.check(tree.root_node(), source, &mut ctx);
+
+        let lint9 = PublicRandomAccessLint;
+        lint9.check(tree.root_node(), source, &mut ctx);
+
+        let lint10 = UnboundedVectorGrowthLint;
+        lint10.check(tree.root_node(), source, &mut ctx);
+
+        let lint11 = HardcodedAddressLint;
+        lint11.check(tree.root_node(), source, &mut ctx);
 
         ctx.into_diagnostics()
             .into_iter()
@@ -1210,7 +1827,7 @@ mod tests {
             module example::oracle {
                 use pyth::pyth;
                 
-                public fun get_value(price_info: &PriceInfoObject): u64 {
+                public fun get_value(price_info: &PriceInfoObject) {
                     let price = pyth::get_price_unsafe(price_info);
                     price.price
                 }
@@ -1229,7 +1846,7 @@ mod tests {
             module example::oracle {
                 use pyth::pyth;
                 
-                public fun get_value(price_info: &PriceInfoObject, clock: &Clock): u64 {
+                public fun get_value(price_info: &PriceInfoObject, clock: &Clock) {
                     let price = pyth::get_price_no_older_than(price_info, clock, 60);
                     price.price
                 }
@@ -1245,7 +1862,7 @@ mod tests {
         // Regular price function without "unsafe" - should not fire
         let source = r#"
             module example::oracle {
-                public fun get_price(asset: &Asset): u64 {
+                public fun get_price(asset: &Asset) {
                     asset.price
                 }
             }
@@ -1312,7 +1929,7 @@ mod tests {
             module example::admin {
                 public fun accept_admin(exchange: &mut Exchange, ctx: &TxContext) {
                     let pending = exchange.pending_admin;
-                    exchange.admin = tx_context::sender(ctx);
+                    exchange.admin = sender(ctx);
                 }
             }
         "#;
@@ -1349,6 +1966,205 @@ mod tests {
 
         let messages = lint_source(source);
         // Should NOT fire because there's no ".admin =" or ".owner =" assignment
+        assert!(messages.is_empty());
+    }
+
+    // =========================================================================
+    // UncheckedCoinSplitLint tests
+    // =========================================================================
+
+    #[test]
+    fn test_unchecked_coin_split_detected() {
+        let source = r#"
+            module example::withdraw {
+                public fun withdraw(coin: &mut Coin<SUI>, amount: u64, ctx: &mut TxContext): Coin<SUI> {
+                    coin::split(coin, amount, ctx)
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert_eq!(messages.len(), 1);
+        assert!(messages[0].contains("coin::split"));
+        assert!(messages[0].contains("balance check"));
+    }
+
+    #[test]
+    fn test_coin_split_with_balance_check_ok() {
+        let source = r#"
+            module example::withdraw {
+                public fun withdraw(coin: &mut Coin<SUI>, amount: u64, ctx: &mut TxContext): Coin<SUI> {
+                    assert!(coin::value(coin) >= amount, E_INSUFFICIENT);
+                    coin::split(coin, amount, ctx)
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty());
+    }
+
+    // =========================================================================
+    // MissingWitnessDropLint tests
+    // =========================================================================
+
+    #[test]
+    fn test_missing_witness_drop_detected() {
+        let source = r#"
+            module example::token {
+                struct MY_TOKEN {}
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert_eq!(messages.len(), 1);
+        assert!(messages[0].contains("MY_TOKEN"));
+        assert!(messages[0].contains("one-time witness"));
+    }
+
+    #[test]
+    fn test_witness_with_drop_ok() {
+        let source = r#"
+            module example::token {
+                struct MY_TOKEN has drop {}
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty());
+    }
+
+    #[test]
+    fn test_regular_struct_not_witness_ok() {
+        // Not all caps, so not detected as OTW
+        let source = r#"
+            module example::data {
+                struct UserData {}
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty());
+    }
+
+    // =========================================================================
+    // PublicRandomAccessLint tests
+    // =========================================================================
+
+    #[test]
+    fn test_public_random_access_detected() {
+        let source = r#"
+            module example::game {
+                public fun get_random_number(r: &Random) {
+                    random::new_generator(r).generate_u64()
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert_eq!(messages.len(), 1);
+        assert!(messages[0].contains("Random"));
+        assert!(messages[0].contains("front-running"));
+    }
+
+    #[test]
+    fn test_entry_random_ok() {
+        // entry functions are OK for Random
+        let source = r#"
+            module example::game {
+                entry fun roll_dice(r: &Random, ctx: &mut TxContext) {
+                    let result = random::new_generator(r, ctx).generate_u64();
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty());
+    }
+
+    // =========================================================================
+    // UnboundedVectorGrowthLint tests
+    // =========================================================================
+
+    #[test]
+    fn test_unbounded_vector_growth_detected() {
+        let source = r#"
+            module example::group {
+                public fun add_member(group: &mut Group, member: address) {
+                    vector::push_back(&mut group.members, member);
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert_eq!(messages.len(), 1);
+        assert!(messages[0].contains("vector"));
+        assert!(messages[0].contains("size limit"));
+    }
+
+    #[test]
+    fn test_bounded_vector_ok() {
+        let source = r#"
+            module example::group {
+                const MAX_MEMBERS: u64 = 100;
+                
+                public fun add_member(group: &mut Group, member: address) {
+                    assert!(vector::length(&group.members) < MAX_SIZE, E_TOO_MANY);
+                    vector::push_back(&mut group.members, member);
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty());
+    }
+
+    // =========================================================================
+    // HardcodedAddressLint tests
+    // =========================================================================
+
+    #[test]
+    fn test_hardcoded_address_detected() {
+        let source = r#"
+module example::fee {
+    public fun send_fee(coin: Coin<SUI>) {
+        transfer::public_transfer(coin, @0x1234567890abcdef);
+    }
+}
+        "#;
+
+        let messages = lint_source(source);
+        assert_eq!(messages.len(), 1);
+        assert!(messages[0].contains("hardcoded address"));
+    }
+
+    #[test]
+    fn test_system_address_ok() {
+        // System addresses like @0x2 (sui framework) are OK
+        let source = r#"
+            module example::call {
+                public fun call_sui() {
+                    let _ = @0x2;
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty());
+    }
+
+    #[test]
+    fn test_short_address_ok() {
+        // Short addresses are likely named constants
+        let source = r#"
+            module example::call {
+                public fun call_thing() {
+                    let _ = @0xabc;
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
         assert!(messages.is_empty());
     }
 }

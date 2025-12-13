@@ -396,10 +396,15 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     "shared_capability",
     "stale_oracle_price",
     "single_step_ownership_transfer",
+    "missing_witness_drop",
+    "public_random_access",
     // Preview lints (require --preview flag)
     "pure_function_transfer",
     "unsafe_arithmetic",
     "suspicious_overflow_check",
+    "unchecked_coin_split",
+    "unbounded_vector_growth",
+    "hardcoded_address",
 ];
 
 const FULL_MODE_SUPERSEDED_LINTS: &[&str] = &["public_mut_tx_context", "unnecessary_public_entry"];
@@ -541,10 +546,15 @@ impl LintRegistry {
             .with_rule(crate::rules::SharedCapabilityLint)
             .with_rule(crate::rules::StaleOraclePriceLint)
             .with_rule(crate::rules::SingleStepOwnershipTransferLint)
+            .with_rule(crate::rules::MissingWitnessDropLint)
+            .with_rule(crate::rules::PublicRandomAccessLint)
             // Preview lints (only included when preview mode enabled)
             .with_rule(crate::rules::PureFunctionTransferLint)
             .with_rule(crate::rules::UnsafeArithmeticLint)
             .with_rule(crate::rules::SuspiciousOverflowCheckLint)
+            .with_rule(crate::rules::UncheckedCoinSplitLint)
+            .with_rule(crate::rules::UnboundedVectorGrowthLint)
+            .with_rule(crate::rules::HardcodedAddressLint)
     }
 
     pub fn default_rules_filtered(
@@ -686,6 +696,12 @@ impl LintRegistry {
                 "single_step_ownership_transfer" => {
                     reg = reg.with_rule(crate::rules::SingleStepOwnershipTransferLint);
                 }
+                "missing_witness_drop" => {
+                    reg = reg.with_rule(crate::rules::MissingWitnessDropLint);
+                }
+                "public_random_access" => {
+                    reg = reg.with_rule(crate::rules::PublicRandomAccessLint);
+                }
                 // Preview lints
                 "pure_function_transfer" => {
                     reg = reg.with_rule(crate::rules::PureFunctionTransferLint);
@@ -695,6 +711,15 @@ impl LintRegistry {
                 }
                 "suspicious_overflow_check" => {
                     reg = reg.with_rule(crate::rules::SuspiciousOverflowCheckLint);
+                }
+                "unchecked_coin_split" => {
+                    reg = reg.with_rule(crate::rules::UncheckedCoinSplitLint);
+                }
+                "unbounded_vector_growth" => {
+                    reg = reg.with_rule(crate::rules::UnboundedVectorGrowthLint);
+                }
+                "hardcoded_address" => {
+                    reg = reg.with_rule(crate::rules::HardcodedAddressLint);
                 }
                 other => unreachable!("unexpected fast lint name: {other}"),
             }
@@ -740,12 +765,17 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "excessive_token_abilities"
         | "shared_capability"
         | "stale_oracle_price"
-        | "single_step_ownership_transfer" => RuleGroup::Stable,
+        | "single_step_ownership_transfer"
+        | "missing_witness_drop"
+        | "public_random_access" => RuleGroup::Stable,
 
         // Preview lints (higher FP risk, require --preview flag)
         | "pure_function_transfer"
         | "unsafe_arithmetic"
-        | "suspicious_overflow_check" => RuleGroup::Preview,
+        | "suspicious_overflow_check"
+        | "unchecked_coin_split"
+        | "unbounded_vector_growth"
+        | "hardcoded_address" => RuleGroup::Preview,
 
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,

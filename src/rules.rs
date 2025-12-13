@@ -22,11 +22,16 @@ pub use modernization::{
 // Security lints (audit-backed)
 pub use security::{
     DroppableHotPotatoLint, 
-    ExcessiveTokenAbilitiesLint, 
+    ExcessiveTokenAbilitiesLint,
+    HardcodedAddressLint,
+    MissingWitnessDropLint,
+    PublicRandomAccessLint,
     SharedCapabilityLint,
     SingleStepOwnershipTransferLint,
     StaleOraclePriceLint,
     SuspiciousOverflowCheckLint,
+    UncheckedCoinSplitLint,
+    UnboundedVectorGrowthLint,
 };
 
 // Style lints
