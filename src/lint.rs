@@ -403,13 +403,17 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     "single_step_ownership_transfer",
     "missing_witness_drop",
     "public_random_access",
+    "suspicious_overflow_check",      // Promoted to stable
+    "ignored_boolean_return",         // NEW: Typus hack pattern
+    "shared_capability_object",       // NEW: Typus hack pattern
     // Preview lints (require --preview flag)
     "pure_function_transfer",
     "unsafe_arithmetic",
-    "suspicious_overflow_check",
     "unchecked_coin_split",
-    "unbounded_vector_growth",
-    "hardcoded_address",
+    "unbounded_vector_growth",        // DEPRECATED
+    "hardcoded_address",              // DEPRECATED
+    "unchecked_withdrawal",           // NEW: Thala hack pattern
+    "capability_leak",                // NEW: MoveScanner pattern
 ];
 
 const FULL_MODE_SUPERSEDED_LINTS: &[&str] = &["public_mut_tx_context", "unnecessary_public_entry"];
@@ -563,13 +567,17 @@ impl LintRegistry {
             .with_rule(crate::rules::SingleStepOwnershipTransferLint)
             .with_rule(crate::rules::MissingWitnessDropLint)
             .with_rule(crate::rules::PublicRandomAccessLint)
+            .with_rule(crate::rules::SuspiciousOverflowCheckLint)  // Promoted to stable
+            .with_rule(crate::rules::IgnoredBooleanReturnLint)     // NEW: Typus hack pattern
+            .with_rule(crate::rules::SharedCapabilityObjectLint)   // NEW: Typus hack pattern
             // Preview lints (only included when preview mode enabled)
             .with_rule(crate::rules::PureFunctionTransferLint)
             .with_rule(crate::rules::UnsafeArithmeticLint)
-            .with_rule(crate::rules::SuspiciousOverflowCheckLint)
             .with_rule(crate::rules::UncheckedCoinSplitLint)
-            .with_rule(crate::rules::UnboundedVectorGrowthLint)
-            .with_rule(crate::rules::HardcodedAddressLint)
+            .with_rule(crate::rules::UnboundedVectorGrowthLint)    // DEPRECATED
+            .with_rule(crate::rules::HardcodedAddressLint)         // DEPRECATED
+            .with_rule(crate::rules::UncheckedWithdrawalLint)      // NEW: Thala hack pattern
+            .with_rule(crate::rules::CapabilityLeakLint)           // NEW: MoveScanner pattern
     }
 
     pub fn default_rules_filtered(
@@ -717,15 +725,21 @@ impl LintRegistry {
                 "public_random_access" => {
                     reg = reg.with_rule(crate::rules::PublicRandomAccessLint);
                 }
+                "suspicious_overflow_check" => {
+                    reg = reg.with_rule(crate::rules::SuspiciousOverflowCheckLint);
+                }
+                "ignored_boolean_return" => {
+                    reg = reg.with_rule(crate::rules::IgnoredBooleanReturnLint);
+                }
+                "shared_capability_object" => {
+                    reg = reg.with_rule(crate::rules::SharedCapabilityObjectLint);
+                }
                 // Preview lints
                 "pure_function_transfer" => {
                     reg = reg.with_rule(crate::rules::PureFunctionTransferLint);
                 }
                 "unsafe_arithmetic" => {
                     reg = reg.with_rule(crate::rules::UnsafeArithmeticLint);
-                }
-                "suspicious_overflow_check" => {
-                    reg = reg.with_rule(crate::rules::SuspiciousOverflowCheckLint);
                 }
                 "unchecked_coin_split" => {
                     reg = reg.with_rule(crate::rules::UncheckedCoinSplitLint);
@@ -735,6 +749,12 @@ impl LintRegistry {
                 }
                 "hardcoded_address" => {
                     reg = reg.with_rule(crate::rules::HardcodedAddressLint);
+                }
+                "unchecked_withdrawal" => {
+                    reg = reg.with_rule(crate::rules::UncheckedWithdrawalLint);
+                }
+                "capability_leak" => {
+                    reg = reg.with_rule(crate::rules::CapabilityLeakLint);
                 }
                 other => unreachable!("unexpected fast lint name: {other}"),
             }
@@ -782,15 +802,21 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "stale_oracle_price"
         | "single_step_ownership_transfer"
         | "missing_witness_drop"
-        | "public_random_access" => RuleGroup::Stable,
+        | "public_random_access"
+        | "suspicious_overflow_check"     // Promoted to stable
+        | "ignored_boolean_return"        // NEW: Typus hack pattern
+        | "shared_capability_object" => RuleGroup::Stable,  // NEW: Typus hack pattern
 
         // Preview lints (higher FP risk, require --preview flag)
         | "pure_function_transfer"
         | "unsafe_arithmetic"
-        | "suspicious_overflow_check"
         | "unchecked_coin_split"
+        | "unchecked_withdrawal"          // NEW: Thala hack pattern
+        | "capability_leak" => RuleGroup::Preview,  // NEW: MoveScanner pattern
+
+        // Deprecated lints (still work but emit deprecation warning)
         | "unbounded_vector_growth"
-        | "hardcoded_address" => RuleGroup::Preview,
+        | "hardcoded_address" => RuleGroup::Deprecated,
 
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,
