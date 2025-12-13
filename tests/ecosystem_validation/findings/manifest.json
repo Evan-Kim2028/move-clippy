@@ -1,0 +1,22 @@
+{
+  "run_date": "2025-12-13T20:08:03Z",
+  "clippy_version": "move-clippy 0.1.0",
+  "preview_mode": false,
+  "repos_count": 11,
+  "successful": 11,
+  "failed": 0,
+  "total_findings": 4097,
+  "repos": [
+    "alphalend",
+    "bluefin-integer",
+    "bluefin-pro",
+    "bluefin-spot",
+    "cetus-clmm",
+    "deepbookv3",
+    "openzeppelin-sui",
+    "scallop-lend",
+    "steamm",
+    "suilend",
+    "suilend-liquid-staking"
+  ]
+}

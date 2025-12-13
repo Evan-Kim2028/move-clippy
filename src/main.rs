@@ -331,43 +331,79 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
     let mut total_fixed = 0usize;
     let mut total_skipped = 0usize;
     let mut files_modified = 0usize;
+    
+    const MAX_ITERATIONS: usize = 10; // Prevent infinite loops
 
     for path in &files {
-        let source = std::fs::read_to_string(path)?;
-        let diagnostics = engine.lint_source(&source)?;
-
-        // Filter to diagnostics with fix suggestions
-        let fixable: Vec<_> = diagnostics
-            .iter()
-            .filter(|d| d.suggestion.is_some())
-            .cloned()
-            .collect();
-
-        if fixable.is_empty() {
-            continue;
-        }
-
-        let result = fixer::apply_fixes(&source, &fixable, args.unsafe_fixes)?;
-
-        if result.fixes_applied == 0 {
-            total_skipped += result.fixes_skipped;
-            continue;
-        }
-
-        if args.fix_dry_run {
-            // Print diff
-            let diff = fixer::format_diff(&source, &result.fixed_source, path);
-            if !diff.is_empty() {
-                println!("{}", diff);
+        let original_source = std::fs::read_to_string(path)?;
+        let mut current_source = original_source.clone();
+        let mut file_fixes = 0usize;
+        let mut iterations = 0usize;
+        
+        // Iterate until no more fixes are applied (or max iterations reached)
+        loop {
+            iterations += 1;
+            if iterations > MAX_ITERATIONS {
+                eprintln!(
+                    "Warning: Max fix iterations ({}) reached for {}",
+                    MAX_ITERATIONS,
+                    path.display()
+                );
+                break;
             }
-        } else {
-            // Write fixed source
-            std::fs::write(path, &result.fixed_source)?;
-            files_modified += 1;
+            
+            let diagnostics = engine.lint_source(&current_source)?;
+
+            // Filter to diagnostics with fix suggestions
+            let fixable: Vec<_> = diagnostics
+                .iter()
+                .filter(|d| d.suggestion.is_some())
+                .cloned()
+                .collect();
+
+            if fixable.is_empty() {
+                break;
+            }
+
+            let result = fixer::apply_fixes(&current_source, &fixable, args.unsafe_fixes)?;
+
+            if result.fixes_applied == 0 {
+                total_skipped += result.fixes_skipped;
+                break;
+            }
+
+            file_fixes += result.fixes_applied;
+            current_source = result.fixed_source;
+            
+            // In dry-run mode, only do one iteration
+            if args.fix_dry_run {
+                total_skipped += result.fixes_skipped;
+                break;
+            }
         }
 
-        total_fixed += result.fixes_applied;
-        total_skipped += result.fixes_skipped;
+        if file_fixes > 0 {
+            if args.fix_dry_run {
+                // Print diff
+                let diff = fixer::format_diff(&original_source, &current_source, path);
+                if !diff.is_empty() {
+                    println!("{}", diff);
+                }
+            } else {
+                // Create backup unless --no-backup is set
+                if !args.no_backup {
+                    let backup_path = path.with_extension(
+                        format!("{}.bak", path.extension().unwrap_or_default().to_string_lossy())
+                    );
+                    std::fs::write(&backup_path, &original_source)?;
+                }
+                
+                // Write fixed source
+                std::fs::write(path, &current_source)?;
+                files_modified += 1;
+            }
+            total_fixed += file_fixes;
+        }
     }
 
     // Print summary
@@ -581,6 +617,99 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
             println!("  False Positive: {} ({:.1}%)", summary.false_positive, pct(summary.false_positive, summary.total));
             println!("  Won't Fix:      {} ({:.1}%)", summary.wont_fix, pct(summary.wont_fix, summary.total));
 
+            Ok(ExitCode::SUCCESS)
+        }
+
+        TriageAction::Stats { by, min_count, sort } => {
+            let db = TriageDatabase::load(db_path)?;
+            
+            // Collect stats based on grouping
+            let mut stats: Vec<(String, usize, usize, usize, usize)> = Vec::new(); // (name, total, confirmed, fp, needs_review)
+            
+            match by.as_str() {
+                "lint" => {
+                    for (lint, findings) in db.group_by_lint() {
+                        let total = findings.len();
+                        let confirmed = findings.iter().filter(|f| f.status == TriageStatus::Confirmed).count();
+                        let fp = findings.iter().filter(|f| f.status == TriageStatus::FalsePositive).count();
+                        let nr = findings.iter().filter(|f| f.status == TriageStatus::NeedsReview).count();
+                        if total >= min_count {
+                            stats.push((lint, total, confirmed, fp, nr));
+                        }
+                    }
+                }
+                "repo" => {
+                    for (repo, findings) in db.group_by_repo() {
+                        let total = findings.len();
+                        let confirmed = findings.iter().filter(|f| f.status == TriageStatus::Confirmed).count();
+                        let fp = findings.iter().filter(|f| f.status == TriageStatus::FalsePositive).count();
+                        let nr = findings.iter().filter(|f| f.status == TriageStatus::NeedsReview).count();
+                        if total >= min_count {
+                            stats.push((repo, total, confirmed, fp, nr));
+                        }
+                    }
+                }
+                "category" => {
+                    let mut by_cat: std::collections::HashMap<String, Vec<&Finding>> = std::collections::HashMap::new();
+                    for f in db.list_all() {
+                        by_cat.entry(f.category.clone()).or_default().push(f);
+                    }
+                    for (cat, findings) in by_cat {
+                        let total = findings.len();
+                        let confirmed = findings.iter().filter(|f| f.status == TriageStatus::Confirmed).count();
+                        let fp = findings.iter().filter(|f| f.status == TriageStatus::FalsePositive).count();
+                        let nr = findings.iter().filter(|f| f.status == TriageStatus::NeedsReview).count();
+                        if total >= min_count {
+                            stats.push((cat, total, confirmed, fp, nr));
+                        }
+                    }
+                }
+                _ => {
+                    eprintln!("Unknown grouping: {}. Use lint, repo, or category.", by);
+                    return Ok(ExitCode::from(1));
+                }
+            }
+            
+            // Sort
+            match sort.as_str() {
+                "total" => stats.sort_by(|a, b| b.1.cmp(&a.1)),
+                "confirmed" => stats.sort_by(|a, b| b.2.cmp(&a.2)),
+                "fp" => stats.sort_by(|a, b| b.3.cmp(&a.3)),
+                "fp_rate" => {
+                    stats.sort_by(|a, b| {
+                        let reviewed_a = a.2 + a.3;
+                        let reviewed_b = b.2 + b.3;
+                        let rate_a = if reviewed_a > 0 { a.3 as f64 / reviewed_a as f64 } else { 0.0 };
+                        let rate_b = if reviewed_b > 0 { b.3 as f64 / reviewed_b as f64 } else { 0.0 };
+                        rate_b.partial_cmp(&rate_a).unwrap_or(std::cmp::Ordering::Equal)
+                    });
+                }
+                _ => stats.sort_by(|a, b| b.1.cmp(&a.1)),
+            }
+            
+            // Print header
+            let header = match by.as_str() {
+                "lint" => "Lint",
+                "repo" => "Repository",
+                "category" => "Category",
+                _ => "Name",
+            };
+            
+            println!("{:<35} {:>6} {:>6} {:>6} {:>6} {:>7}", header, "Total", "Conf", "FP", "NR", "FP%");
+            println!("{}", "-".repeat(75));
+            
+            for (name, total, confirmed, fp, nr) in &stats {
+                let reviewed = *confirmed + *fp;
+                let fp_rate = if reviewed > 0 { (*fp as f64 / reviewed as f64) * 100.0 } else { 0.0 };
+                let truncated = if name.len() > 35 { format!("{}...", &name[..32]) } else { name.clone() };
+                println!("{:<35} {:>6} {:>6} {:>6} {:>6} {:>6.1}%", truncated, total, confirmed, fp, nr, fp_rate);
+            }
+            
+            println!("{}", "-".repeat(75));
+            let totals: (usize, usize, usize, usize) = stats.iter()
+                .fold((0, 0, 0, 0), |acc, x| (acc.0 + x.1, acc.1 + x.2, acc.2 + x.3, acc.3 + x.4));
+            println!("{:<35} {:>6} {:>6} {:>6} {:>6}", "TOTAL", totals.0, totals.1, totals.2, totals.3);
+            
             Ok(ExitCode::SUCCESS)
         }
     }

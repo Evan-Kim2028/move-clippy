@@ -126,6 +126,21 @@ pub enum TriageAction {
 
     /// Show summary statistics.
     Summary,
+
+    /// Show detailed statistics by lint, repo, or category.
+    Stats {
+        /// Group by field: lint, repo, category, severity.
+        #[arg(long, default_value = "lint")]
+        by: String,
+
+        /// Only show entries with this minimum count.
+        #[arg(long, default_value = "1")]
+        min_count: usize,
+
+        /// Sort by: total, confirmed, fp, fp_rate.
+        #[arg(long, default_value = "total")]
+        sort: String,
+    },
 }
 
 #[derive(Debug, Clone, ClapArgs)]
@@ -190,6 +205,13 @@ pub struct LintArgs {
     /// before committing.
     #[arg(long, requires = "fix")]
     pub unsafe_fixes: bool,
+
+    /// Skip creating .bak backup files before applying fixes (requires --fix).
+    ///
+    /// By default, move-clippy creates a .bak backup of each file before
+    /// modifying it. Use this flag to disable backups.
+    #[arg(long, requires = "fix")]
+    pub no_backup: bool,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
