@@ -1,0 +1,28 @@
+[package]
+name = "move-clippy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+clap = { version = "4.5.53", features = ["derive"] }
+itertools = "0.14.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+toml = "0.9.8"
+tree-sitter = "0.20.10"
+tree-sitter-move = { git = "https://github.com/tzakian/tree-sitter-move", rev = "640ee15e4a7b0d09a4bc95dcc71336c28d97999b" }
+
+# Optional (future) semantic analysis via Mysten's Move fork snapshot
+move-compiler = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
+move-ir-types = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
+
+[features]
+default = []
+full = [
+    "move-compiler",
+    "move-ir-types",
+]
+
+[dev-dependencies]
+insta = "1.44.3"
