@@ -60,6 +60,11 @@ tracing-subscriber = { workspace = true, optional = true }
 tree-sitter = { workspace = true }
 tree-sitter-move = { git = "https://github.com/tzakian/tree-sitter-move", rev = "640ee15e4a7b0d09a4bc95dcc71336c28d97999b" }
 
+# Triage system dependencies
+chrono = { version = "0.4", features = ["serde"] }
+sha2 = "0.10"
+hex = "0.4"
+
 # Optional (future) semantic analysis via Mysten's Move fork snapshot
 move-compiler = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
 move-ir-types = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }

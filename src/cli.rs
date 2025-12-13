@@ -31,6 +31,101 @@ pub enum Command {
         /// Lint rule name.
         rule: String,
     },
+
+    /// Triage findings - track, categorize, and report lint results.
+    Triage(TriageCommand),
+}
+
+// ============================================================================
+// Triage Subcommand
+// ============================================================================
+
+#[derive(Debug, Clone, ClapArgs)]
+pub struct TriageCommand {
+    #[command(subcommand)]
+    pub action: TriageAction,
+
+    /// Path to triage database file.
+    #[arg(long, default_value = "triage.json", global = true)]
+    pub database: PathBuf,
+}
+
+#[derive(Debug, Clone, Subcommand)]
+pub enum TriageAction {
+    /// List findings with optional filtering.
+    List {
+        /// Filter by status (needs_review, confirmed, false_positive, wont_fix).
+        #[arg(long)]
+        status: Option<String>,
+
+        /// Filter by lint name.
+        #[arg(long)]
+        lint: Option<String>,
+
+        /// Filter by repository.
+        #[arg(long)]
+        repo: Option<String>,
+
+        /// Filter by severity (critical, high, medium, low, info).
+        #[arg(long)]
+        severity: Option<String>,
+
+        /// Filter by category (security, style, etc.).
+        #[arg(long)]
+        category: Option<String>,
+
+        /// Maximum number of results to show.
+        #[arg(long, default_value = "50")]
+        limit: usize,
+    },
+
+    /// Show detailed info about a specific finding.
+    Show {
+        /// Finding ID (or prefix).
+        id: String,
+    },
+
+    /// Update the status of a finding.
+    Update {
+        /// Finding ID (or prefix).
+        id: String,
+
+        /// New status (confirmed, false_positive, wont_fix, needs_review).
+        #[arg(long)]
+        status: String,
+
+        /// Optional notes about this finding.
+        #[arg(long)]
+        notes: Option<String>,
+    },
+
+    /// Generate a summary report.
+    Report {
+        /// Output format (md, json, text).
+        #[arg(long, default_value = "md")]
+        format: String,
+
+        /// Group findings by field (lint, repo, status, severity).
+        #[arg(long)]
+        group_by: Option<String>,
+
+        /// Output file (stdout if not specified).
+        #[arg(long, short)]
+        output: Option<PathBuf>,
+    },
+
+    /// Import findings from lint output (JSON format).
+    Import {
+        /// Path to JSON file with lint output.
+        input: PathBuf,
+
+        /// Repository name to associate with findings.
+        #[arg(long)]
+        repo: String,
+    },
+
+    /// Show summary statistics.
+    Summary,
 }
 
 #[derive(Debug, Clone, ClapArgs)]
@@ -76,11 +171,24 @@ pub struct LintArgs {
     #[arg(long)]
     pub preview: bool,
 
-    /// Apply unsafe fixes (requires --fix when implemented).
+    /// Apply safe auto-fixes to files.
+    ///
+    /// Only machine-applicable fixes are applied by default.
+    /// Use --unsafe-fixes to also apply potentially unsafe fixes.
+    #[arg(long)]
+    pub fix: bool,
+
+    /// Preview fixes without applying them (requires --fix).
+    ///
+    /// Shows a unified diff of what changes would be made.
+    #[arg(long, requires = "fix")]
+    pub fix_dry_run: bool,
+
+    /// Apply unsafe fixes (requires --fix).
     ///
     /// Unsafe fixes may change runtime behavior. Review changes carefully
     /// before committing.
-    #[arg(long)]
+    #[arg(long, requires = "fix")]
     pub unsafe_fixes: bool,
 }
 

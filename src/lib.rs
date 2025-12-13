@@ -7,6 +7,8 @@ pub mod cli;
 pub mod config;
 pub mod diagnostics;
 pub mod error;
+pub mod fix;
+pub mod fixer;
 pub mod level;
 pub mod lint;
 pub mod parser;
@@ -14,6 +16,7 @@ pub mod rules;
 pub mod semantic;
 pub mod suppression;
 pub mod telemetry;
+pub mod triage;
 pub mod visitor;
 
 use anyhow::Result;
