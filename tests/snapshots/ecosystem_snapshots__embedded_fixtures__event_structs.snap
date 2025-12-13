@@ -1,0 +1,7 @@
+---
+source: tests/ecosystem_snapshots.rs
+expression: messages
+---
+[
+    "modern_module_syntax: Use Move 2024 module label syntax: `module pkg::mod;`",
+]

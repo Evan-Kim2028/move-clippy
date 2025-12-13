@@ -1,0 +1,10 @@
+---
+source: tests/ecosystem_snapshots.rs
+expression: messages
+---
+[
+    "modern_module_syntax: Use Move 2024 module label syntax: `module pkg::mod;`",
+    "modern_method_syntax: Prefer method syntax: `metadata.public_freeze_object(...)`",
+    "modern_method_syntax: Prefer method syntax: `treasury_cap.public_transfer(...)`",
+    "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
+]

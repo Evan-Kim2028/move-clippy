@@ -2,4 +2,6 @@
 source: tests/sui_lints.rs
 expression: output
 ---
-
+sources/main.move:6:5: missing_access_control: Public function `correct_mint` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
+sources/main.move:9:5: missing_access_control: Public function `another_correct` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
+sources/main.move:15:5: missing_access_control: Public function `custom_module` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.

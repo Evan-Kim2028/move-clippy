@@ -2,4 +2,4 @@
 source: tests/sui_lints.rs
 expression: output
 ---
-
+sources/main.move:13:5: missing_access_control: Public function `suppressed_multi_param` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.

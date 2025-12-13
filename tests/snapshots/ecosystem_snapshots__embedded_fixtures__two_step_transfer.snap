@@ -1,0 +1,12 @@
+---
+source: tests/ecosystem_snapshots.rs
+expression: messages
+---
+[
+    "modern_module_syntax: Use Move 2024 module label syntax: `module pkg::mod;`",
+    "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
+    "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
+    "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
+    "public_mut_tx_context: TxContext parameters should use `&mut TxContext`",
+    "public_mut_tx_context: TxContext parameters should use `&mut TxContext`",
+]

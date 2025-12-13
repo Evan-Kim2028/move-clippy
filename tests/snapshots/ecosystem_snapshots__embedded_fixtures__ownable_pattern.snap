@@ -1,0 +1,10 @@
+---
+source: tests/ecosystem_snapshots.rs
+expression: messages
+---
+[
+    "modern_module_syntax: Use Move 2024 module label syntax: `module pkg::mod;`",
+    "modern_method_syntax: Prefer method syntax: `admin_cap.transfer(...)`",
+    "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
+    "pure_function_transfer: Non-entry public functions should return objects instead of transferring internally. This makes the function more composable.",
+]
