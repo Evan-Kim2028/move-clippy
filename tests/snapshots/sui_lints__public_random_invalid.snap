@@ -1,0 +1,14 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+sources/main.move:8:42: public_random: Risky use of 'sui::random': 'public' function 'not_allowed1' accepts 'Random' as a parameter
+sources/main.move:8:42: public_random: Risky use of 'sui::random': 'public' function 'not_allowed1' accepts 'Random' as a parameter
+sources/main.move:9:34: public_random: Risky use of 'sui::random': 'public' function 'not_allowed2' accepts 'RandomGenerator' as a parameter
+sources/main.move:9:34: public_random: Risky use of 'sui::random': 'public' function 'not_allowed2' accepts 'RandomGenerator' as a parameter
+sources/main.move:10:33: public_random: Risky use of 'sui::random': 'public' function 'not_allowed3' accepts 'Random' as a parameter
+sources/main.move:10:33: public_random: Risky use of 'sui::random': 'public' function 'not_allowed3' accepts 'Random' as a parameter
+sources/main.move:10:47: public_random: Risky use of 'sui::random': 'public' function 'not_allowed3' accepts 'RandomGenerator' as a parameter
+sources/main.move:10:47: public_random: Risky use of 'sui::random': 'public' function 'not_allowed3' accepts 'RandomGenerator' as a parameter
+sources/main.move:11:48: public_random: Risky use of 'sui::random': 'public' function 'not_allowed4' accepts 'Random' as a parameter
+sources/main.move:11:48: public_random: Risky use of 'sui::random': 'public' function 'not_allowed4' accepts 'Random' as a parameter

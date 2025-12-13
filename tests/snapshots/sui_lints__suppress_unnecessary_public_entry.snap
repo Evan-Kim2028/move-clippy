@@ -1,0 +1,5 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+

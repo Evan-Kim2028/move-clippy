@@ -1,0 +1,7 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+sources/main.move:21:9: freezing_capability: freezing potential capability: The type 'a::test_true_positives::AdminCap' is potentially a capability based on its name
+sources/main.move:25:9: freezing_capability: freezing potential capability: The type 'a::test_true_positives::UserCapability' is potentially a capability based on its name
+sources/main.move:29:9: freezing_capability: freezing potential capability: The type 'a::test_true_positives::OwnerCapV2' is potentially a capability based on its name

@@ -1,0 +1,5 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+sources/main.move:29:19: capability_naming: Capability struct should be suffixed with `_cap`: `Obj_cap`

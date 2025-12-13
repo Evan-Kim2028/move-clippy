@@ -1,0 +1,11 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+sources/main.move:9:19: capability_naming: Capability struct should be suffixed with `_cap`: `S1_cap`
+sources/main.move:23:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:23:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:27:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:27:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:39:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:39:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address

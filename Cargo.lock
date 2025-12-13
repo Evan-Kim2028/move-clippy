@@ -1088,6 +1088,7 @@ dependencies = [
  "move-compiler",
  "move-ir-types",
  "move-package",
+ "regex",
  "serde",
  "serde_json",
  "tempfile",

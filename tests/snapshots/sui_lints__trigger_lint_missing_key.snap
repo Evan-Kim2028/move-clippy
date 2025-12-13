@@ -1,0 +1,6 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+sources/main.move:5:5: missing_key: struct with id but missing key ability: Struct's first field has an 'id' field of type 'sui::object::UID' but is missing the 'key' ability.
+sources/main.move:5:5: missing_key: struct with id but missing key ability: Struct's first field has an 'id' field of type 'sui::object::UID' but is missing the 'key' ability.

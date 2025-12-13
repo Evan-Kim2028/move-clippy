@@ -1,0 +1,28 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+sources/main.move:17:14: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::bag::Bag' may yield unexpected result.
+sources/main.move:17:14: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::bag::Bag' may yield unexpected result.
+sources/main.move:21:14: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::object_bag::ObjectBag' may yield unexpected result.
+sources/main.move:21:14: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::object_bag::ObjectBag' may yield unexpected result.
+sources/main.move:25:16: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::table::Table' may yield unexpected result.
+sources/main.move:25:16: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::table::Table' may yield unexpected result.
+sources/main.move:32:20: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::object_table::ObjectTable' may yield unexpected result.
+sources/main.move:32:20: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::object_table::ObjectTable' may yield unexpected result.
+sources/main.move:36:16: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::linked_table::LinkedTable' may yield unexpected result.
+sources/main.move:36:16: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::linked_table::LinkedTable' may yield unexpected result.
+sources/main.move:40:16: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::table_vec::TableVec' may yield unexpected result.
+sources/main.move:40:16: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::table_vec::TableVec' may yield unexpected result.
+sources/main.move:44:14: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::vec_map::VecMap' may yield unexpected result.
+sources/main.move:44:14: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::vec_map::VecMap' may yield unexpected result.
+sources/main.move:48:14: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::vec_set::VecSet' may yield unexpected result.
+sources/main.move:48:14: collection_equality: possibly useless collections compare: Comparing collections of type 'sui::vec_set::VecSet' may yield unexpected result.
+sources/main.move:61:19: capability_naming: Capability struct should be suffixed with `_cap`: `Bag_cap`
+sources/main.move:69:19: capability_naming: Capability struct should be suffixed with `_cap`: `ObjectBag_cap`
+sources/main.move:77:19: capability_naming: Capability struct should be suffixed with `_cap`: `Table_cap`
+sources/main.move:85:19: capability_naming: Capability struct should be suffixed with `_cap`: `ObjectTable_cap`
+sources/main.move:93:19: capability_naming: Capability struct should be suffixed with `_cap`: `LinkedTable_cap`
+sources/main.move:101:19: capability_naming: Capability struct should be suffixed with `_cap`: `TableVec_cap`
+sources/main.move:109:19: capability_naming: Capability struct should be suffixed with `_cap`: `VecMap_cap`
+sources/main.move:117:19: capability_naming: Capability struct should be suffixed with `_cap`: `VecSet_cap`

@@ -1,0 +1,6 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+sources/main.move:25:9: freezing_capability: freezing potential capability: The type 'a::test_false_positives::NoCap' is potentially a capability based on its name
+sources/main.move:29:9: freezing_capability: freezing potential capability: The type 'a::test_false_positives::CapAndHat' is potentially a capability based on its name

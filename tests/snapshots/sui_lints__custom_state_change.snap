@@ -1,0 +1,11 @@
+---
+source: tests/sui_lints.rs
+expression: output
+---
+sources/main.move:10:19: capability_naming: Capability struct should be suffixed with `_cap`: `S1_cap`
+sources/main.move:15:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom transfer function.
+sources/main.move:15:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom transfer function.
+sources/main.move:20:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom share function.
+sources/main.move:20:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom share function.
+sources/main.move:24:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom freeze function.
+sources/main.move:24:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom freeze function.
