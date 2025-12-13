@@ -9,11 +9,6 @@ Move linter inspired by Rust Clippy, focused on Move 2024 style and Sui conventi
 - Respects `#[allow(lint::name)]` attributes on modules, structs, functions, constants, and use items.
 - Optional `--mode full` semantic analysis (behind the `full` feature) for capability/event/getter naming.
 
-## Development
-
-- The repository is a single-member Cargo workspace so release/test profile settings (panic = abort, split debuginfo, `release-lto`) and dependency versions stay centralized.
-- Basic tracing instrumentation is available via the `telemetry` feature (on by default). Set `RUST_LOG=move_clippy=info` to inspect spans around semantic linting and fixture modernization.
-
 ## Usage
 
 ```bash
@@ -24,9 +19,34 @@ cargo run -- lint path/to/sources
 cargo run --features full -- lint --mode full --package path/to/Move/package
 ```
 
-## References
+## Auto-Fix Support
 
-- Design notes live in `../notes/move-clippy/`, especially:
-  - `04-focused-roadmap.md` for immediate milestones
-  - `06-semantic-analysis-path.md` for analysis approach
-- Developer docs now live under `docs/` (see `docs/DEVELOPMENT.md` and `docs/STABILITY.md`).
+Move Clippy can automatically fix certain lint violations:
+
+```bash
+# Preview fixes without applying (shows unified diff)
+cargo run -- --fix --fix-dry-run path/to/sources
+
+# Apply fixes (creates .bak backup files)
+cargo run -- --fix path/to/sources
+
+# Apply fixes without creating backups
+cargo run -- --fix --no-backup path/to/sources
+```
+
+**Lints with auto-fix support:**
+- `while_true_to_loop` - Replace `while (true)` with `loop`
+- `empty_vector_literal` - Replace `vector::empty()` with `vector[]`
+- `abilities_order` - Reorder struct abilities to canonical order (key, copy, drop, store)
+
+## Development
+
+- The repository is a single-member Cargo workspace so release/test profile settings (panic = abort, split debuginfo, `release-lto`) and dependency versions stay centralized.
+- Basic tracing instrumentation is available via the `telemetry` feature (on by default). Set `RUST_LOG=move_clippy=info` to inspect spans around semantic linting and fixture modernization.
+
+## Documentation
+
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) - Developer workflow and architecture
+- [`docs/STABILITY.md`](docs/STABILITY.md) - Lint stability policy and configuration
+- [`docs/SECURITY_LINTS.md`](docs/SECURITY_LINTS.md) - Security lint reference
+- [`docs/LINT_DEVELOPMENT_GUIDE.md`](docs/LINT_DEVELOPMENT_GUIDE.md) - How to add new lints

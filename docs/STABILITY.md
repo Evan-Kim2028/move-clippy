@@ -13,6 +13,7 @@ Move Clippy uses a stability classification system inspired by [Ruff](https://do
 - Clear, actionable error messages
 - Well-documented behavior
 - Consistent behavior across Move codebases
+- FP prevention tests in `tests/false_positive_prevention.rs`
 
 **Example usage:**
 ```bash
@@ -72,6 +73,42 @@ A rule can be promoted from Preview to Stable when it meets ALL of the following
 - At least 2 weeks of preview availability
 - Positive feedback from community users
 - No major objections from Move experts
+
+## Per-Lint FP Risk Assessment
+
+### Security Lints (Stable)
+
+| Lint | FP Risk | Detection Strategy | FP Prevention |
+|------|---------|-------------------|---------------|
+| `droppable_hot_potato` | **Zero** | Exact ability check | Name contains "hot_potato" AND has `drop` |
+| `excessive_token_abilities` | **Low** | Ability + keyword + context | Filters event patterns (past-tense names) |
+| `shared_capability` | **Low** | share_object + Cap keyword | Word boundary check (won't match "recap") |
+| `stale_oracle_price` | **Zero** | Exact function name | `get_price_unsafe` only |
+| `single_step_ownership_transfer` | **Low** | Function name + field assignment | Pattern match `.admin = ` |
+| `missing_witness_drop` | **Zero** | OTW naming (ALL_CAPS) + no drop | Exact struct naming convention |
+| `public_random_access` | **Low** | Public function + Random param | Type-based detection |
+
+### Security Lints (Preview)
+
+| Lint | FP Risk | Why Preview | Graduation Path |
+|------|---------|-------------|-----------------|
+| `pure_function_transfer` | **Medium** | May flag intentional internal transfers | Needs allowlist for common patterns |
+| `unsafe_arithmetic` | **High** | Many arithmetic ops are safe | Needs data-flow analysis |
+| `suspicious_overflow_check` | **Medium** | Heuristic-based detection | Needs more ecosystem validation |
+| `unchecked_coin_split` | **Medium** | May flag checked splits | Needs balance tracking |
+| `unbounded_vector_growth` | **Medium** | May flag bounded loops | Needs loop analysis |
+| `hardcoded_address` | **Medium** | Test addresses are benign | Needs test context detection |
+
+### Style/Modernization Lints (All Stable - Zero FP Risk)
+
+| Lint | FP Risk | Reason |
+|------|---------|--------|
+| `modern_module_syntax` | **Zero** | Exact syntax pattern match |
+| `modern_method_syntax` | **Zero** | Allowlisted function names only |
+| `prefer_vector_methods` | **Zero** | Exact function signature match |
+| `while_true_to_loop` | **Zero** | Exact `while (true)` pattern |
+| `abilities_order` | **Zero** | Exact ability ordering check |
+| `constant_naming` | **Zero** | Regex pattern for SCREAMING_SNAKE_CASE |
 
 ## Fix Safety
 
