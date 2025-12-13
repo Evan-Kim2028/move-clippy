@@ -1,5 +1,5 @@
 use crate::diagnostics::Diagnostic;
-use crate::lint::{LintCategory, LintDescriptor, LintSettings};
+use crate::lint::{FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup};
 use crate::rules::modernization::{PUBLIC_MUT_TX_CONTEXT, UNNECESSARY_PUBLIC_ENTRY};
 use anyhow::Result;
 use std::path::Path;
@@ -12,72 +12,96 @@ pub static CAPABILITY_NAMING: LintDescriptor = LintDescriptor {
     name: "capability_naming",
     category: LintCategory::Naming,
     description: "Capability structs (key+store) should be suffixed with _cap (semantic, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static EVENT_NAMING: LintDescriptor = LintDescriptor {
     name: "event_naming",
     category: LintCategory::Naming,
     description: "Event structs (copy+drop) should be named <past_tense>_<noun>_event (semantic, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static GETTER_NAMING: LintDescriptor = LintDescriptor {
     name: "getter_naming",
     category: LintCategory::Naming,
     description: "Avoid get_ prefix for simple field getters taking &Self (semantic, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static SHARE_OWNED: LintDescriptor = LintDescriptor {
     name: "share_owned",
     category: LintCategory::Suspicious,
     description: "Possible owned object share (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static SELF_TRANSFER: LintDescriptor = LintDescriptor {
     name: "self_transfer",
     category: LintCategory::Suspicious,
     description: "Transferring or sharing objects back to the sender (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static CUSTOM_STATE_CHANGE: LintDescriptor = LintDescriptor {
     name: "custom_state_change",
     category: LintCategory::Suspicious,
     description: "Custom transfer/share/freeze functions must call private variants (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static COIN_FIELD: LintDescriptor = LintDescriptor {
     name: "coin_field",
     category: LintCategory::Suspicious,
     description: "Avoid storing sui::coin::Coin fields inside structs (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static FREEZE_WRAPPED: LintDescriptor = LintDescriptor {
     name: "freeze_wrapped",
     category: LintCategory::Suspicious,
     description: "Do not wrap shared objects before freezing (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static COLLECTION_EQUALITY: LintDescriptor = LintDescriptor {
     name: "collection_equality",
     category: LintCategory::Suspicious,
     description: "Avoid equality checks over bags/tables/collections (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static PUBLIC_RANDOM: LintDescriptor = LintDescriptor {
     name: "public_random",
     category: LintCategory::Suspicious,
     description: "Random state should remain private and uncopyable (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static MISSING_KEY: LintDescriptor = LintDescriptor {
     name: "missing_key",
     category: LintCategory::Suspicious,
     description: "Warn when shared/transferred structs lack the key ability (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 pub static FREEZING_CAPABILITY: LintDescriptor = LintDescriptor {
     name: "freezing_capability",
     category: LintCategory::Suspicious,
     description: "Avoid storing freeze capabilities (Sui lint, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
 };
 
 static DESCRIPTORS: &[&LintDescriptor] = &[

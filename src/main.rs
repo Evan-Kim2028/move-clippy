@@ -44,7 +44,19 @@ fn list_rules() {
     rules.sort_by_key(|d| d.name);
 
     for d in rules {
-        println!("{}\t{}\t{}", d.name, d.category.as_str(), d.description);
+        let fix_status = if d.fix.available {
+            format!(" [fix: {}]", d.fix.safety.as_str())
+        } else {
+            String::new()
+        };
+        println!(
+            "{}\t{}\t{}\t{}{}",
+            d.name,
+            d.category.as_str(),
+            d.group.as_str(),
+            d.description,
+            fix_status
+        );
     }
 }
 
@@ -59,7 +71,16 @@ fn explain_rule(rule: &str) -> anyhow::Result<()> {
 
     println!("name: {}", d.name);
     println!("category: {}", d.category.as_str());
+    println!("group: {}", d.group.as_str());
     println!("description: {}", d.description);
+    if d.fix.available {
+        println!("fix: available ({})", d.fix.safety.as_str());
+        if !d.fix.description.is_empty() {
+            println!("fix description: {}", d.fix.description);
+        }
+    } else {
+        println!("fix: not available");
+    }
     Ok(())
 }
 
@@ -67,14 +88,16 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
     let start_dir = infer_start_dir(&args)?;
     let loaded_cfg = config::load_config(args.config.as_deref(), &start_dir)?;
 
-    let (disabled, settings) = match loaded_cfg.as_ref() {
+    let (disabled, settings, preview) = match loaded_cfg.as_ref() {
         Some((_path, cfg)) => (
             cfg.lints.disabled.clone(),
             LintSettings::default()
                 .with_config_levels(cfg.lints.levels.clone())
                 .disable(cfg.lints.disabled.clone()),
+            // CLI flag takes precedence over config
+            args.preview || cfg.lints.preview,
         ),
-        None => (Vec::new(), LintSettings::default()),
+        None => (Vec::new(), LintSettings::default(), args.preview),
     };
 
     if matches!(args.mode, LintMode::Fast) && args.only.iter().any(|n| is_semantic_lint(n.as_str()))
@@ -120,7 +143,13 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
         Vec::new()
     };
 
-    let registry = LintRegistry::default_rules_filtered(&args.only, &args.skip, &disabled)?;
+    let registry = LintRegistry::default_rules_filtered(
+        &args.only,
+        &args.skip,
+        &disabled,
+        matches!(args.mode, LintMode::Full),
+        preview,
+    )?;
     let engine = LintEngine::new_with_settings(registry, settings.clone());
 
     let mut total_diags = 0usize;

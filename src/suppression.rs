@@ -1,5 +1,6 @@
 use tree_sitter::Node;
 
+/// Helpers for honoring `#[allow(lint::name)]` attributes in Move source.
 fn is_item_kind(kind: &str) -> bool {
     if kind == "module_definition" || kind == "use_declaration" {
         return true;
@@ -12,6 +13,7 @@ fn is_item_kind(kind: &str) -> bool {
         || kind.contains("constant")
 }
 
+/// Return the byte offset for the enclosing item used as a suppression anchor.
 pub fn anchor_item_start_byte(node: Node) -> usize {
     if is_item_kind(node.kind()) {
         return node.start_byte();
@@ -28,6 +30,7 @@ pub fn anchor_item_start_byte(node: Node) -> usize {
     node.start_byte()
 }
 
+/// Check whether the item starting at `item_start_byte` is suppressed for `lint_name`.
 pub fn is_suppressed_at(source: &str, item_start_byte: usize, lint_name: &str) -> bool {
     let Some(before_item) = source.get(..item_start_byte) else {
         return false;

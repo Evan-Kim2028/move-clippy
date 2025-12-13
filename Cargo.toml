@@ -30,3 +30,4 @@ full = [
 insta = "1.44.3"
 tempfile = "3.23.0"
 regex = "1.11.1"
+walkdir = "2.5"

@@ -5,7 +5,115 @@ use anyhow::{Result, anyhow};
 use std::collections::{HashMap, HashSet};
 use tree_sitter::Node;
 
-#[derive(Debug, Clone, Copy)]
+// ============================================================================
+// Rule Groups (Preview vs Stable) - Inspired by Ruff
+// ============================================================================
+
+/// Classification of lint rules by stability level.
+/// 
+/// New rules start in `Preview` and graduate to `Stable` after meeting
+/// promotion criteria (see STABILITY.md).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RuleGroup {
+    /// Battle-tested rules with minimal false positives.
+    /// Enabled by default based on category.
+    #[default]
+    Stable,
+    
+    /// New rules that need community validation.
+    /// Require `--preview` flag or `preview = true` in config.
+    Preview,
+    
+    /// Rules scheduled for removal in the next major version.
+    /// Emit a warning when explicitly enabled.
+    Deprecated,
+}
+
+impl RuleGroup {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            RuleGroup::Stable => "stable",
+            RuleGroup::Preview => "preview",
+            RuleGroup::Deprecated => "deprecated",
+        }
+    }
+}
+
+// ============================================================================
+// Fix Safety Classification - Inspired by Ruff
+// ============================================================================
+
+/// Safety classification for auto-fixes.
+/// 
+/// - `Safe` fixes preserve runtime behavior exactly
+/// - `Unsafe` fixes may change runtime behavior and require explicit opt-in
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum FixSafety {
+    /// Fix is guaranteed to preserve runtime behavior.
+    /// Applied by default with `--fix`.
+    #[default]
+    Safe,
+    
+    /// Fix may change runtime behavior (different errors, side effects, etc.).
+    /// Requires `--unsafe-fixes` flag to apply.
+    Unsafe,
+}
+
+impl FixSafety {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            FixSafety::Safe => "safe",
+            FixSafety::Unsafe => "unsafe",
+        }
+    }
+}
+
+/// Descriptor for an auto-fix associated with a lint rule.
+#[derive(Debug, Clone)]
+pub struct FixDescriptor {
+    /// Whether an auto-fix is available for this lint.
+    pub available: bool,
+    /// Safety classification of the fix.
+    pub safety: FixSafety,
+    /// Human-readable description of what the fix does.
+    pub description: &'static str,
+}
+
+impl FixDescriptor {
+    /// Create a safe fix descriptor.
+    pub const fn safe(description: &'static str) -> Self {
+        Self {
+            available: true,
+            safety: FixSafety::Safe,
+            description,
+        }
+    }
+    
+    /// Create an unsafe fix descriptor.
+    pub const fn unsafe_fix(description: &'static str) -> Self {
+        Self {
+            available: true,
+            safety: FixSafety::Unsafe,
+            description,
+        }
+    }
+    
+    /// Indicate no fix is available.
+    pub const fn none() -> Self {
+        Self {
+            available: false,
+            safety: FixSafety::Safe,
+            description: "",
+        }
+    }
+}
+
+// ============================================================================
+// Lint Categories
+// ============================================================================
+
+/// High-level categories used to group lints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LintCategory {
     Style,
     Modernization,
@@ -26,18 +134,89 @@ impl LintCategory {
     }
 }
 
+/// Static metadata describing a lint rule.
 #[derive(Debug)]
 pub struct LintDescriptor {
     pub name: &'static str,
     pub category: LintCategory,
     pub description: &'static str,
+    /// Stability group: Stable, Preview, or Deprecated.
+    pub group: RuleGroup,
+    /// Auto-fix availability and safety classification.
+    pub fix: FixDescriptor,
 }
 
+impl LintDescriptor {
+    /// Helper to create a stable lint descriptor with no fix.
+    pub const fn stable(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Stable,
+            fix: FixDescriptor::none(),
+        }
+    }
+    
+    /// Helper to create a stable lint descriptor with a safe fix.
+    pub const fn stable_with_fix(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+        fix_description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Stable,
+            fix: FixDescriptor::safe(fix_description),
+        }
+    }
+    
+    /// Helper to create a preview lint descriptor with no fix.
+    pub const fn preview(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Preview,
+            fix: FixDescriptor::none(),
+        }
+    }
+    
+    /// Helper to create a preview lint descriptor with a safe fix.
+    pub const fn preview_with_fix(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+        fix_description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Preview,
+            fix: FixDescriptor::safe(fix_description),
+        }
+    }
+}
+
+/// A single lint rule that can inspect a syntax tree.
 pub trait LintRule: Send + Sync {
     fn descriptor(&self) -> &'static LintDescriptor;
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>);
 }
 
+/// Per-lint configuration derived from `move-clippy.toml`.
 #[derive(Debug, Clone, Default)]
 pub struct LintSettings {
     levels: HashMap<String, LintLevel>,
@@ -45,22 +224,35 @@ pub struct LintSettings {
 
 impl LintSettings {
     pub fn with_config_levels(mut self, levels: HashMap<String, LintLevel>) -> Self {
-        self.levels.extend(levels);
+        // Resolve aliases when storing levels
+        for (name, level) in levels {
+            let canonical = resolve_lint_alias(&name);
+            self.levels.insert(canonical.to_string(), level);
+        }
         self
     }
 
     pub fn disable(mut self, disabled: impl IntoIterator<Item = String>) -> Self {
         for name in disabled {
-            self.levels.insert(name, LintLevel::Allow);
+            // Resolve aliases when disabling
+            let canonical = resolve_lint_alias(&name);
+            self.levels.insert(canonical.to_string(), LintLevel::Allow);
         }
         self
     }
 
     pub fn level_for(&self, lint_name: &str) -> LintLevel {
-        self.levels.get(lint_name).copied().unwrap_or_default()
+        // First try canonical name, then check if input is an alias
+        if let Some(&level) = self.levels.get(lint_name) {
+            return level;
+        }
+        // Try resolving as alias
+        let canonical = resolve_lint_alias(lint_name);
+        self.levels.get(canonical).copied().unwrap_or_default()
     }
 }
 
+/// Mutable context passed to lint rules while traversing a file.
 pub struct LintContext<'src> {
     source: &'src str,
     settings: LintSettings,
@@ -165,19 +357,104 @@ impl<'src> LintContext<'src> {
     }
 }
 
+/// Names of all built-in syntax-only lints.
 pub const FAST_LINT_NAMES: &[&str] = &[
+    // Existing lints
     "modern_module_syntax",
     "redundant_self_import",
     "prefer_to_string",
     "prefer_vector_methods",
     "modern_method_syntax",
     "merge_test_attributes",
+    "constant_naming",
+    "unneeded_return",
+    "unnecessary_public_entry",
+    "public_mut_tx_context",
+    "while_true_to_loop",
+    // P0 lints (Zero FP)
+    "abilities_order",
+    "doc_comment_style",
+    "explicit_self_assignments",
+    "test_abort_code",
+    "redundant_test_prefix",
+    // P1 lints (Near-zero FP)
+    "equality_in_assert",
+    "admin_cap_position",
+    "manual_option_check",
+    "manual_loop_iteration",
+    // Additional stable lints
+    "event_suffix",
+    "empty_vector_literal",
+    "typed_abort_code",
+    // Preview lints (require --preview flag)
+    "pure_function_transfer",
+    "unsafe_arithmetic",
 ];
 
-pub const SEMANTIC_LINT_NAMES: &[&str] = &["capability_naming", "event_naming", "getter_naming"];
+const FULL_MODE_SUPERSEDED_LINTS: &[&str] = &["public_mut_tx_context", "unnecessary_public_entry"];
+
+/// Names of all built-in semantic lints.
+pub const SEMANTIC_LINT_NAMES: &[&str] = &[
+    "capability_naming",
+    "event_naming",
+    "getter_naming",
+    "share_owned",
+    "self_transfer",
+    "custom_state_change",
+    "coin_field",
+    "freeze_wrapped",
+    "collection_equality",
+    "public_random",
+    "missing_key",
+    "freezing_capability",
+];
 
 pub fn is_semantic_lint(name: &str) -> bool {
     SEMANTIC_LINT_NAMES.iter().any(|n| *n == name)
+}
+
+// ============================================================================
+// Lint Name Aliases (Backward Compatibility)
+// ============================================================================
+
+/// Mapping of old lint names to their current canonical names.
+/// 
+/// When renaming a lint, add an entry here to maintain backward compatibility.
+/// Users can still reference the old name in config files and CLI arguments.
+/// 
+/// Format: (old_name, canonical_name)
+pub const LINT_ALIASES: &[(&str, &str)] = &[
+    // Example aliases for potential future renames:
+    // ("legacy_module_block", "modern_module_syntax"),
+    // ("utf8_string_import", "prefer_to_string"),
+    // ("get_prefix_getter", "getter_naming"),
+];
+
+/// Resolve a lint name to its canonical form.
+/// 
+/// If the name is an alias, returns the canonical name.
+/// Otherwise, returns the original name unchanged.
+pub fn resolve_lint_alias(name: &str) -> &str {
+    for (alias, canonical) in LINT_ALIASES {
+        if *alias == name {
+            return canonical;
+        }
+    }
+    name
+}
+
+/// Check if a name is a known alias (not the canonical name).
+pub fn is_lint_alias(name: &str) -> bool {
+    LINT_ALIASES.iter().any(|(alias, _)| *alias == name)
+}
+
+/// Get all known lint names including aliases.
+pub fn all_known_lints_with_aliases() -> HashSet<&'static str> {
+    let mut known = all_known_lints();
+    for (alias, _) in LINT_ALIASES {
+        known.insert(alias);
+    }
+    known
 }
 
 pub fn all_known_lints() -> HashSet<&'static str> {
@@ -188,6 +465,7 @@ pub fn all_known_lints() -> HashSet<&'static str> {
         .collect()
 }
 
+/// Registry of syntax-only lint rules used by the fast-mode engine.
 pub struct LintRegistry {
     rules: Vec<Box<dyn LintRule>>,
 }
@@ -216,20 +494,47 @@ impl LintRegistry {
 
     pub fn default_rules() -> Self {
         Self::new()
+            // Existing lints
             .with_rule(crate::rules::ModernModuleSyntaxLint)
             .with_rule(crate::rules::RedundantSelfImportLint)
             .with_rule(crate::rules::PreferToStringLint)
             .with_rule(crate::rules::PreferVectorMethodsLint)
             .with_rule(crate::rules::ModernMethodSyntaxLint)
             .with_rule(crate::rules::MergeTestAttributesLint)
+            .with_rule(crate::rules::ConstantNamingLint)
+            .with_rule(crate::rules::UnneededReturnLint)
+            .with_rule(crate::rules::UnnecessaryPublicEntryLint)
+            .with_rule(crate::rules::PublicMutTxContextLint)
+            .with_rule(crate::rules::WhileTrueToLoopLint)
+            // P0 lints
+            .with_rule(crate::rules::AbilitiesOrderLint)
+            .with_rule(crate::rules::DocCommentStyleLint)
+            .with_rule(crate::rules::ExplicitSelfAssignmentsLint)
+            .with_rule(crate::rules::TestAbortCodeLint)
+            .with_rule(crate::rules::RedundantTestPrefixLint)
+            // P1 lints
+            .with_rule(crate::rules::EqualityInAssertLint)
+            .with_rule(crate::rules::AdminCapPositionLint)
+            .with_rule(crate::rules::ManualOptionCheckLint)
+            .with_rule(crate::rules::ManualLoopIterationLint)
+            // Additional stable lints
+            .with_rule(crate::rules::EventSuffixLint)
+            .with_rule(crate::rules::EmptyVectorLiteralLint)
+            .with_rule(crate::rules::TypedAbortCodeLint)
+            // Preview lints (only included when preview mode enabled)
+            .with_rule(crate::rules::PureFunctionTransferLint)
+            .with_rule(crate::rules::UnsafeArithmeticLint)
     }
 
     pub fn default_rules_filtered(
         only: &[String],
         skip: &[String],
         disabled: &[String],
+        full_mode: bool,
+        preview: bool,
     ) -> Result<Self> {
-        let known = all_known_lints();
+        // Use the extended set that includes aliases for validation
+        let known = all_known_lints_with_aliases();
 
         for n in only.iter().chain(skip.iter()).chain(disabled.iter()) {
             if !known.contains(n.as_str()) {
@@ -237,49 +542,165 @@ impl LintRegistry {
             }
         }
 
-        let only_set: Option<HashSet<&str>> = if only.is_empty() {
+        // Resolve aliases to canonical names for filtering
+        let only_resolved: Vec<&str> = only.iter().map(|s| resolve_lint_alias(s)).collect();
+        let skip_resolved: Vec<&str> = skip.iter().map(|s| resolve_lint_alias(s)).collect();
+        let disabled_resolved: Vec<&str> = disabled.iter().map(|s| resolve_lint_alias(s)).collect();
+
+        let only_set: Option<HashSet<&str>> = if only_resolved.is_empty() {
             None
         } else {
-            Some(only.iter().map(|s| s.as_str()).collect())
+            Some(only_resolved.into_iter().collect())
         };
-        let skip_set: HashSet<&str> = skip.iter().map(|s| s.as_str()).collect();
-        let disabled_set: HashSet<&str> = disabled.iter().map(|s| s.as_str()).collect();
 
-        let include = |name: &'static str| {
-            let selected =
-                only_set.as_ref().map_or(true, |s| s.contains(name)) && !skip_set.contains(name);
-            if !selected {
-                return false;
-            }
-
-            // Config-disabled lints are excluded unless explicitly selected.
-            if disabled_set.contains(name) {
-                return only_set.as_ref().map_or(false, |s| s.contains(name));
-            }
-
-            true
-        };
+        let skip_set: HashSet<&str> = skip_resolved.into_iter().collect();
+        let disabled_set: HashSet<&str> = disabled_resolved.into_iter().collect();
 
         let mut reg = Self::new();
-        if include("modern_module_syntax") {
-            reg = reg.with_rule(crate::rules::ModernModuleSyntaxLint);
-        }
-        if include("redundant_self_import") {
-            reg = reg.with_rule(crate::rules::RedundantSelfImportLint);
-        }
-        if include("prefer_to_string") {
-            reg = reg.with_rule(crate::rules::PreferToStringLint);
-        }
-        if include("prefer_vector_methods") {
-            reg = reg.with_rule(crate::rules::PreferVectorMethodsLint);
-        }
-        if include("modern_method_syntax") {
-            reg = reg.with_rule(crate::rules::ModernMethodSyntaxLint);
-        }
-        if include("merge_test_attributes") {
-            reg = reg.with_rule(crate::rules::MergeTestAttributesLint);
+        for name in FAST_LINT_NAMES {
+            if full_mode && FULL_MODE_SUPERSEDED_LINTS.iter().any(|l| l == name) {
+                continue;
+            }
+            if let Some(ref only) = only_set {
+                if !only.contains(name) {
+                    continue;
+                }
+            }
+            if skip_set.contains(name) || disabled_set.contains(name) {
+                continue;
+            }
+
+            // Get the rule's group and filter if preview mode is disabled
+            let group = get_lint_group(name);
+            if group == RuleGroup::Preview && !preview {
+                continue;
+            }
+
+            match *name {
+                "modern_module_syntax" => {
+                    reg = reg.with_rule(crate::rules::ModernModuleSyntaxLint);
+                }
+                "redundant_self_import" => {
+                    reg = reg.with_rule(crate::rules::RedundantSelfImportLint);
+                }
+                "prefer_to_string" => {
+                    reg = reg.with_rule(crate::rules::PreferToStringLint);
+                }
+                "prefer_vector_methods" => {
+                    reg = reg.with_rule(crate::rules::PreferVectorMethodsLint);
+                }
+                "modern_method_syntax" => {
+                    reg = reg.with_rule(crate::rules::ModernMethodSyntaxLint);
+                }
+                "merge_test_attributes" => {
+                    reg = reg.with_rule(crate::rules::MergeTestAttributesLint);
+                }
+                "constant_naming" => {
+                    reg = reg.with_rule(crate::rules::ConstantNamingLint);
+                }
+                "unneeded_return" => {
+                    reg = reg.with_rule(crate::rules::UnneededReturnLint);
+                }
+                "unnecessary_public_entry" => {
+                    reg = reg.with_rule(crate::rules::UnnecessaryPublicEntryLint);
+                }
+                "public_mut_tx_context" => {
+                    reg = reg.with_rule(crate::rules::PublicMutTxContextLint);
+                }
+                "while_true_to_loop" => {
+                    reg = reg.with_rule(crate::rules::WhileTrueToLoopLint);
+                }
+                // P0 lints
+                "abilities_order" => {
+                    reg = reg.with_rule(crate::rules::AbilitiesOrderLint);
+                }
+                "doc_comment_style" => {
+                    reg = reg.with_rule(crate::rules::DocCommentStyleLint);
+                }
+                "explicit_self_assignments" => {
+                    reg = reg.with_rule(crate::rules::ExplicitSelfAssignmentsLint);
+                }
+                "test_abort_code" => {
+                    reg = reg.with_rule(crate::rules::TestAbortCodeLint);
+                }
+                "redundant_test_prefix" => {
+                    reg = reg.with_rule(crate::rules::RedundantTestPrefixLint);
+                }
+                // P1 lints
+                "equality_in_assert" => {
+                    reg = reg.with_rule(crate::rules::EqualityInAssertLint);
+                }
+                "admin_cap_position" => {
+                    reg = reg.with_rule(crate::rules::AdminCapPositionLint);
+                }
+                "manual_option_check" => {
+                    reg = reg.with_rule(crate::rules::ManualOptionCheckLint);
+                }
+                "manual_loop_iteration" => {
+                    reg = reg.with_rule(crate::rules::ManualLoopIterationLint);
+                }
+                // Additional stable lints
+                "event_suffix" => {
+                    reg = reg.with_rule(crate::rules::EventSuffixLint);
+                }
+                "empty_vector_literal" => {
+                    reg = reg.with_rule(crate::rules::EmptyVectorLiteralLint);
+                }
+                "typed_abort_code" => {
+                    reg = reg.with_rule(crate::rules::TypedAbortCodeLint);
+                }
+                // Preview lints
+                "pure_function_transfer" => {
+                    reg = reg.with_rule(crate::rules::PureFunctionTransferLint);
+                }
+                "unsafe_arithmetic" => {
+                    reg = reg.with_rule(crate::rules::UnsafeArithmeticLint);
+                }
+                other => unreachable!("unexpected fast lint name: {other}"),
+            }
         }
 
         Ok(reg)
+    }
+}
+
+/// Get the RuleGroup for a lint by name.
+/// This is used during filtering to determine if a lint should be enabled.
+fn get_lint_group(name: &str) -> RuleGroup {
+    // All P0 and P1 lints are stable
+    match name {
+        "modern_module_syntax"
+        | "redundant_self_import"
+        | "prefer_to_string"
+        | "prefer_vector_methods"
+        | "modern_method_syntax"
+        | "merge_test_attributes"
+        | "constant_naming"
+        | "unneeded_return"
+        | "unnecessary_public_entry"
+        | "public_mut_tx_context"
+        | "while_true_to_loop"
+        // P0 lints
+        | "abilities_order"
+        | "doc_comment_style"
+        | "explicit_self_assignments"
+        | "test_abort_code"
+        | "redundant_test_prefix"
+        // P1 lints
+        | "equality_in_assert"
+        | "admin_cap_position"
+        | "manual_option_check"
+        | "manual_loop_iteration"
+        // Additional stable lints
+        | "event_suffix"
+        | "empty_vector_literal"
+        | "typed_abort_code" => RuleGroup::Stable,
+        
+        // Preview lints (higher FP risk, require --preview flag)
+        | "pure_function_transfer"
+        | "unsafe_arithmetic" => RuleGroup::Preview,
+        
+        // Default to stable for unknown lints
+        _ => RuleGroup::Stable,
     }
 }

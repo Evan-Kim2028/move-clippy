@@ -11,7 +11,8 @@ fn config_can_promote_lint_to_error() {
     let cfg = config::load_config_file(&cfg_path).expect("config should load");
 
     let empty: Vec<String> = Vec::new();
-    let registry = LintRegistry::default_rules_filtered(&empty, &empty, &cfg.lints.disabled)
+    let preview = cfg.lints.preview;
+    let registry = LintRegistry::default_rules_filtered(&empty, &empty, &cfg.lints.disabled, false, preview)
         .expect("registry");
     let settings = LintSettings::default()
         .with_config_levels(cfg.lints.levels)
@@ -35,7 +36,8 @@ fn config_can_disable_lint() {
     let cfg = config::load_config_file(&cfg_path).expect("config should load");
 
     let empty: Vec<String> = Vec::new();
-    let registry = LintRegistry::default_rules_filtered(&empty, &empty, &cfg.lints.disabled)
+    let preview = cfg.lints.preview;
+    let registry = LintRegistry::default_rules_filtered(&empty, &empty, &cfg.lints.disabled, false, preview)
         .expect("registry");
     let settings = LintSettings::default()
         .with_config_levels(cfg.lints.levels)

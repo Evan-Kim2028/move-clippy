@@ -1,9 +1,27 @@
 mod util;
 
+pub mod conventions;
 pub mod modernization;
 pub mod style;
 pub mod test_quality;
 
-pub use modernization::{ModernMethodSyntaxLint, ModernModuleSyntaxLint, PreferVectorMethodsLint};
-pub use style::{PreferToStringLint, RedundantSelfImportLint};
-pub use test_quality::MergeTestAttributesLint;
+// Conventions lints
+pub use conventions::AdminCapPositionLint;
+
+// Modernization lints
+pub use modernization::{
+    EqualityInAssertLint, ManualLoopIterationLint, ManualOptionCheckLint,
+    ModernMethodSyntaxLint, ModernModuleSyntaxLint, PreferVectorMethodsLint,
+    PublicMutTxContextLint, PureFunctionTransferLint, UnnecessaryPublicEntryLint,
+    UnsafeArithmeticLint, WhileTrueToLoopLint,
+};
+
+// Style lints
+pub use style::{
+    AbilitiesOrderLint, ConstantNamingLint, DocCommentStyleLint, EmptyVectorLiteralLint,
+    EventSuffixLint, ExplicitSelfAssignmentsLint, PreferToStringLint, RedundantSelfImportLint,
+    TypedAbortCodeLint, UnneededReturnLint,
+};
+
+// Test quality lints
+pub use test_quality::{MergeTestAttributesLint, RedundantTestPrefixLint, TestAbortCodeLint};

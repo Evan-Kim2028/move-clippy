@@ -1,3 +1,8 @@
+//! Core Move Clippy engine and lint registry.
+//!
+//! The crate exposes a tree-sitter based `LintEngine` for fast mode and
+//! optional semantic helpers when built with the `full` feature.
+
 pub mod cli;
 pub mod config;
 pub mod diagnostics;
@@ -24,6 +29,7 @@ pub struct LintEngine {
 }
 
 impl LintEngine {
+    /// Create a new engine with default lint settings.
     pub fn new(registry: LintRegistry) -> Self {
         Self {
             registry,
@@ -31,10 +37,12 @@ impl LintEngine {
         }
     }
 
+    /// Create a new engine with explicit lint settings (e.g. from config).
     pub fn new_with_settings(registry: LintRegistry, settings: LintSettings) -> Self {
         Self { registry, settings }
     }
 
+    /// Lint a single in-memory source string and return diagnostics.
     pub fn lint_source(&self, source: &str) -> Result<Vec<Diagnostic>> {
         let tree = parse_source(source)?;
         self.run_rules(source, &tree)
@@ -56,6 +64,7 @@ impl LintEngine {
     }
 }
 
+/// Construct a `LintEngine` with all built-in fast lints enabled.
 pub fn create_default_engine() -> LintEngine {
     LintEngine::new(LintRegistry::default_rules())
 }

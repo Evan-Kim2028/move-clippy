@@ -68,6 +68,20 @@ pub struct LintArgs {
     /// Exit with code 1 if any diagnostics are emitted.
     #[arg(long)]
     pub deny_warnings: bool,
+
+    /// Enable preview rules that are not yet stable.
+    ///
+    /// Preview rules may have higher false-positive rates or change behavior
+    /// between versions. Use with caution.
+    #[arg(long)]
+    pub preview: bool,
+
+    /// Apply unsafe fixes (requires --fix when implemented).
+    ///
+    /// Unsafe fixes may change runtime behavior. Review changes carefully
+    /// before committing.
+    #[arg(long)]
+    pub unsafe_fixes: bool,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
