@@ -185,6 +185,43 @@ pub static UNUSED_CAPABILITY_PARAM: LintDescriptor = LintDescriptor {
     fix: FixDescriptor::none(),
 };
 
+/// Detects division operations without zero-divisor validation.
+///
+/// # Security References
+///
+/// - **General Smart Contract Security**: Division by zero causes transaction abort
+/// - **Sui Move**: No automatic zero-check for division operations
+///
+/// # Why This Matters
+///
+/// Division or modulo by zero will abort the transaction. If the divisor
+/// comes from user input or external data, the function should validate
+/// it before performing the division.
+///
+/// # Example (Bad)
+///
+/// ```move
+/// public fun calculate_share(total: u64, count: u64): u64 {
+///     total / count  // Will abort if count is 0!
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun calculate_share(total: u64, count: u64): u64 {
+///     assert!(count != 0, E_DIVISION_BY_ZERO);
+///     total / count
+/// }
+/// ```
+pub static UNCHECKED_DIVISION: LintDescriptor = LintDescriptor {
+    name: "unchecked_division",
+    category: LintCategory::Security,
+    description: "Division without zero-divisor check may abort unexpectedly",
+    group: RuleGroup::Preview, // Preview due to potential FPs
+    fix: FixDescriptor::none(),
+};
+
 static DESCRIPTORS: &[&LintDescriptor] = &[
     &CAPABILITY_NAMING,
     &EVENT_NAMING,
@@ -201,6 +238,7 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     // Security semantic lints
     &UNFROZEN_COIN_METADATA,
     &UNUSED_CAPABILITY_PARAM,
+    &UNCHECKED_DIVISION,
 ];
 
 /// Return descriptors for all semantic lints.
@@ -268,6 +306,9 @@ mod full {
             lint_capability_naming(&mut out, settings, &file_map, &typing_info)?;
             lint_event_naming(&mut out, settings, &file_map, &typing_info)?;
             lint_getter_naming(&mut out, settings, &file_map, &typing_ast)?;
+            lint_unused_capability_param(&mut out, settings, &file_map, &typing_ast)?;
+            lint_unfrozen_coin_metadata(&mut out, settings, &file_map, &typing_ast)?;
+            lint_unchecked_division(&mut out, settings, &file_map, &typing_ast)?;
             lint_sui_visitors(&mut out, settings, &build_plan, &package_root)?;
             Ok(out)
         })
@@ -505,6 +546,473 @@ mod full {
         }
 
         Ok(())
+    }
+
+    // =========================================================================
+    // Security Semantic Lints
+    // =========================================================================
+
+    /// Lint for unused capability parameters - indicates missing access control.
+    ///
+    /// If a function takes a *Cap parameter but never uses it, the access
+    /// control check is likely missing, allowing anyone to call the function.
+    fn lint_unused_capability_param(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                // Find parameters that look like capabilities
+                let cap_params: Vec<_> = fdef
+                    .signature
+                    .parameters
+                    .iter()
+                    .filter(|(_, var, _ty)| {
+                        let name = var.value.name.value().as_str();
+                        name.ends_with("_cap")
+                            || name.ends_with("Cap")
+                            || name == "cap"
+                            || name.starts_with("admin")
+                    })
+                    .map(|(_, var, _)| var.clone())
+                    .collect();
+
+                if cap_params.is_empty() {
+                    continue;
+                }
+
+                // Check if the function body uses these parameters
+                let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
+                    continue;
+                };
+
+                for cap_var in &cap_params {
+                    let is_used = seq_items.iter().any(|item| {
+                        check_var_used_in_seq_item(item, cap_var)
+                    });
+
+                    if !is_used {
+                        let loc = fdef.loc;
+                        let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                            continue;
+                        };
+                        let anchor = loc.start() as usize;
+                        let func_name = fname.value().as_str();
+                        let cap_name = cap_var.value.name.value().as_str();
+
+                        push_diag(
+                            out,
+                            settings,
+                            &UNUSED_CAPABILITY_PARAM,
+                            file,
+                            span,
+                            contents.as_ref(),
+                            anchor,
+                            format!(
+                                "Capability parameter `{cap_name}` in function `{func_name}` is unused. \
+                                 This suggests missing access control - the capability should be checked \
+                                 (e.g., `assert!(cap.pool_id == object::id(pool), E_WRONG_CAP)`)."
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check if a variable is used in a sequence item (recursively).
+    fn check_var_used_in_seq_item(item: &T::SequenceItem, var: &N::Var) -> bool {
+        match &item.value {
+            T::SequenceItem_::Seq(exp) => check_var_used_in_exp(exp, var),
+            T::SequenceItem_::Declare(_) => false,
+            T::SequenceItem_::Bind(_, _, exp) => check_var_used_in_exp(exp, var),
+        }
+    }
+
+    /// Check if a variable is used in an expression (recursively).
+    fn check_var_used_in_exp(exp: &T::Exp, var: &N::Var) -> bool {
+        match &exp.exp.value {
+            T::UnannotatedExp_::Use(v) => v.value.id == var.value.id,
+            T::UnannotatedExp_::Copy { var: v, .. } => v.value.id == var.value.id,
+            T::UnannotatedExp_::Move { var: v, .. } => v.value.id == var.value.id,
+            T::UnannotatedExp_::BorrowLocal(_, v) => v.value.id == var.value.id,
+            
+            // Recursive cases
+            T::UnannotatedExp_::ModuleCall(call) => {
+                call.arguments.iter().any(|arg| check_var_used_in_exp(arg, var))
+            }
+            T::UnannotatedExp_::VarCall(_, args) => {
+                args.iter().any(|arg| check_var_used_in_exp(arg, var))
+            }
+            T::UnannotatedExp_::Builtin(_, args) => {
+                args.iter().any(|arg| check_var_used_in_exp(arg, var))
+            }
+            T::UnannotatedExp_::Vector(_, _, _, args) => {
+                args.iter().any(|arg| check_var_used_in_exp(arg, var))
+            }
+            T::UnannotatedExp_::Pack(_, _, _, fields) => {
+                fields.iter().any(|(_, _, (_, (_, exp)))| check_var_used_in_exp(exp, var))
+            }
+            T::UnannotatedExp_::ExpList(items) => {
+                items.iter().any(|item| match item {
+                    T::ExpListItem::Single(e, _) => check_var_used_in_exp(e, var),
+                    T::ExpListItem::Splat(_, e, _) => check_var_used_in_exp(e, var),
+                })
+            }
+            T::UnannotatedExp_::Borrow(_, inner, _) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::TempBorrow(_, inner) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::Dereference(inner) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::UnaryExp(_, inner) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::BinopExp(left, _, _, right) => {
+                check_var_used_in_exp(left, var) || check_var_used_in_exp(right, var)
+            }
+            T::UnannotatedExp_::IfElse(cond, then_e, else_e) => {
+                check_var_used_in_exp(cond, var)
+                    || check_var_used_in_exp(then_e, var)
+                    || check_var_used_in_exp(else_e, var)
+            }
+            T::UnannotatedExp_::While(_, cond, body) => {
+                check_var_used_in_exp(cond, var) || check_var_used_in_exp(body, var)
+            }
+            T::UnannotatedExp_::Loop { body, .. } => check_var_used_in_exp(body, var),
+            T::UnannotatedExp_::Block((_, seq)) => {
+                seq.iter().any(|item| check_var_used_in_seq_item(item, var))
+            }
+            T::UnannotatedExp_::Assign(_, _, rhs) => check_var_used_in_exp(rhs, var),
+            T::UnannotatedExp_::Mutate(lhs, rhs) => {
+                check_var_used_in_exp(lhs, var) || check_var_used_in_exp(rhs, var)
+            }
+            T::UnannotatedExp_::Return(inner) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::Abort(inner) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::Cast(inner, _) => check_var_used_in_exp(inner, var),
+            T::UnannotatedExp_::Annotate(inner, _) => check_var_used_in_exp(inner, var),
+            
+            // Base cases that don't use variables
+            T::UnannotatedExp_::Unit { .. }
+            | T::UnannotatedExp_::Value(_)
+            | T::UnannotatedExp_::Constant(_, _)
+            | T::UnannotatedExp_::Break
+            | T::UnannotatedExp_::Continue
+            | T::UnannotatedExp_::UnresolvedError
+            | T::UnannotatedExp_::ErrorConstant { .. } => false,
+            
+            // Catch-all for other cases
+            _ => false,
+        }
+    }
+
+    /// Lint for CoinMetadata being shared instead of frozen.
+    ///
+    /// CoinMetadata should be frozen (immutable) to prevent the admin from
+    /// modifying token name/symbol after deployment.
+    fn lint_unfrozen_coin_metadata(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            // Look for init functions
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                let func_name = fname.value().as_str();
+                if func_name != "init" {
+                    continue;
+                }
+
+                let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
+                    continue;
+                };
+
+                // Check for share_object calls on metadata
+                for item in seq_items.iter() {
+                    check_metadata_share_in_seq_item(item, out, settings, file_map, &fdef.loc);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Recursively check for share_object calls on CoinMetadata.
+    fn check_metadata_share_in_seq_item(
+        item: &T::SequenceItem,
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_loc: &Loc,
+    ) {
+        match &item.value {
+            T::SequenceItem_::Seq(exp) => {
+                check_metadata_share_in_exp(exp, out, settings, file_map, func_loc);
+            }
+            T::SequenceItem_::Bind(_, _, exp) => {
+                check_metadata_share_in_exp(exp, out, settings, file_map, func_loc);
+            }
+            _ => {}
+        }
+    }
+
+    /// Check if an expression is a share_object call on CoinMetadata.
+    fn check_metadata_share_in_exp(
+        exp: &T::Exp,
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_loc: &Loc,
+    ) {
+        match &exp.exp.value {
+            T::UnannotatedExp_::ModuleCall(call) => {
+                let module_name = call.module.value.module.value().as_str();
+                let func_name = call.name.value().as_str();
+                
+                // Check for transfer::public_share_object or transfer::share_object
+                if module_name == "transfer" 
+                    && (func_name == "public_share_object" || func_name == "share_object") 
+                {
+                    // Check if argument type contains CoinMetadata
+                    // For simplicity, we check if any type argument contains "CoinMetadata"
+                    let type_str = format!("{:?}", call.type_arguments);
+                    if type_str.contains("CoinMetadata") {
+                        let loc = exp.exp.loc;
+                        let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                            return;
+                        };
+                        let anchor = loc.start() as usize;
+
+                        push_diag(
+                            out,
+                            settings,
+                            &UNFROZEN_COIN_METADATA,
+                            file,
+                            span,
+                            contents.as_ref(),
+                            anchor,
+                            "CoinMetadata is being shared instead of frozen. \
+                             Use `transfer::public_freeze_object(metadata)` to make it immutable. \
+                             Shared metadata allows the admin to modify token name/symbol after deployment."
+                                .to_string(),
+                        );
+                    }
+                }
+
+                // Recurse into arguments
+                for arg in &call.arguments {
+                    check_metadata_share_in_exp(arg, out, settings, file_map, func_loc);
+                }
+            }
+            T::UnannotatedExp_::Block((_, seq)) => {
+                for item in seq.iter() {
+                    check_metadata_share_in_seq_item(item, out, settings, file_map, func_loc);
+                }
+            }
+            T::UnannotatedExp_::IfElse(cond, then_e, else_e) => {
+                check_metadata_share_in_exp(cond, out, settings, file_map, func_loc);
+                check_metadata_share_in_exp(then_e, out, settings, file_map, func_loc);
+                check_metadata_share_in_exp(else_e, out, settings, file_map, func_loc);
+            }
+            _ => {}
+        }
+    }
+
+    /// Lint for division operations without zero-divisor checks.
+    ///
+    /// Division by zero will abort the transaction. This lint detects divisions
+    /// where the divisor hasn't been validated as non-zero.
+    fn lint_unchecked_division(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
+                    continue;
+                };
+
+                // Track variables that have been validated as non-zero
+                let mut validated_vars: std::collections::HashSet<u16> = std::collections::HashSet::new();
+                
+                for item in seq_items.iter() {
+                    check_division_in_seq_item(
+                        item,
+                        &mut validated_vars,
+                        out,
+                        settings,
+                        file_map,
+                        fname.value().as_str(),
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check for division operations in a sequence item.
+    fn check_division_in_seq_item(
+        item: &T::SequenceItem,
+        validated_vars: &mut std::collections::HashSet<u16>,
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        match &item.value {
+            T::SequenceItem_::Seq(exp) => {
+                // Check for assert statements that validate non-zero
+                check_for_nonzero_assertion(exp, validated_vars);
+                check_division_in_exp(exp, validated_vars, out, settings, file_map, func_name);
+            }
+            T::SequenceItem_::Bind(_, _, exp) => {
+                check_division_in_exp(exp, validated_vars, out, settings, file_map, func_name);
+            }
+            _ => {}
+        }
+    }
+
+    /// Check if an expression is an assertion that validates a variable is non-zero.
+    fn check_for_nonzero_assertion(exp: &T::Exp, validated_vars: &mut std::collections::HashSet<u16>) {
+        // Look for assert!(var != 0, ...) or assert!(var > 0, ...)
+        if let T::UnannotatedExp_::Builtin(builtin, args) = &exp.exp.value {
+            let builtin_str = format!("{:?}", builtin);
+            if builtin_str.contains("Assert") && !args.is_empty() {
+                // Check if the condition is a comparison with 0
+                if let Some(first_arg) = args.first() {
+                    if let T::UnannotatedExp_::BinopExp(left, op, _, right) = &first_arg.exp.value {
+                        let op_str = format!("{:?}", op);
+                        // Check for != 0 or > 0
+                        if op_str.contains("Neq") || op_str.contains("Gt") {
+                            // Check if comparing with 0
+                            if is_zero_value(right) {
+                                if let Some(var_id) = extract_var_id(left) {
+                                    validated_vars.insert(var_id);
+                                }
+                            }
+                            if is_zero_value(left) {
+                                if let Some(var_id) = extract_var_id(right) {
+                                    validated_vars.insert(var_id);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Check if an expression is a zero value.
+    fn is_zero_value(exp: &T::Exp) -> bool {
+        if let T::UnannotatedExp_::Value(val) = &exp.exp.value {
+            let val_str = format!("{:?}", val);
+            val_str.contains("0") && !val_str.contains("0x")
+        } else {
+            false
+        }
+    }
+
+    /// Extract variable ID from an expression if it's a simple variable reference.
+    fn extract_var_id(exp: &T::Exp) -> Option<u16> {
+        match &exp.exp.value {
+            T::UnannotatedExp_::Use(v) => Some(v.value.id),
+            T::UnannotatedExp_::Copy { var, .. } => Some(var.value.id),
+            T::UnannotatedExp_::Move { var, .. } => Some(var.value.id),
+            _ => None,
+        }
+    }
+
+    /// Check for division operations in an expression.
+    fn check_division_in_exp(
+        exp: &T::Exp,
+        validated_vars: &std::collections::HashSet<u16>,
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        match &exp.exp.value {
+            T::UnannotatedExp_::BinopExp(left, op, _, right) => {
+                let op_str = format!("{:?}", op);
+                if op_str.contains("Div") || op_str.contains("Mod") {
+                    // Check if the divisor (right) is a validated variable
+                    let divisor_validated = if let Some(var_id) = extract_var_id(right) {
+                        validated_vars.contains(&var_id)
+                    } else {
+                        // If it's a constant or complex expression, assume it might be safe
+                        // (conservative approach to reduce FPs)
+                        matches!(&right.exp.value, T::UnannotatedExp_::Value(_) | T::UnannotatedExp_::Constant(_, _))
+                    };
+
+                    if !divisor_validated {
+                        let loc = exp.exp.loc;
+                        let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                            return;
+                        };
+                        let anchor = loc.start() as usize;
+
+                        push_diag(
+                            out,
+                            settings,
+                            &UNCHECKED_DIVISION,
+                            file,
+                            span,
+                            contents.as_ref(),
+                            anchor,
+                            format!(
+                                "Division in function `{func_name}` may divide by zero. \
+                                 Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation."
+                            ),
+                        );
+                    }
+                }
+
+                // Recurse
+                check_division_in_exp(left, validated_vars, out, settings, file_map, func_name);
+                check_division_in_exp(right, validated_vars, out, settings, file_map, func_name);
+            }
+            T::UnannotatedExp_::ModuleCall(call) => {
+                for arg in &call.arguments {
+                    check_division_in_exp(arg, validated_vars, out, settings, file_map, func_name);
+                }
+            }
+            T::UnannotatedExp_::Block((_, seq)) => {
+                let mut local_validated = validated_vars.clone();
+                for item in seq.iter() {
+                    check_division_in_seq_item(item, &mut local_validated, out, settings, file_map, func_name);
+                }
+            }
+            T::UnannotatedExp_::IfElse(cond, then_e, else_e) => {
+                check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
+                check_division_in_exp(then_e, validated_vars, out, settings, file_map, func_name);
+                check_division_in_exp(else_e, validated_vars, out, settings, file_map, func_name);
+            }
+            _ => {}
+        }
     }
 
     fn lint_sui_visitors(

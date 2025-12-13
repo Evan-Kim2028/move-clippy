@@ -426,6 +426,7 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
     // Security semantic lints (audit-backed, see docs/SECURITY_LINTS.md)
     "unfrozen_coin_metadata",
     "unused_capability_param",
+    "unchecked_division",
 ];
 
 pub fn is_semantic_lint(name: &str) -> bool {

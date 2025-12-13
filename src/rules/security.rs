@@ -420,7 +420,7 @@ fn get_copy_drop_abilities(struct_node: Node, source: &str) -> (bool, bool) {
 pub static SHARED_CAPABILITY: LintDescriptor = LintDescriptor {
     name: "shared_capability",
     category: LintCategory::Security,
-    description: "Capability object is being shared, making it publicly accessible to anyone",
+    description: "Capability object is being shared, making it publicly accessible (see: Sui security best practices)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
 };
@@ -828,7 +828,7 @@ fn check_stale_oracle_price(node: Node, source: &str, ctx: &mut LintContext<'_>)
 pub static SINGLE_STEP_OWNERSHIP_TRANSFER: LintDescriptor = LintDescriptor {
     name: "single_step_ownership_transfer",
     category: LintCategory::Security,
-    description: "Single-step ownership transfer is dangerous - use two-step (propose + accept) pattern",
+    description: "Single-step ownership transfer is dangerous - use two-step pattern (see: OpenZeppelin Ownable2Step)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
 };
@@ -1067,7 +1067,7 @@ fn check_unchecked_coin_split(node: Node, source: &str, ctx: &mut LintContext<'_
 pub static MISSING_WITNESS_DROP: LintDescriptor = LintDescriptor {
     name: "missing_witness_drop",
     category: LintCategory::Security,
-    description: "One-time witness struct missing `drop` ability",
+    description: "One-time witness struct missing `drop` ability (see: Sui OTW pattern docs)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
 };
@@ -1174,7 +1174,7 @@ fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_
 pub static PUBLIC_RANDOM_ACCESS: LintDescriptor = LintDescriptor {
     name: "public_random_access",
     category: LintCategory::Security,
-    description: "Public function exposes Random object, enabling front-running",
+    description: "Public function exposes Random object, enabling front-running (see: Sui randomness docs)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
 };
