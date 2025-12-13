@@ -1,0 +1,1058 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/admin.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/admin.move",
+    "row": 25,
+    "column": 7,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/admin.move",
+    "row": 28,
+    "column": 7,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/admin.move",
+    "row": 46,
+    "column": 7,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 69,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `SlidingWindowElement` should end with `Event` suffix (e.g., `SlidingWindowElementEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 69,
+    "column": 33,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, drop, copy`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 89,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `AggregatorHistoryRow` should end with `Event` suffix (e.g., `AggregatorHistoryRowEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 89,
+    "column": 33,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has drop, copy, store`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 130,
+    "column": 19,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 138,
+    "column": 23,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 139,
+    "column": 26,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 140,
+    "column": 28,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 146,
+    "column": 20,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `read_whitelist.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 147,
+    "column": 37,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `read_whitelist.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 176,
+    "column": 23,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 190,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `aggregator.share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 190,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 217,
+    "column": 60,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 218,
+    "column": 33,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 265,
+    "column": 5,
+    "level": "warning",
+    "lint": "single_step_ownership_transfer",
+    "message": "Function `set_authority` appears to implement single-step ownership transfer. This is dangerous - a typo in the new address permanently locks out admin access. Consider implementing a two-step pattern: 1) propose_admin sets pending_admin, 2) accept_admin requires the new admin to confirm."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 287,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 308,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 354,
+    "column": 20,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `read_whitelist.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 355,
+    "column": 55,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `read_whitelist.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 361,
+    "column": 20,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `remove_from_whitelist.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 362,
+    "column": 73,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `remove_from_whitelist.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 373,
+    "column": 39,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 389,
+    "column": 19,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 456,
+    "column": 23,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 460,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `medians.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 586,
+    "column": 13,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 589,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 608,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/aggregator.move",
+    "row": 616,
+    "column": 5,
+    "level": "warning",
+    "lint": "unnecessary_public_entry",
+    "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/errors.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/job.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/job.move",
+    "row": 39,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `job.freeze_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/job.move",
+    "row": 39,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 14,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `SwitchboardDecimal` should end with `Event` suffix (e.g., `SwitchboardDecimalEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 78,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `v.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 79,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `v.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 84,
+    "column": 14,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `v.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 294,
+    "column": 20,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 294,
+    "column": 48,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 310,
+    "column": 20,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 310,
+    "column": 44,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 336,
+    "column": 23,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 339,
+    "column": 23,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 402,
+    "column": 25,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 402,
+    "column": 53,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 408,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `test_math` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 408,
+    "column": 5,
+    "level": "warning",
+    "lint": "unnecessary_public_entry",
+    "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 410,
+    "column": 47,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 411,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 412,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 413,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 414,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 415,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 416,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 417,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 418,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 419,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 420,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 421,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 422,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 423,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 424,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 425,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 426,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 431,
+    "column": 47,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 432,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 433,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 434,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 435,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 436,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 437,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 438,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 439,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 440,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 441,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 442,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 443,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 444,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 445,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 446,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 447,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 452,
+    "column": 47,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 453,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 454,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 455,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 456,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 457,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 458,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 459,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 460,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 461,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 462,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 463,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 464,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 465,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 466,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 467,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 468,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 474,
+    "column": 47,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 475,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 481,
+    "column": 47,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 482,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 483,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 489,
+    "column": 47,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 490,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 491,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 492,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 498,
+    "column": 47,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 499,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/math.move",
+    "row": 500,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/quote.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/quote.move",
+    "row": 111,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `quote.share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/quote.move",
+    "row": 111,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 23,
+    "column": 34,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 28,
+    "column": 24,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `vec.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 29,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `result.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 70,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `escrow.value(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 137,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bytes.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 138,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bytes.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 143,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bytes.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 144,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bytes.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 145,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bytes.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 146,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bytes.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/switchboard_rule/vendors/switchboard_std_test/sources/utils.move",
+    "row": 150,
+    "column": 5,
+    "level": "warning",
+    "lint": "unnecessary_public_entry",
+    "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+  }
+]

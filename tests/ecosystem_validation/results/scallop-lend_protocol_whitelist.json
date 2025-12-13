@@ -1,0 +1,58 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol_whitelist/sources/protocol_whitelist.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol_whitelist/sources/protocol_whitelist.move",
+    "row": 22,
+    "column": 10,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `ScallopWhitelistAllowAll` should end with `Event` suffix (e.g., `ScallopWhitelistAllowAllEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol_whitelist/sources/protocol_whitelist.move",
+    "row": 26,
+    "column": 10,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `ScallopWhitelistRejectAll` should end with `Event` suffix (e.g., `ScallopWhitelistRejectAllEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol_whitelist/sources/protocol_whitelist.move",
+    "row": 44,
+    "column": 38,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `market.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol_whitelist/sources/protocol_whitelist.move",
+    "row": 62,
+    "column": 38,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `market.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol_whitelist/sources/protocol_whitelist.move",
+    "row": 87,
+    "column": 38,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `market.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/protocol_whitelist/sources/protocol_whitelist.move",
+    "row": 103,
+    "column": 38,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `market.id(...)`"
+  }
+]

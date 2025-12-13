@@ -1,0 +1,498 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracle_decimal.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracle_decimal.move",
+    "row": 3,
+    "column": 19,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `OracleDecimal` should end with `Event` suffix (e.g., `OracleDecimalEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 29,
+    "column": 36,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has copy, store, drop`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 131,
+    "column": 22,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 138,
+    "column": 33,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 142,
+    "column": 26,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 143,
+    "column": 27,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `admin_cap.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 169,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add_pyth_oracle` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 171,
+    "column": 9,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&AdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 176,
+    "column": 49,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 188,
+    "column": 9,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&AdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 193,
+    "column": 49,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 200,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add_switchboard_oracle` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 202,
+    "column": 9,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&AdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 207,
+    "column": 49,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 217,
+    "column": 9,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&AdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 222,
+    "column": 49,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 248,
+    "column": 41,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 281,
+    "column": 41,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 297,
+    "column": 22,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/oracles.move",
+    "row": 304,
+    "column": 33,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/pyth.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/pyth.move",
+    "row": 7,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/switchboard.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/version.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/sources/version.move",
+    "row": 9,
+    "column": 27,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has drop, store`. Found: `has store, drop`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 3,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 5,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 6,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 7,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 8,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 31,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `new_price_info_obj` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 32,
+    "column": 21,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 33,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `v.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/mock_pyth.move",
+    "row": 37,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `v.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/oracles_tests.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/oracles_tests.move",
+    "row": 2,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/oracles_tests.move",
+    "row": 8,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/oracles_tests.move",
+    "row": 203,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 4,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 7,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 12,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `example_price_identifier` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 13,
+    "column": 21,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 17,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `v.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 26,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 75,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 78,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 123,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 126,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 173,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/pyth_tests.move",
+    "row": 176,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 3,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 8,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 65,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 68,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 124,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 127,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 181,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/suilend/contracts/oracles/tests/switchboard_tests.move",
+    "row": 184,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  }
+]

@@ -1,0 +1,410 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_feed.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_feed.move",
+    "row": 6,
+    "column": 20,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 35,
+    "column": 10,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `PriceUpdatePolicyRulesKey` should end with `Event` suffix (e.g., `PriceUpdatePolicyRulesKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 44,
+    "column": 12,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `policy.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 51,
+    "column": 12,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `policy.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 53,
+    "column": 20,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 72,
+    "column": 10,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `rules_table.contains(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 76,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `rules_table.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 80,
+    "column": 3,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add_rule_v2` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 82,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&PriceUpdatePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 84,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `policy.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 92,
+    "column": 10,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `rules_table.contains(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 93,
+    "column": 7,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `rules_table.add(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 96,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `rules_table.borrow_mut(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 100,
+    "column": 3,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add_rule` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 102,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&PriceUpdatePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 104,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `policy.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 110,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&PriceUpdatePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 112,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `policy.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 120,
+    "column": 10,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `rules_table.contains(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 124,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `rules_table.borrow_mut(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 130,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&PriceUpdatePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 132,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `policy.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 136,
+    "column": 3,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add_price_feed` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 147,
+    "column": 20,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `policy.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 150,
+    "column": 21,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `receipts.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/price_update_policy.move",
+    "row": 155,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `receipts.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/test/mock_adapter/pyth_mock_adapter.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/test/mock_adapter/supra_mock_adapter.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/test/mock_adapter/switchboard_mock_adapter.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/test/primary_test.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/test/primary_with_secondary_test.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/test/test_utils.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/test/test_utils.move",
+    "row": 18,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `prices.contains(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 48,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `x_oracle.share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 49,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `x_oracle_policy_cap.transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 49,
+    "column": 45,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 80,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&XOraclePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 90,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&XOraclePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 100,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&XOraclePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 110,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&XOraclePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 120,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&XOraclePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 130,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&XOraclePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 140,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&XOraclePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 150,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&XOraclePolicyCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 222,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `primary_price_feeds.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 223,
+    "column": 30,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `primary_price_feeds.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 224,
+    "column": 36,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `secondary_price_feeds.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/x_oracle/sources/x_oracle.move",
+    "row": 231,
+    "column": 34,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `secondary_price_feeds.pop_back(...)`"
+  }
+]

@@ -1,0 +1,306 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 4,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 48,
+    "column": 7,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ac_table.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 61,
+    "column": 3,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 82,
+    "column": 7,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 156,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 156,
+    "column": 17,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 158,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 169,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 169,
+    "column": 17,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ac_table.move",
+    "row": 171,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/balance_bag.move",
+    "row": 9,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/balance_bag.move",
+    "row": 36,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `in_bag_balance.join(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/balance_bag.move",
+    "row": 39,
+    "column": 3,
+    "level": "warning",
+    "lint": "unchecked_coin_split",
+    "message": "Function `split` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/balance_bag.move",
+    "row": 42,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `in_bag_balance.split(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/balance_bag.move",
+    "row": 48,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `in_bag_balance.value(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/balance_bag.move",
+    "row": 62,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/one_time_lock_value.move",
+    "row": 6,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/one_time_lock_value.move",
+    "row": 31,
+    "column": 22,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.epoch(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/one_time_lock_value.move",
+    "row": 48,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/one_time_lock_value.move",
+    "row": 50,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.epoch(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/one_time_lock_value.move",
+    "row": 62,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/one_time_lock_value.move",
+    "row": 62,
+    "column": 26,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/one_time_lock_value.move",
+    "row": 63,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/one_time_lock_value.move",
+    "row": 65,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.epoch(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ownership.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/ownership.move",
+    "row": 28,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `item.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/supply_bag.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/supply_bag.move",
+    "row": 54,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 4,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 46,
+    "column": 3,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 67,
+    "column": 7,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 139,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 139,
+    "column": 18,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 141,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 151,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 151,
+    "column": 18,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/wit_table.move",
+    "row": 153,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/x/sources/witness.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  }
+]

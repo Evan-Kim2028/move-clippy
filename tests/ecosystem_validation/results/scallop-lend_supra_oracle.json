@@ -1,0 +1,10 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/supra_rule/vendors/supra_oracle/sources/SupraSValueFeed.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  }
+]

@@ -1,0 +1,98 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 9,
+    "column": 10,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `WhitelistKey` should end with `Event` suffix (e.g., `WhitelistKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 9,
+    "column": 23,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has copy, store, drop`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 13,
+    "column": 10,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `AllowAllKey` should end with `Event` suffix (e.g., `AllowAllKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 13,
+    "column": 22,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has copy, store, drop`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 15,
+    "column": 10,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `RejectAllKey` should end with `Event` suffix (e.g., `RejectAllKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 15,
+    "column": 23,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has copy, store, drop`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 49,
+    "column": 50,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `uid.uid_to_inner(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 54,
+    "column": 53,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `uid.uid_to_inner(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 61,
+    "column": 37,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `uid.uid_to_inner(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 72,
+    "column": 38,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `uid.uid_to_inner(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/libs/whitelist/sources/whitelist.move",
+    "row": 83,
+    "column": 50,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `uid.uid_to_inner(...)`"
+  }
+]

@@ -7,7 +7,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESULTS_DIR="$SCRIPT_DIR/results"
 CLIPPY_BIN="$SCRIPT_DIR/../../target/release/move-clippy"
-REPOS_DIR="$SCRIPT_DIR/../../ecosystem-test-repos"
+# Ecosystem repos are in packages/ecosystem-test-repos
+REPOS_DIR="/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -20,19 +21,23 @@ echo -e "${YELLOW}Building move-clippy in release mode...${NC}"
 cd "$SCRIPT_DIR/../.."
 cargo build --release
 
-# Repository list with metadata
-declare -A REPOS=(
-    ["alphalend"]="AlphaLend lending protocol"
-    ["scallop-lend"]="Scallop lending protocol"
-    ["suilend"]="Suilend lending protocol"
-    ["deepbookv3"]="DeepBook V3 DEX"
-    ["cetus-clmm"]="Cetus CLMM DEX"
-    ["bluefin-spot"]="Bluefin spot trading"
-    ["bluefin-pro"]="Bluefin perpetuals"
-    ["bluefin-integer"]="Bluefin integer math"
-    ["openzeppelin-sui"]="OpenZeppelin Sui library"
-    ["steamm"]="Steamm AMM"
-    ["suilend-liquid-staking"]="Suilend liquid staking"
+# NOTE: Semantic lints (--mode full) require --features full at build time
+# and currently have compilation issues. Running fast lints only for now.
+LINT_MODE="fast"
+
+# Repository list (simple arrays instead of associative)
+REPOS=(
+    "alphalend:AlphaLend lending protocol"
+    "scallop-lend:Scallop lending protocol"
+    "suilend:Suilend lending protocol"
+    "deepbookv3:DeepBook V3 DEX"
+    "cetus-clmm:Cetus CLMM DEX"
+    "bluefin-spot:Bluefin spot trading"
+    "bluefin-pro:Bluefin perpetuals"
+    "bluefin-integer:Bluefin integer math"
+    "openzeppelin-sui:OpenZeppelin Sui library"
+    "steamm:Steamm AMM"
+    "suilend-liquid-staking:Suilend liquid staking"
 )
 
 # Statistics tracking
@@ -50,10 +55,11 @@ rm -f "$RESULTS_DIR"/*.json
 rm -f "$RESULTS_DIR"/*.log
 
 # Run linter on each repo
-for repo_name in "${!REPOS[@]}"; do
+for repo_entry in "${REPOS[@]}"; do
     TOTAL_REPOS=$((TOTAL_REPOS + 1))
+    repo_name="${repo_entry%%:*}"
+    description="${repo_entry#*:}"
     repo_path="$REPOS_DIR/$repo_name"
-    description="${REPOS[$repo_name]}"
     
     echo -e "${YELLOW}Processing: $repo_name${NC} - $description"
     
@@ -64,7 +70,7 @@ for repo_name in "${!REPOS[@]}"; do
     fi
     
     # Find Move.toml files (may have multiple packages)
-    move_tomls=$(find "$repo_path" -name "Move.toml" -type f)
+    move_tomls=$(find "$repo_path" -name "Move.toml" -type f | grep -v "deps-")
     
     if [ -z "$move_tomls" ]; then
         echo -e "${RED}  ✗ No Move.toml found${NC}"
@@ -83,19 +89,29 @@ for repo_name in "${!REPOS[@]}"; do
         echo -e "  Checking package: $package_name"
         
         # Run move-clippy with preview lints enabled
-        # Capture both stdout and stderr
+        # Use --package flag and --format json
         output_file="$RESULTS_DIR/${repo_name}_${package_name}.json"
         log_file="$RESULTS_DIR/${repo_name}_${package_name}.log"
         
-        if "$CLIPPY_BIN" check "$package_dir" --preview --json > "$output_file" 2> "$log_file"; then
+        # Run with explicit package flag for semantic lints
+        if "$CLIPPY_BIN" --mode "$LINT_MODE" --package "$package_dir" --preview --format json "$package_dir" > "$output_file" 2> "$log_file"; then
             # Count findings
-            count=$(jq '. | length' "$output_file" 2>/dev/null || echo "0")
+            count=$(jq 'if type=="array" then length else 0 end' "$output_file" 2>/dev/null || echo "0")
             findings_count=$((findings_count + count))
             echo -e "    ${GREEN}✓${NC} Found $count lint findings"
         else
-            # Linter failed (compilation error, etc.)
-            echo -e "    ${RED}✗${NC} Linting failed - see $log_file"
-            echo "ERROR" > "$output_file"
+            # Check if it's just a compilation error vs actual crash
+            exit_code=$?
+            if [ $exit_code -eq 1 ]; then
+                # Linter found issues but ran successfully
+                count=$(jq 'if type=="array" then length else 0 end' "$output_file" 2>/dev/null || echo "0")
+                findings_count=$((findings_count + count))
+                echo -e "    ${YELLOW}⚠${NC} Found $count lint findings (with warnings)"
+            else
+                # Actual error - compilation failed, etc.
+                echo -e "    ${RED}✗${NC} Linting failed (exit $exit_code) - see $log_file"
+                echo '{"error": "compilation_failed"}' > "$output_file"
+            fi
         fi
         
         package_count=$((package_count + 1))
@@ -138,7 +154,8 @@ summary_file="$RESULTS_DIR/_SUMMARY.txt"
     echo "Per-repo findings:"
     echo ""
     
-    for repo_name in "${!REPOS[@]}"; do
+    for repo_name in "${REPOS[@]}"; do
+        repo_name="${repo_name%:*}"
         total_findings=0
         for result_file in "$RESULTS_DIR/${repo_name}"_*.json; do
             if [ -f "$result_file" ] && [ "$(cat "$result_file")" != "ERROR" ]; then

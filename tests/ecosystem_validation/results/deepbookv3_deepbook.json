@@ -1,0 +1,1722 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 64,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `BalanceKey` should end with `Event` suffix (e.g., `BalanceKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 168,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 181,
+    "column": 65,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 228,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 240,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 245,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 254,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 255,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 260,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 280,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DepositCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 282,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 297,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&WithdrawCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 374,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 406,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `referral.share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 406,
+    "column": 5,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 411,
+    "column": 77,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 452,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DepositCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 453,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 458,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 466,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&WithdrawCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 467,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 472,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 510,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 510,
+    "column": 24,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 548,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 563,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 578,
+    "column": 29,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 582,
+    "column": 59,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 586,
+    "column": 55,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 587,
+    "column": 51,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.borrow_id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 590,
+    "column": 60,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DepositCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 591,
+    "column": 51,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `deposit_cap.borrow_id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 594,
+    "column": 61,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&WithdrawCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/balance_manager.move",
+    "row": 595,
+    "column": 51,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `withdraw_cap.borrow_id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/book/book.move",
+    "row": 333,
+    "column": 1,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `get_level2_range_and_ticks` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/book/fill.move",
+    "row": 12,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `Fill` should end with `Event` suffix (e.g., `FillEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/book/order_info.move",
+    "row": 34,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `OrderInfo` should end with `Event` suffix (e.g., `OrderInfoEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/book/order_info.move",
+    "row": 291,
+    "column": 1,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add_fill` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/book/order_info.move",
+    "row": 483,
+    "column": 1,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `match_maker` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 67,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `SliceRef` should end with `Event` suffix (e.g., `SliceRefEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 177,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 177,
+    "column": 19,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 267,
+    "column": 17,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 267,
+    "column": 26,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 1164,
+    "column": 1,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `slice_merge` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 1238,
+    "column": 1,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `inorder_values` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 1266,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 4 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/big_vector.move",
+    "row": 1266,
+    "column": 19,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 4 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/helper/utils.move",
+    "row": 24,
+    "column": 1,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `pop_n` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 190,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 223,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 271,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 323,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 425,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 495,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 534,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 562,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 579,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 626,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 642,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 663,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 688,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 702,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 896,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 902,
+    "column": 23,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `referral.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 917,
+    "column": 23,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `referral.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 949,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 969,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 983,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1006,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1029,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1056,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1074,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1700,
+    "column": 23,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `referral.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1751,
+    "column": 19,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `pool.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1764,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `creation_fee.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1764,
+    "column": 5,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1765,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `pool.share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1765,
+    "column": 5,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1823,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/pool.move",
+    "row": 1930,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 52,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `PoolKey` should end with `Event` suffix (e.g., `PoolKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 57,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `StableCoinKey` should end with `Event` suffix (e.g., `StableCoinKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 58,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `BalanceManagerKey` should end with `Event` suffix (e.g., `BalanceManagerKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 64,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `AppKey` should end with `Event` suffix (e.g., `AppKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 67,
+    "column": 58,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 72,
+    "column": 60,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 95,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 97,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `admin.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 106,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 115,
+    "column": 62,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 124,
+    "column": 63,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 133,
+    "column": 60,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 159,
+    "column": 63,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 180,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 339,
+    "column": 14,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 340,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `registry.share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/registry.move",
+    "row": 340,
+    "column": 5,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/account.move",
+    "row": 13,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `Account` should end with `Event` suffix (e.g., `AccountEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/account.move",
+    "row": 65,
+    "column": 32,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/account.move",
+    "row": 83,
+    "column": 53,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/balances.move",
+    "row": 11,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `Balances` should end with `Event` suffix (e.g., `BalancesEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/ewma.move",
+    "row": 17,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `EWMAState` should end with `Event` suffix (e.g., `EWMAStateEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/ewma.move",
+    "row": 27,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `EWMAUpdate` should end with `Event` suffix (e.g., `EWMAUpdateEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/ewma.move",
+    "row": 35,
+    "column": 42,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/ewma.move",
+    "row": 54,
+    "column": 83,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/ewma.move",
+    "row": 95,
+    "column": 52,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/ewma.move",
+    "row": 140,
+    "column": 80,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/governance.move",
+    "row": 36,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `Proposal` should end with `Event` suffix (e.g., `ProposalEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/governance.move",
+    "row": 72,
+    "column": 70,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/governance.move",
+    "row": 120,
+    "column": 56,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/history.move",
+    "row": 22,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `Volumes` should end with `Event` suffix (e.g., `VolumesEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/history.move",
+    "row": 39,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `EpochData` should end with `Event` suffix (e.g., `EpochDataEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/history.move",
+    "row": 86,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/history.move",
+    "row": 170,
+    "column": 1,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `update_historic_median` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 64,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `RebateEventV2` should end with `Event` suffix (e.g., `RebateEventV2Event`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 112,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 196,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 221,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 245,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 270,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 302,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 342,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 376,
+    "column": 10,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 414,
+    "column": 59,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 438,
+    "column": 68,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/state.move",
+    "row": 471,
+    "column": 67,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/state/trade_params.move",
+    "row": 8,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `TradeParams` should end with `Event` suffix (e.g., `TradeParamsEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/deep_price.move",
+    "row": 47,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `OrderDeepPrice` should end with `Event` suffix (e.g., `OrderDeepPriceEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+    "row": 58,
+    "column": 1,
+    "level": "warning",
+    "lint": "unchecked_coin_split",
+    "message": "Function `settle_balance_manager` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+    "row": 135,
+    "column": 1,
+    "level": "warning",
+    "lint": "unchecked_coin_split",
+    "message": "Function `withdraw_deep_to_burn` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+    "row": 209,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+    "row": 209,
+    "column": 19,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+    "row": 231,
+    "column": 9,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/sources/vault/vault.move",
+    "row": 231,
+    "column": 19,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 15,
+    "column": 1,
+    "level": "warning",
+    "lint": "missing_witness_drop",
+    "message": "Struct `SPAM` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 16,
+    "column": 1,
+    "level": "warning",
+    "lint": "missing_witness_drop",
+    "message": "Struct `USDC` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 17,
+    "column": 1,
+    "level": "warning",
+    "lint": "missing_witness_drop",
+    "message": "Struct `USDT` appears to be a one-time witness (OTW) but is missing the `drop` ability. OTW structs must have `drop` so they can be consumed after use in the init function. Add `has drop` to the struct."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 44,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 59,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 95,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 125,
+    "column": 24,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 126,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 127,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 158,
+    "column": 24,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 164,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 169,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 204,
+    "column": 26,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `deposit_cap.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 211,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `deposit_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 216,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 246,
+    "column": 32,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager_2.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 249,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `deposit_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 250,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 251,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager_2.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 288,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `deposit_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 292,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 329,
+    "column": 27,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `withdraw_cap.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 342,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `withdraw_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 347,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 378,
+    "column": 32,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager_2.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 385,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `withdraw_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 387,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 388,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager_2.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 432,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `withdraw_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 436,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 483,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 508,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 566,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 586,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 623,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 658,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 658,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 660,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 660,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 673,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `deposit_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 673,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 674,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `withdraw_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 674,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 675,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 675,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 720,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 720,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 722,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/balance_manager_tests.move",
+    "row": 722,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/big_vector_tests.move",
+    "row": 20,
+    "column": 1,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/big_vector_tests.move",
+    "row": 35,
+    "column": 1,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/master_tests.move",
+    "row": 35,
+    "column": 7,
+    "level": "warning",
+    "lint": "constant_naming",
+    "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `NoError`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/master_tests.move",
+    "row": 36,
+    "column": 7,
+    "level": "warning",
+    "lint": "constant_naming",
+    "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `NoErrorDeepAsBase`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/master_tests.move",
+    "row": 37,
+    "column": 7,
+    "level": "warning",
+    "lint": "constant_naming",
+    "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `NoErrorPayWithInput`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/master_tests.move",
+    "row": 38,
+    "column": 7,
+    "level": "warning",
+    "lint": "constant_naming",
+    "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `NoErrorHasDeepPrice`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/master_tests.move",
+    "row": 3386,
+    "column": 28,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/master_tests.move",
+    "row": 3387,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 6395,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 6471,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 6609,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 6685,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 6880,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7082,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7188,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7243,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7353,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7408,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7561,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7667,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7737,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7823,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7836,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 7993,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 8011,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 8215,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 8233,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/pool_tests.move",
+    "row": 8250,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bm.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/state/ewma_tests.move",
+    "row": 15,
+    "column": 38,
+    "level": "warning",
+    "lint": "public_mut_tx_context",
+    "message": "TxContext parameters should use `&mut TxContext`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/vault/vault_tests.move",
+    "row": 225,
+    "column": 1,
+    "level": "warning",
+    "lint": "unchecked_coin_split",
+    "message": "Function `borrow_flashloan_incorrect_return_base_e` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/deepbook/tests/vault/vault_tests.move",
+    "row": 263,
+    "column": 1,
+    "level": "warning",
+    "lint": "unchecked_coin_split",
+    "message": "Function `borrow_flashloan_incorrect_return_quote_e` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort."
+  }
+]

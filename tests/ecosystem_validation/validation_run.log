@@ -1,0 +1,182 @@
+[1;33mBuilding move-clippy in release mode...[0m
+warning: /Users/evandekim/Documents/learning_move/packages/move-clippy/Cargo.toml: `panic` setting is ignored for `test` profile
+   Compiling move-clippy v0.1.0 (/Users/evandekim/Documents/learning_move/packages/move-clippy)
+    Finished `release` profile [optimized + debuginfo] target(s) in 1.71s
+[0;32m======================================[0m
+[0;32mMove Clippy Ecosystem Validation[0m
+[0;32m======================================[0m
+
+[1;33mProcessing: alphalend[0m - AlphaLend lending protocol
+  Checking package: alphafi_stdlib
+    [0;32m✓[0m Found 3 lint findings
+  Checking package: alphafi_oracle
+    [0;32m✓[0m Found 15 lint findings
+  Checking package: alpha_lending
+    [0;32m✓[0m Found 60 lint findings
+  [0;32m✓[0m Processed 3 package(s), found 78 total findings
+
+[1;33mProcessing: scallop-lend[0m - Scallop lending protocol
+  Checking package: test_coin
+    [0;32m✓[0m Found 17 lint findings
+  Checking package: test
+    [0;32m✓[0m Found 54 lint findings
+  Checking package: protocol
+    [0;32m✓[0m Found 279 lint findings
+  Checking package: whitelist
+    [0;32m✓[0m Found 12 lint findings
+  Checking package: math
+    [0;32m✓[0m Found 4 lint findings
+  Checking package: coin_decimals_registry
+    [0;32m✓[0m Found 7 lint findings
+  Checking package: x
+    [0;32m✓[0m Found 38 lint findings
+  Checking package: query
+    [0;32m✓[0m Found 30 lint findings
+  Checking package: supra_oracle
+    [0;32m✓[0m Found 1 lint findings
+  Checking package: supra_rule
+    [0;32m✓[0m Found 12 lint findings
+  Checking package: pyth
+    [0;32m✓[0m Found 294 lint findings
+  Checking package: wormhole
+    [0;32m✓[0m Found 385 lint findings
+  Checking package: pyth_rule
+    [0;32m✓[0m Found 692 lint findings
+  Checking package: switchboard_on_demand_rule
+    [0;32m✓[0m Found 12 lint findings
+  Checking package: x_oracle
+    [0;32m✓[0m Found 51 lint findings
+  Checking package: switchboard_std
+    [0;32m✓[0m Found 128 lint findings
+  Checking package: switchboard_std_test
+    [0;32m✓[0m Found 132 lint findings
+  Checking package: switchboard_rule
+    [0;32m✓[0m Found 272 lint findings
+  Checking package: protocol_whitelist
+    [0;32m✓[0m Found 7 lint findings
+  [0;32m✓[0m Processed 19 package(s), found 2427 total findings
+
+[1;33mProcessing: suilend[0m - Suilend lending protocol
+  Checking package: oracles
+    [0;32m✓[0m Found 62 lint findings
+  Checking package: sprungsui
+    [0;32m✓[0m Found 4 lint findings
+  Checking package: suilend
+    [0;32m✓[0m Found 490 lint findings
+  Checking package: strategy_wrapper
+    [0;32m✓[0m Found 59 lint findings
+  [0;32m✓[0m Processed 4 package(s), found 615 total findings
+
+[1;33mProcessing: deepbookv3[0m - DeepBook V3 DEX
+  Checking package: token
+    [0;32m✓[0m Found 1 lint findings
+  Checking package: dbtc
+    [0;32m✓[0m Found 2 lint findings
+  Checking package: margin_liquidation
+    [0;32m✓[0m Found 7 lint findings
+  Checking package: deepbook_margin
+    [0;32m✓[0m Found 136 lint findings
+  Checking package: deepbook
+    [0;32m✓[0m Found 215 lint findings
+  [0;32m✓[0m Processed 5 package(s), found 361 total findings
+
+[1;33mProcessing: cetus-clmm[0m - Cetus CLMM DEX
+  Checking package: xcetus
+    [0;32m✓[0m Found 15 lint findings
+  Checking package: dividends
+    [0;32m✓[0m Found 9 lint findings
+  Checking package: cetus
+    [0;32m✓[0m Found 1 lint findings
+  Checking package: limit-order
+    [0;32m✓[0m Found 18 lint findings
+  Checking package: lp_burn
+    [0;32m✓[0m Found 3 lint findings
+  Checking package: stable_farming
+    [0;32m✓[0m Found 43 lint findings
+  Checking package: vaults
+    [0;32m✓[0m Found 10 lint findings
+  Checking package: dca
+    [0;32m✓[0m Found 6 lint findings
+  Checking package: cetus_clmm
+    [0;32m✓[0m Found 64 lint findings
+  Checking package: clmm_vester
+    [0;32m✓[0m Found 3 lint findings
+  [0;32m✓[0m Processed 10 package(s), found 172 total findings
+
+[1;33mProcessing: bluefin-spot[0m - Bluefin spot trading
+  Checking package: bluefin-spot
+    [0;32m✓[0m Found 40 lint findings
+  [0;32m✓[0m Processed 1 package(s), found 40 total findings
+
+[1;33mProcessing: bluefin-pro[0m - Bluefin perpetuals
+  Checking package: bluefin-pro
+    [0;32m✓[0m Found 564 lint findings
+  [0;32m✓[0m Processed 1 package(s), found 564 total findings
+
+[1;33mProcessing: bluefin-integer[0m - Bluefin integer math
+  Checking package: specs
+    [0;32m✓[0m Found 0 lint findings
+  Checking package: specs-bv
+    [0;32m✓[0m Found 3 lint findings
+  Checking package: bluefin-integer
+    [0;32m✓[0m Found 41 lint findings
+  [0;32m✓[0m Processed 3 package(s), found 44 total findings
+
+[1;33mProcessing: openzeppelin-sui[0m - OpenZeppelin Sui library
+  Checking package: access
+    [0;32m✓[0m Found 20 lint findings
+  Checking package: core
+    [0;32m✓[0m Found 10 lint findings
+  [0;32m✓[0m Processed 2 package(s), found 30 total findings
+
+[1;33mProcessing: steamm[0m - Steamm AMM
+  Checking package: steamm_scripts
+    [0;32m✓[0m Found 7 lint findings
+  Checking package: rewards
+    [0;32m✓[0m Found 4 lint findings
+  Checking package: steamm
+    [0;32m✓[0m Found 272 lint findings
+  [0;32m✓[0m Processed 3 package(s), found 283 total findings
+
+[1;33mProcessing: suilend-liquid-staking[0m - Suilend liquid staking
+  Checking package: contracts
+    [0;32m✓[0m Found 53 lint findings
+  [0;32m✓[0m Processed 1 package(s), found 53 total findings
+
+[0;32m======================================[0m
+[0;32mSummary[0m
+[0;32m======================================[0m
+Total repos: 11
+[0;32mSuccessful: 11[0m
+[0;31mFailed: 0[0m
+
+Results saved to: /Users/evandekim/Documents/learning_move/packages/move-clippy/tests/ecosystem_validation/results
+
+[1;33mGenerating combined summary...[0m
+Move Clippy Ecosystem Validation Summary
+=========================================
+Generated: Sat Dec 13 14:29:19 EST 2025
+
+Statistics:
+  Total repos: 11
+  Successful: 11
+  Failed: 0
+
+Per-repo findings:
+
+  alphalend: 78 findings
+  scallop-lend: 2427 findings
+  suilend: 615 findings
+  deepbookv3: 361 findings
+  cetus-clmm: 172 findings
+  bluefin-spot: 40 findings
+  bluefin-pro: 564 findings
+  bluefin-integer: 44 findings
+  openzeppelin-sui: 30 findings
+  steamm: 283 findings
+  suilend-liquid-staking: 53 findings
+[0;32mDone![0m
+Next steps:
+  1. Review results in: /Users/evandekim/Documents/learning_move/packages/move-clippy/tests/ecosystem_validation/results
+  2. Run triage: python calculate_metrics.py
+  3. Update baselines as needed

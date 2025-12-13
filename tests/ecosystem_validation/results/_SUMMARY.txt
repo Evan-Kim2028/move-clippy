@@ -1,0 +1,22 @@
+Move Clippy Ecosystem Validation Summary
+=========================================
+Generated: Sat Dec 13 14:29:19 EST 2025
+
+Statistics:
+  Total repos: 11
+  Successful: 11
+  Failed: 0
+
+Per-repo findings:
+
+  alphalend: 78 findings
+  scallop-lend: 2427 findings
+  suilend: 615 findings
+  deepbookv3: 361 findings
+  cetus-clmm: 172 findings
+  bluefin-spot: 40 findings
+  bluefin-pro: 564 findings
+  bluefin-integer: 44 findings
+  openzeppelin-sui: 30 findings
+  steamm: 283 findings
+  suilend-liquid-staking: 53 findings

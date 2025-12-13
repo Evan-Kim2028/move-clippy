@@ -1,0 +1,138 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/BTC.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/BTC.move",
+    "row": 34,
+    "column": 18,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/BTC.move",
+    "row": 41,
+    "column": 5,
+    "level": "warning",
+    "lint": "shared_capability",
+    "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/BTC.move",
+    "row": 44,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `coinMeta.public_freeze_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/ETH.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/ETH.move",
+    "row": 34,
+    "column": 18,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/ETH.move",
+    "row": 41,
+    "column": 5,
+    "level": "warning",
+    "lint": "shared_capability",
+    "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/ETH.move",
+    "row": 44,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `coinMeta.public_freeze_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDC.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDC.move",
+    "row": 34,
+    "column": 18,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDC.move",
+    "row": 41,
+    "column": 5,
+    "level": "warning",
+    "lint": "shared_capability",
+    "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDC.move",
+    "row": 44,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `coinMeta.public_freeze_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDT.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDT.move",
+    "row": 34,
+    "column": 18,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDT.move",
+    "row": 41,
+    "column": 5,
+    "level": "warning",
+    "lint": "shared_capability",
+    "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/USDT.move",
+    "row": 44,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `coinMeta.public_freeze_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/test_coin/sources/package.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  }
+]

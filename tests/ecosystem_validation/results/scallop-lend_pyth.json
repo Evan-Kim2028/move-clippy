@@ -1,0 +1,2354 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 2,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 5,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 7,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 9,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 12,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 60,
+    "column": 13,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 7 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 60,
+    "column": 35,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 7 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 61,
+    "column": 21,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 61,
+    "column": 28,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 83,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `deserialize` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 89,
+    "column": 27,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 94,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `price_infos.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/batch_price_attestation.move",
+    "row": 163,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/data_source.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/data_source.move",
+    "row": 2,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/data_source.move",
+    "row": 6,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/data_source.move",
+    "row": 24,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `DataSource` should end with `Event` suffix (e.g., `DataSourceEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/deserialize.move",
+    "row": 1,
+    "column": 2,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/deserialize.move",
+    "row": 2,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/deserialize.move",
+    "row": 9,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/event.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/event.move",
+    "row": 2,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/event.move",
+    "row": 11,
+    "column": 33,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has copy, store, drop`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+    "row": 10,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+    "row": 11,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+    "row": 15,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+    "row": 18,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+    "row": 19,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+    "row": 36,
+    "column": 29,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop`. Found: `has drop, copy`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/contract_upgrade.move",
+    "row": 141,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance.move",
+    "row": 41,
+    "column": 13,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance.move",
+    "row": 41,
+    "column": 43,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_action.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_action.move",
+    "row": 12,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `GovernanceAction` should end with `Event` suffix (e.g., `GovernanceActionEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_instruction.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_instruction.move",
+    "row": 62,
+    "column": 13,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_instruction.move",
+    "row": 62,
+    "column": 35,
+    "level": "warning",
+    "lint": "explicit_self_assignments",
+    "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_instruction.move",
+    "row": 71,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_instruction.move",
+    "row": 78,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/governance_instruction.move",
+    "row": 85,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 5,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 6,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 27,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `from_byte_vec` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 31,
+    "column": 23,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 37,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `sources.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 51,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 52,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 55,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_data_sources.move",
+    "row": 56,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_fee_recipient.move",
+    "row": 3,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_fee_recipient.move",
+    "row": 5,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_governance_data_source.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_governance_data_source.move",
+    "row": 8,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_stale_price_threshold.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_stale_price_threshold.move",
+    "row": 29,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_stale_price_threshold.move",
+    "row": 30,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_update_fee.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_update_fee.move",
+    "row": 2,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_update_fee.move",
+    "row": 43,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/governance/set_update_fee.move",
+    "row": 44,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/hot_potato_vector.move",
+    "row": 3,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/hot_potato_vector.move",
+    "row": 47,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `A` should end with `Event` suffix (e.g., `AEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/hot_potato_vector.move",
+    "row": 52,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `test_hot_potato_vector` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/hot_potato_vector.move",
+    "row": 53,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<A>` over `vector::empty<A>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/hot_potato_vector.move",
+    "row": 54,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec_of_a.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/hot_potato_vector.move",
+    "row": 55,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec_of_a.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/hot_potato_vector.move",
+    "row": 56,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `vec_of_a.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/i64.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/i64.move",
+    "row": 14,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `I64` should end with `Event` suffix (e.g., `I64Event`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/i64.move",
+    "row": 78,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/i64.move",
+    "row": 90,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/i64.move",
+    "row": 117,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/i64.move",
+    "row": 128,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 3,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 4,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 6,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 9,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 37,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `node_hash` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 50,
+    "column": 17,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 51,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `v.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 64,
+    "column": 18,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `aa.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 64,
+    "column": 44,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bb.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 66,
+    "column": 25,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `bb.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 66,
+    "column": 51,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `aa.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 77,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `set_element` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 79,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `a.swap_remove(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 124,
+    "column": 20,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<Bytes20>` over `vector::empty<Bytes20>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 133,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `tree.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 140,
+    "column": 55,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `messages.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 152,
+    "column": 44,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `tree.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 152,
+    "column": 76,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `tree.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 159,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `tree.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 162,
+    "column": 22,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 165,
+    "column": 29,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<u8>` over `vector::empty<u8>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 166,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `cur_proof.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 169,
+    "column": 62,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `tree.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 222,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `testMerkleTreeDepth1` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 223,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<vector<u8>>` over `vector::empty<vector<u8>>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 224,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 237,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `testMerkleTreeDepth2` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 238,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<vector<u8>>` over `vector::empty<vector<u8>>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 239,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 240,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 241,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 242,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 257,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `test_merkle_tree_depth_3` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 258,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<vector<u8>>` over `vector::empty<vector<u8>>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 259,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 260,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 261,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 262,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 263,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 264,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 265,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 266,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 285,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `test_merkle_tree_depth_1_invalid_proofs` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 286,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<vector<u8>>` over `vector::empty<vector<u8>>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 287,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 302,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `test_merkle_tree_depth_2_invalid_proofs` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 303,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<vector<u8>>` over `vector::empty<vector<u8>>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 304,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 305,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 306,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 307,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 326,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `test_merkle_tree_depth_3_invalid_proofs` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 327,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<vector<u8>>` over `vector::empty<vector<u8>>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 328,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 329,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 330,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 331,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 332,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 333,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 334,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 335,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 355,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 357,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `test_merkle_tree_depth_exceeded_1` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 358,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<vector<u8>>` over `vector::empty<vector<u8>>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 359,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 360,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 361,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 366,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 368,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `test_merkle_tree_depth_exceeded_2` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 369,
+    "column": 24,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<vector<u8>>` over `vector::empty<vector<u8>>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 370,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 371,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 372,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 373,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/merkle_tree.move",
+    "row": 374,
+    "column": 9,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `messages.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/migrate.move",
+    "row": 13,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/migrate.move",
+    "row": 17,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/migrate.move",
+    "row": 20,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `MigrateComplete` should end with `Event` suffix (e.g., `MigrateCompleteEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/migrate.move",
+    "row": 20,
+    "column": 28,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop`. Found: `has drop, copy`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price.move",
+    "row": 12,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `Price` should end with `Event` suffix (e.g., `PriceEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_feed.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_identifier.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_identifier.move",
+    "row": 7,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `PriceIdentifier` should end with `Event` suffix (e.g., `PriceIdentifierEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_identifier.move",
+    "row": 12,
+    "column": 17,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `bytes.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 4,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 5,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 29,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `PriceInfo` should end with `Event` suffix (e.g., `PriceInfoEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 102,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `fee.value(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 114,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `current_fee.join(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 142,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 144,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 165,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `uid.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_info.move",
+    "row": 175,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_status.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_status.move",
+    "row": 11,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `PriceStatus` should end with `Event` suffix (e.g., `PriceStatusEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/price_status.move",
+    "row": 48,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 6,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 14,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 15,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 20,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 22,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 24,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 25,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 41,
+    "column": 5,
+    "level": "warning",
+    "lint": "unnecessary_public_entry",
+    "message": "Functions should not be both `public` and `entry`; remove one of the modifiers"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 77,
+    "column": 17,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `emitter_chain_ids.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 77,
+    "column": 55,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `emitter_addresses.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 80,
+    "column": 23,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector[]` over `vector::empty()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 82,
+    "column": 20,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `emitter_chain_ids.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 83,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `sources.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 84,
+    "column": 18,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `emitter_chain_ids.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 85,
+    "column": 60,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `emitter_addresses.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 140,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `verified_vaas.is_empty(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 141,
+    "column": 23,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `verified_vaas.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 168,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_infos.is_empty(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 169,
+    "column": 34,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_infos.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 188,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `new_price_info_object.public_share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 232,
+    "column": 29,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<PriceInfo>` over `vector::empty<PriceInfo>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 233,
+    "column": 16,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `verified_vaas.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 234,
+    "column": 27,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `verified_vaas.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 246,
+    "column": 20,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `price_infos.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 247,
+    "column": 38,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_infos.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 248,
+    "column": 17,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `price_updates.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 276,
+    "column": 59,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `fee.value(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 374,
+    "column": 21,
+    "level": "warning",
+    "lint": "stale_oracle_price",
+    "message": "Using `get_price_unsafe` may return stale/outdated oracle prices. Consider using `get_price_no_older_than` with an appropriate max age to ensure price freshness. See: Pyth documentation."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 421,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 422,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 432,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 436,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 437,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 438,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 439,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 440,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 443,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 444,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 447,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 468,
+    "column": 38,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<VAA>` over `vector::empty<VAA>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 471,
+    "column": 20,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `test_vaas_.length()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 472,
+    "column": 32,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `test_vaas.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 474,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `verified_vaas_reversed.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 477,
+    "column": 29,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<VAA>` over `vector::empty<VAA>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 479,
+    "column": 23,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `verified_vaas_reversed.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 480,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `verified_vaas.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 594,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 640,
+    "column": 57,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `expected.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 643,
+    "column": 69,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `expected.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 645,
+    "column": 87,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `actual.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 689,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 714,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 810,
+    "column": 25,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `test_coins.split(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 916,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 950,
+    "column": 6,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 983,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1016,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1162,
+    "column": 30,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `coins.split(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1172,
+    "column": 52,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `expected_price_infos.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1186,
+    "column": 5,
+    "level": "warning",
+    "lint": "merge_test_attributes",
+    "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1301,
+    "column": 31,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_info_object_vec.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1302,
+    "column": 31,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_info_object_vec.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1303,
+    "column": 31,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_info_object_vec.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1304,
+    "column": 31,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_info_object_vec.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1415,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1431,
+    "column": 39,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_info_updates.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1431,
+    "column": 79,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `expected_price_infos.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1437,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `coins.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1446,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1466,
+    "column": 39,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `price_info_updates.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1466,
+    "column": 79,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `expected_price_infos.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1472,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `coins.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1485,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `accumulator_test_3_to_price_info` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1486,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1487,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1494,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `expected.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1499,
+    "column": 26,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `feed_ids.borrow(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1522,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth.move",
+    "row": 1523,
+    "column": 9,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth_accumulator.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth_accumulator.move",
+    "row": 2,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth_accumulator.move",
+    "row": 6,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth_accumulator.move",
+    "row": 7,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth_accumulator.move",
+    "row": 9,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth_accumulator.move",
+    "row": 10,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth_accumulator.move",
+    "row": 104,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `parse_and_verify_accumulator_updates` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/pyth_accumulator.move",
+    "row": 114,
+    "column": 13,
+    "level": "warning",
+    "lint": "prefer_vector_methods",
+    "message": "Prefer method syntax: `price_info_updates.push_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/set.move",
+    "row": 2,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/set.move",
+    "row": 8,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `Unit` should end with `Event` suffix (e.g., `UnitEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/set.move",
+    "row": 8,
+    "column": 17,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, copy, drop`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/set.move",
+    "row": 20,
+    "column": 19,
+    "level": "warning",
+    "lint": "empty_vector_literal",
+    "message": "Prefer `vector<A>` over `vector::empty<A>()`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/set.move",
+    "row": 27,
+    "column": 5,
+    "level": "warning",
+    "lint": "unbounded_vector_growth",
+    "message": "Function `add` adds to a vector without an apparent size limit. Consider adding a maximum size check like `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 4,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 7,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 31,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 41,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 43,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 66,
+    "column": 9,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `id.delete(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 69,
+    "column": 9,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/setup.move",
+    "row": 69,
+    "column": 9,
+    "level": "warning",
+    "lint": "shared_capability",
+    "message": "Capability object appears to be shared via `share_object`. Capabilities should be transferred to a specific owner, not shared publicly. Use `transfer::transfer(cap, owner_address)` instead."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 1,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 8,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 10,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 14,
+    "column": 5,
+    "level": "warning",
+    "lint": "redundant_self_import",
+    "message": "Redundant `{Self}` import; prefer `use pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 81,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `sources.is_empty(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 82,
+    "column": 40,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `sources.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 100,
+    "column": 36,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `ctx.sender(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 240,
+    "column": 17,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `new_sources.is_empty(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 241,
+    "column": 41,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `new_sources.pop_back(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 382,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `CurrentDigest` should end with `Event` suffix (e.g., `CurrentDigestEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/state.move",
+    "row": 382,
+    "column": 26,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, drop, copy`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/version_control.move",
+    "row": 10,
+    "column": 1,
+    "level": "warning",
+    "lint": "modern_module_syntax",
+    "message": "Use Move 2024 module label syntax: `module pkg::mod;`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/version_control.move",
+    "row": 46,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `V__0_1_1` should end with `Event` suffix (e.g., `V__0_1_1Event`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/version_control.move",
+    "row": 46,
+    "column": 21,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, drop, copy`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/version_control.move",
+    "row": 49,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `V__DUMMY` should end with `Event` suffix (e.g., `V__DUMMYEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/version_control.move",
+    "row": 49,
+    "column": 21,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, drop, copy`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/version_control.move",
+    "row": 65,
+    "column": 12,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `V__MIGRATED` should end with `Event` suffix (e.g., `V__MIGRATEDEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/scallop-lend/contracts/sui_x_oracle/pyth_rule/vendors/pyth/sources/version_control.move",
+    "row": 65,
+    "column": 24,
+    "level": "warning",
+    "lint": "abilities_order",
+    "message": "Abilities should be ordered: `has copy, drop, store`. Found: `has store, drop, copy`"
+  }
+]

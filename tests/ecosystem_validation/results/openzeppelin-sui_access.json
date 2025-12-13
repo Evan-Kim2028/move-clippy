@@ -1,0 +1,162 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 106,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `cap.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 107,
+    "column": 32,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 119,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 120,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `capability.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 144,
+    "column": 22,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 170,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 192,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 196,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 196,
+    "column": 5,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/delayed.move",
+    "row": 218,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 89,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `cap.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 90,
+    "column": 32,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 102,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 103,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `capability.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 132,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `request.transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 132,
+    "column": 5,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 142,
+    "column": 13,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 147,
+    "column": 21,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.id(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 151,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `self.transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/openzeppelin-sui/contracts/access/sources/ownership_transfer/two_step.move",
+    "row": 151,
+    "column": 5,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  }
+]

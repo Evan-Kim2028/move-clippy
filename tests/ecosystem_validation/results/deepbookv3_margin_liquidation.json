@@ -1,0 +1,58 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/margin_liquidation/sources/liquidation_vault.move",
+    "row": 26,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `BalanceKey` should end with `Event` suffix (e.g., `BalanceKeyEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/margin_liquidation/sources/liquidation_vault.move",
+    "row": 34,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `LiquidationByVault` should end with `Event` suffix (e.g., `LiquidationByVaultEvent`)"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/margin_liquidation/sources/liquidation_vault.move",
+    "row": 49,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `liquidation_admin_cap.public_transfer(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/margin_liquidation/sources/liquidation_vault.move",
+    "row": 55,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&LiquidationAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/margin_liquidation/sources/liquidation_vault.move",
+    "row": 64,
+    "column": 5,
+    "level": "warning",
+    "lint": "admin_cap_position",
+    "message": "Capability parameter `&LiquidationAdminCap` should be first in the parameter list"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/margin_liquidation/sources/liquidation_vault.move",
+    "row": 79,
+    "column": 5,
+    "level": "warning",
+    "lint": "modern_method_syntax",
+    "message": "Prefer method syntax: `liquidation_vault.share_object(...)`"
+  },
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/margin_liquidation/sources/liquidation_vault.move",
+    "row": 79,
+    "column": 5,
+    "level": "warning",
+    "lint": "pure_function_transfer",
+    "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+  }
+]

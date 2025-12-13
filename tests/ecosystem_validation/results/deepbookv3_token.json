@@ -1,0 +1,10 @@
+[
+  {
+    "file": "/Users/evandekim/Documents/learning_move/packages/ecosystem-test-repos/deepbookv3/packages/token/sources/deep.move",
+    "row": 12,
+    "column": 15,
+    "level": "warning",
+    "lint": "event_suffix",
+    "message": "Event struct `TreasuryCapKey` should end with `Event` suffix (e.g., `TreasuryCapKeyEvent`)"
+  }
+]

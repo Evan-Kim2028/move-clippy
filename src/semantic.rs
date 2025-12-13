@@ -391,7 +391,7 @@ mod full {
     use move_compiler::shared::{Identifier, files::MappedFiles, program_info::TypingProgramInfo};
     use move_compiler::shared::{SaveFlag, SaveHook};
     use move_compiler::sui_mode::linters;
-    use move_compiler::{naming::ast as N, typing::ast as T};
+    use move_compiler::{naming::ast as N, typing::ast as T, expansion::ast as E};
     use move_ir_types::location::Loc;
     use move_package::BuildConfig;
     use move_package::compilation::build_plan::BuildPlan;
