@@ -1,6 +1,8 @@
 use clap::Parser;
 use move_clippy::LintEngine;
-use move_clippy::cli::{Args, Command, LintArgs, LintMode, OutputFormat, TriageCommand, TriageAction};
+use move_clippy::cli::{
+    Args, Command, LintArgs, LintMode, OutputFormat, TriageAction, TriageCommand,
+};
 use move_clippy::config;
 use move_clippy::fixer;
 use move_clippy::level::LintLevel;
@@ -8,7 +10,7 @@ use move_clippy::lint::{LintRegistry, LintSettings, is_semantic_lint};
 use move_clippy::semantic;
 use move_clippy::triage::{
     Finding, FindingFilter, ReportFormat, Severity, TriageDatabase, TriageStatus,
-    generate_markdown_report, generate_json_report, generate_text_report,
+    generate_json_report, generate_markdown_report, generate_text_report,
 };
 use serde::Serialize;
 use std::io::Read;
@@ -331,7 +333,7 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
     let mut total_fixed = 0usize;
     let mut total_skipped = 0usize;
     let mut files_modified = 0usize;
-    
+
     const MAX_ITERATIONS: usize = 10; // Prevent infinite loops
 
     for path in &files {
@@ -339,7 +341,7 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
         let mut current_source = original_source.clone();
         let mut file_fixes = 0usize;
         let mut iterations = 0usize;
-        
+
         // Iterate until no more fixes are applied (or max iterations reached)
         loop {
             iterations += 1;
@@ -351,7 +353,7 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
                 );
                 break;
             }
-            
+
             let diagnostics = engine.lint_source(&current_source)?;
 
             // Filter to diagnostics with fix suggestions
@@ -374,7 +376,7 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
 
             file_fixes += result.fixes_applied;
             current_source = result.fixed_source;
-            
+
             // In dry-run mode, only do one iteration
             if args.fix_dry_run {
                 total_skipped += result.fixes_skipped;
@@ -392,12 +394,13 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
             } else {
                 // Create backup unless --no-backup is set
                 if !args.no_backup {
-                    let backup_path = path.with_extension(
-                        format!("{}.bak", path.extension().unwrap_or_default().to_string_lossy())
-                    );
+                    let backup_path = path.with_extension(format!(
+                        "{}.bak",
+                        path.extension().unwrap_or_default().to_string_lossy()
+                    ));
                     std::fs::write(&backup_path, &original_source)?;
                 }
-                
+
                 // Write fixed source
                 std::fs::write(path, &current_source)?;
                 files_modified += 1;
@@ -408,14 +411,27 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
 
     // Print summary
     if args.fix_dry_run {
-        println!("\n{} fix(es) would be applied to {} file(s)", total_fixed, files.len());
+        println!(
+            "\n{} fix(es) would be applied to {} file(s)",
+            total_fixed,
+            files.len()
+        );
         if total_skipped > 0 {
-            println!("{} fix(es) skipped (use --unsafe-fixes to apply)", total_skipped);
+            println!(
+                "{} fix(es) skipped (use --unsafe-fixes to apply)",
+                total_skipped
+            );
         }
     } else {
-        println!("Applied {} fix(es) to {} file(s)", total_fixed, files_modified);
+        println!(
+            "Applied {} fix(es) to {} file(s)",
+            total_fixed, files_modified
+        );
         if total_skipped > 0 {
-            println!("{} fix(es) skipped (use --unsafe-fixes to apply)", total_skipped);
+            println!(
+                "{} fix(es) skipped (use --unsafe-fixes to apply)",
+                total_skipped
+            );
         }
     }
 
@@ -453,19 +469,17 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
             if let Some(r) = repo {
                 filter = filter.with_repo(r);
             }
-            if let Some(sev) = severity {
-                if let Some(s) = Severity::from_str(&sev) {
-                    filter = filter.with_severity(s);
-                }
+            if let Some(sev) = severity
+                && let Some(s) = Severity::from_str(&sev)
+            {
+                filter = filter.with_severity(s);
             }
             if let Some(c) = category {
                 filter = filter.with_category(c);
             }
 
             let mut findings: Vec<_> = db.filter(&filter);
-            findings.sort_by(|a, b| {
-                (&a.repo, &a.file, a.line).cmp(&(&b.repo, &b.file, b.line))
-            });
+            findings.sort_by(|a, b| (&a.repo, &a.file, a.line).cmp(&(&b.repo, &b.file, b.line)));
 
             let total = findings.len();
             let shown = findings.iter().take(limit);
@@ -477,7 +491,10 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
             }
 
             if total > limit {
-                println!("\n... and {} more (use --limit to show more)", total - limit);
+                println!(
+                    "\n... and {} more (use --limit to show more)",
+                    total - limit
+                );
             }
 
             Ok(ExitCode::SUCCESS)
@@ -485,19 +502,14 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
 
         TriageAction::Show { id } => {
             let db = TriageDatabase::load(db_path)?;
-
             // Try exact match first, then prefix match
-            let finding = db.get(&id).or_else(|| {
-                db.list_all()
-                    .into_iter()
-                    .find(|f| f.id.starts_with(&id))
-            });
-
+            let finding = db
+                .get(&id)
+                .or_else(|| db.list_all().into_iter().find(|f| f.id.starts_with(&id)));
             let Some(finding) = finding else {
                 eprintln!("Finding not found: {}", id);
                 return Ok(ExitCode::from(1));
             };
-
             println!("Finding: {}", finding.id);
             println!("Status:  {}", finding.status);
             println!("Lint:    {}", finding.lint);
@@ -505,17 +517,30 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
             println!("Severity: {}", finding.severity);
             println!("Repo:    {}", finding.repo);
             println!("File:    {}:{}", finding.file, finding.line);
-            println!("Message: {}", finding.message);
+
+            // Display snippet with line numbers if available
+            if let (Some(snippet), Some(start_line)) =
+                (&finding.snippet, finding.snippet_start_line)
+            {
+                println!("\nCode:");
+                let formatted = move_clippy::triage::format_snippet_with_lines(
+                    snippet,
+                    start_line,
+                    finding.line,
+                );
+                print!("{}", formatted);
+            }
+
+            println!("\nMessage: {}", finding.message);
 
             if let Some(notes) = &finding.notes {
                 println!("Notes:   {}", notes);
             }
 
-            if let Some(snippet) = &finding.snippet {
-                println!("\nSnippet:\n{}", snippet);
-            }
-
-            println!("\nDetected: {}", finding.detected_at.format("%Y-%m-%d %H:%M UTC"));
+            println!(
+                "\nDetected: {}",
+                finding.detected_at.format("%Y-%m-%d %H:%M UTC")
+            );
             if let Some(reviewed) = finding.reviewed_at {
                 println!("Reviewed: {}", reviewed.format("%Y-%m-%d %H:%M UTC"));
             }
@@ -572,16 +597,43 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
             Ok(ExitCode::SUCCESS)
         }
 
-        TriageAction::Import { input, repo } => {
+        TriageAction::Import {
+            input,
+            repo,
+            exclude_defaults,
+            exclude_patterns,
+            no_snippets,
+            dry_run,
+        } => {
             let mut db = TriageDatabase::load(db_path)?;
+
+            // Build exclude patterns list
+            let mut patterns: Vec<String> = exclude_patterns;
+            if exclude_defaults {
+                patterns.extend(
+                    move_clippy::triage::DEFAULT_EXCLUDE_PATTERNS
+                        .iter()
+                        .map(|s| s.to_string()),
+                );
+            }
 
             // Read JSON lint output
             let contents = std::fs::read_to_string(&input)?;
             let diagnostics: Vec<JsonDiagnostic> = serde_json::from_str(&contents)?;
 
             let mut imported = 0;
+            let mut excluded = 0;
+
             for diag in diagnostics {
-                let finding = Finding::new(
+                // Check if path should be excluded
+                if !patterns.is_empty()
+                    && move_clippy::triage::should_exclude_path(&diag.file, &patterns)
+                {
+                    excluded += 1;
+                    continue;
+                }
+
+                let mut finding = Finding::new(
                     diag.lint.clone(),
                     infer_category(&diag.lint),
                     repo.clone(),
@@ -591,12 +643,40 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
                     diag.message.clone(),
                 );
 
-                db.add_or_update(finding);
+                // Capture snippet if enabled
+                if !no_snippets {
+                    let file_path = std::path::Path::new(&diag.file);
+                    if let Some((snippet, start_line)) =
+                        move_clippy::triage::extract_snippet(file_path, diag.row as u32, 2)
+                    {
+                        finding.snippet = Some(snippet);
+                        finding.snippet_start_line = Some(start_line);
+                    }
+                }
+
+                if !dry_run {
+                    db.add_or_update(finding);
+                }
                 imported += 1;
             }
 
-            db.save(db_path)?;
-            println!("Imported {} findings from {} into {}", imported, input.display(), db_path.display());
+            if dry_run {
+                println!(
+                    "DRY RUN - would import {} findings ({} excluded by patterns)",
+                    imported, excluded
+                );
+            } else {
+                db.save(db_path)?;
+                println!(
+                    "Imported {} findings from {} into {}",
+                    imported,
+                    input.display(),
+                    db_path.display()
+                );
+                if excluded > 0 {
+                    println!("Excluded {} findings by path patterns", excluded);
+                }
+            }
 
             Ok(ExitCode::SUCCESS)
         }
@@ -608,31 +688,60 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
             println!("TRIAGE SUMMARY");
             println!("==============");
             println!("Database: {}", db_path.display());
-            println!("");
+            println!();
             println!("Total Findings: {}", summary.total);
-            println!("");
+            println!();
             println!("By Status:");
-            println!("  Needs Review:   {} ({:.1}%)", summary.needs_review, pct(summary.needs_review, summary.total));
-            println!("  Confirmed:      {} ({:.1}%)", summary.confirmed, pct(summary.confirmed, summary.total));
-            println!("  False Positive: {} ({:.1}%)", summary.false_positive, pct(summary.false_positive, summary.total));
-            println!("  Won't Fix:      {} ({:.1}%)", summary.wont_fix, pct(summary.wont_fix, summary.total));
+            println!(
+                "  Needs Review:   {} ({:.1}%)",
+                summary.needs_review,
+                pct(summary.needs_review, summary.total)
+            );
+            println!(
+                "  Confirmed:      {} ({:.1}%)",
+                summary.confirmed,
+                pct(summary.confirmed, summary.total)
+            );
+            println!(
+                "  False Positive: {} ({:.1}%)",
+                summary.false_positive,
+                pct(summary.false_positive, summary.total)
+            );
+            println!(
+                "  Won't Fix:      {} ({:.1}%)",
+                summary.wont_fix,
+                pct(summary.wont_fix, summary.total)
+            );
 
             Ok(ExitCode::SUCCESS)
         }
 
-        TriageAction::Stats { by, min_count, sort } => {
+        TriageAction::Stats {
+            by,
+            min_count,
+            sort,
+        } => {
             let db = TriageDatabase::load(db_path)?;
-            
+
             // Collect stats based on grouping
             let mut stats: Vec<(String, usize, usize, usize, usize)> = Vec::new(); // (name, total, confirmed, fp, needs_review)
-            
+
             match by.as_str() {
                 "lint" => {
                     for (lint, findings) in db.group_by_lint() {
                         let total = findings.len();
-                        let confirmed = findings.iter().filter(|f| f.status == TriageStatus::Confirmed).count();
-                        let fp = findings.iter().filter(|f| f.status == TriageStatus::FalsePositive).count();
-                        let nr = findings.iter().filter(|f| f.status == TriageStatus::NeedsReview).count();
+                        let confirmed = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::Confirmed)
+                            .count();
+                        let fp = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::FalsePositive)
+                            .count();
+                        let nr = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::NeedsReview)
+                            .count();
                         if total >= min_count {
                             stats.push((lint, total, confirmed, fp, nr));
                         }
@@ -641,24 +750,43 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
                 "repo" => {
                     for (repo, findings) in db.group_by_repo() {
                         let total = findings.len();
-                        let confirmed = findings.iter().filter(|f| f.status == TriageStatus::Confirmed).count();
-                        let fp = findings.iter().filter(|f| f.status == TriageStatus::FalsePositive).count();
-                        let nr = findings.iter().filter(|f| f.status == TriageStatus::NeedsReview).count();
+                        let confirmed = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::Confirmed)
+                            .count();
+                        let fp = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::FalsePositive)
+                            .count();
+                        let nr = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::NeedsReview)
+                            .count();
                         if total >= min_count {
                             stats.push((repo, total, confirmed, fp, nr));
                         }
                     }
                 }
                 "category" => {
-                    let mut by_cat: std::collections::HashMap<String, Vec<&Finding>> = std::collections::HashMap::new();
+                    let mut by_cat: std::collections::HashMap<String, Vec<&Finding>> =
+                        std::collections::HashMap::new();
                     for f in db.list_all() {
                         by_cat.entry(f.category.clone()).or_default().push(f);
                     }
                     for (cat, findings) in by_cat {
                         let total = findings.len();
-                        let confirmed = findings.iter().filter(|f| f.status == TriageStatus::Confirmed).count();
-                        let fp = findings.iter().filter(|f| f.status == TriageStatus::FalsePositive).count();
-                        let nr = findings.iter().filter(|f| f.status == TriageStatus::NeedsReview).count();
+                        let confirmed = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::Confirmed)
+                            .count();
+                        let fp = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::FalsePositive)
+                            .count();
+                        let nr = findings
+                            .iter()
+                            .filter(|f| f.status == TriageStatus::NeedsReview)
+                            .count();
                         if total >= min_count {
                             stats.push((cat, total, confirmed, fp, nr));
                         }
@@ -669,7 +797,7 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
                     return Ok(ExitCode::from(1));
                 }
             }
-            
+
             // Sort
             match sort.as_str() {
                 "total" => stats.sort_by(|a, b| b.1.cmp(&a.1)),
@@ -679,14 +807,24 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
                     stats.sort_by(|a, b| {
                         let reviewed_a = a.2 + a.3;
                         let reviewed_b = b.2 + b.3;
-                        let rate_a = if reviewed_a > 0 { a.3 as f64 / reviewed_a as f64 } else { 0.0 };
-                        let rate_b = if reviewed_b > 0 { b.3 as f64 / reviewed_b as f64 } else { 0.0 };
-                        rate_b.partial_cmp(&rate_a).unwrap_or(std::cmp::Ordering::Equal)
+                        let rate_a = if reviewed_a > 0 {
+                            a.3 as f64 / reviewed_a as f64
+                        } else {
+                            0.0
+                        };
+                        let rate_b = if reviewed_b > 0 {
+                            b.3 as f64 / reviewed_b as f64
+                        } else {
+                            0.0
+                        };
+                        rate_b
+                            .partial_cmp(&rate_a)
+                            .unwrap_or(std::cmp::Ordering::Equal)
                     });
                 }
                 _ => stats.sort_by(|a, b| b.1.cmp(&a.1)),
             }
-            
+
             // Print header
             let header = match by.as_str() {
                 "lint" => "Lint",
@@ -694,22 +832,129 @@ fn triage_command(cmd: TriageCommand) -> anyhow::Result<ExitCode> {
                 "category" => "Category",
                 _ => "Name",
             };
-            
-            println!("{:<35} {:>6} {:>6} {:>6} {:>6} {:>7}", header, "Total", "Conf", "FP", "NR", "FP%");
+
+            println!(
+                "{:<35} {:>6} {:>6} {:>6} {:>6} {:>7}",
+                header, "Total", "Conf", "FP", "NR", "FP%"
+            );
             println!("{}", "-".repeat(75));
-            
+
             for (name, total, confirmed, fp, nr) in &stats {
                 let reviewed = *confirmed + *fp;
-                let fp_rate = if reviewed > 0 { (*fp as f64 / reviewed as f64) * 100.0 } else { 0.0 };
-                let truncated = if name.len() > 35 { format!("{}...", &name[..32]) } else { name.clone() };
-                println!("{:<35} {:>6} {:>6} {:>6} {:>6} {:>6.1}%", truncated, total, confirmed, fp, nr, fp_rate);
+                let fp_rate = if reviewed > 0 {
+                    (*fp as f64 / reviewed as f64) * 100.0
+                } else {
+                    0.0
+                };
+                let truncated = if name.len() > 35 {
+                    format!("{}...", &name[..32])
+                } else {
+                    name.clone()
+                };
+                println!(
+                    "{:<35} {:>6} {:>6} {:>6} {:>6} {:>6.1}%",
+                    truncated, total, confirmed, fp, nr, fp_rate
+                );
             }
-            
+
             println!("{}", "-".repeat(75));
-            let totals: (usize, usize, usize, usize) = stats.iter()
-                .fold((0, 0, 0, 0), |acc, x| (acc.0 + x.1, acc.1 + x.2, acc.2 + x.3, acc.3 + x.4));
-            println!("{:<35} {:>6} {:>6} {:>6} {:>6}", "TOTAL", totals.0, totals.1, totals.2, totals.3);
-            
+            let totals: (usize, usize, usize, usize) = stats.iter().fold((0, 0, 0, 0), |acc, x| {
+                (acc.0 + x.1, acc.1 + x.2, acc.2 + x.3, acc.3 + x.4)
+            });
+            println!(
+                "{:<35} {:>6} {:>6} {:>6} {:>6}",
+                "TOTAL", totals.0, totals.1, totals.2, totals.3
+            );
+
+            Ok(ExitCode::SUCCESS)
+        }
+
+        TriageAction::BulkUpdate {
+            lint,
+            path_contains,
+            repo,
+            current_status,
+            status,
+            notes,
+            dry_run,
+        } => {
+            let mut db = TriageDatabase::load(db_path)?;
+
+            // Parse the new status
+            let new_status = TriageStatus::from_str(&status)?;
+
+            // Parse current status filter if provided
+            let current_status_filter = if let Some(ref cs) = current_status {
+                Some(TriageStatus::from_str(cs)?)
+            } else {
+                None
+            };
+
+            // Collect matching finding IDs
+            let mut matching_ids: Vec<String> = Vec::new();
+
+            for finding in db.list_all() {
+                // Apply filters
+                if let Some(ref l) = lint
+                    && &finding.lint != l
+                {
+                    continue;
+                }
+
+                if let Some(ref p) = path_contains
+                    && !finding.file.contains(p)
+                {
+                    continue;
+                }
+
+                if let Some(ref r) = repo
+                    && &finding.repo != r
+                {
+                    continue;
+                }
+
+                if let Some(cs) = current_status_filter
+                    && finding.status != cs
+                {
+                    continue;
+                }
+
+                matching_ids.push(finding.id.clone());
+            }
+
+            if matching_ids.is_empty() {
+                println!("No findings match the specified criteria.");
+                return Ok(ExitCode::SUCCESS);
+            }
+
+            if dry_run {
+                println!(
+                    "DRY RUN - would update {} findings to status '{}':",
+                    matching_ids.len(),
+                    new_status
+                );
+                for id in matching_ids.iter().take(10) {
+                    if let Some(f) = db.get(id) {
+                        println!("  {} {} {}:{}", f.lint, f.repo, f.file, f.line);
+                    }
+                }
+                if matching_ids.len() > 10 {
+                    println!("  ... and {} more", matching_ids.len() - 10);
+                }
+            } else {
+                // Apply updates
+                for id in &matching_ids {
+                    db.update_status(id, new_status, notes.clone())?;
+                }
+
+                db.save(db_path)?;
+                println!(
+                    "Updated {} findings to status '{}'",
+                    matching_ids.len(),
+                    new_status
+                );
+            }
+
             Ok(ExitCode::SUCCESS)
         }
     }
@@ -744,10 +989,7 @@ fn infer_category(lint: &str) -> String {
     }
 
     // Modernization lints
-    if lint.contains("modern")
-        || lint.contains("prefer_")
-        || lint.contains("empty_vector")
-    {
+    if lint.contains("modern") || lint.contains("prefer_") || lint.contains("empty_vector") {
         return "modernization".to_string();
     }
 

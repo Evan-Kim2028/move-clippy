@@ -4,8 +4,8 @@
 //! to ensure they correctly identify bugs and don't fire false positives.
 
 use insta::assert_snapshot;
-use move_clippy::lint::{LintRegistry, LintSettings};
 use move_clippy::LintEngine;
+use move_clippy::lint::{LintRegistry, LintSettings};
 use std::path::PathBuf;
 
 /// Helper to lint a semantic fixture file and return formatted diagnostics
@@ -25,11 +25,11 @@ fn lint_semantic_fixture(fixture_name: &str) -> String {
     let settings = LintSettings::default();
 
     let registry = LintRegistry::default_rules_filtered(
-        &[],    // only
-        &[],    // skip
-        &[],    // disabled
-        false,  // full_mode
-        true,   // preview (enable preview lints)
+        &[],   // only
+        &[],   // skip
+        &[],   // disabled
+        false, // full_mode
+        true,  // preview (enable preview lints)
     )
     .expect("Failed to create registry");
 
@@ -45,10 +45,7 @@ fn lint_semantic_fixture(fixture_name: &str) -> String {
                     .map(|d| {
                         format!(
                             "{}:{} - {}: {}",
-                            d.span.start.row,
-                            d.span.start.column,
-                            d.lint.name,
-                            d.message
+                            d.span.start.row, d.span.start.column, d.lint.name, d.message
                         )
                     })
                     .collect::<Vec<_>>()

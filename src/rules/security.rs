@@ -78,12 +78,12 @@ pub static DROPPABLE_HOT_POTATO: LintDescriptor = LintDescriptor {
 /// Note: We require the name to contain both a "hot potato indicator" keyword
 /// AND NOT be an event struct (which legitimately has copy+drop).
 const HOT_POTATO_KEYWORDS: &[&str] = &[
-    "receipt",   // FlashLoanReceipt
-    "promise",   // RepaymentPromise
-    "ticket",    // BorrowTicket
-    "potato",    // HotPotato (explicit)
+    "receipt",    // FlashLoanReceipt
+    "promise",    // RepaymentPromise
+    "ticket",     // BorrowTicket
+    "potato",     // HotPotato (explicit)
     "obligation", // RepaymentObligation
-    "voucher",   // LoanVoucher
+    "voucher",    // LoanVoucher
 ];
 
 /// Keywords that indicate a struct is an event (and legitimately has copy+drop).
@@ -103,40 +103,41 @@ impl LintRule for DroppableHotPotatoLint {
 
 fn check_droppable_hot_potato(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     // Look for struct definitions
-    if node.kind() == "struct_definition" {
-        if let Some(name_node) = node.child_by_field_name("name") {
-            let struct_name = name_node
-                .utf8_text(source.as_bytes())
-                .unwrap_or("")
-                .to_lowercase();
+    if node.kind() == "struct_definition"
+        && let Some(name_node) = node.child_by_field_name("name")
+    {
+        let struct_name = name_node
+            .utf8_text(source.as_bytes())
+            .unwrap_or("")
+            .to_lowercase();
 
-            // Skip if this is an event struct (events legitimately have copy+drop)
-            let is_event = EVENT_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
-            if is_event {
-                // Recurse and return early
-                let mut cursor = node.walk();
-                for child in node.children(&mut cursor) {
-                    check_droppable_hot_potato(child, source, ctx);
-                }
-                return;
+        // Skip if this is an event struct (events legitimately have copy+drop)
+        let is_event = EVENT_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
+        if is_event {
+            // Recurse and return early
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                check_droppable_hot_potato(child, source, ctx);
             }
+            return;
+        }
 
-            // Check if this looks like a hot potato struct
-            let is_hot_potato = HOT_POTATO_KEYWORDS
-                .iter()
-                .any(|kw| struct_name.contains(kw));
+        // Check if this looks like a hot potato struct
+        let is_hot_potato = HOT_POTATO_KEYWORDS
+            .iter()
+            .any(|kw| struct_name.contains(kw));
 
-            if is_hot_potato {
-                // Check if it has the drop ability
-                let has_drop = has_drop_ability(node, source);
-                let has_copy = has_copy_ability(node, source);
-                
-                // Skip if it has BOTH copy AND drop - this is likely a data transfer object
-                // Hot potatoes should have ONLY drop (or no abilities at all)
-                // A struct with copy+drop is typically used for events or tracking, not enforcement
-                if has_drop && !has_copy {
-                    let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-                    ctx.report_node(
+        if is_hot_potato {
+            // Check if it has the drop ability
+            let has_drop = has_drop_ability(node, source);
+            let has_copy = has_copy_ability(node, source);
+
+            // Skip if it has BOTH copy AND drop - this is likely a data transfer object
+            // Hot potatoes should have ONLY drop (or no abilities at all)
+            // A struct with copy+drop is typically used for events or tracking, not enforcement
+            if has_drop && !has_copy {
+                let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
+                ctx.report_node(
                         &DROPPABLE_HOT_POTATO,
                         node,
                         format!(
@@ -146,7 +147,6 @@ fn check_droppable_hot_potato(node: Node, source: &str, ctx: &mut LintContext<'_
                             original_name
                         ),
                     );
-                }
             }
         }
     }
@@ -255,22 +255,37 @@ pub static EXCESSIVE_TOKEN_ABILITIES: LintDescriptor = LintDescriptor {
 /// - Event structs (legitimately have copy+drop)
 /// - Key structs used as map keys (legitimately have copy+drop)
 const TOKEN_KEYWORDS: &[&str] = &[
-    "token",   // MyToken
-    "coin",    // GameCoin
-    "asset",   // DigitalAsset
-    "share",   // PoolShare
-    "stake",   // StakePosition
+    "token", // MyToken
+    "coin",  // GameCoin
+    "asset", // DigitalAsset
+    "share", // PoolShare
+    "stake", // StakePosition
 ];
 
 /// Keywords that indicate a struct is a key/event, not a valuable asset.
 /// Includes past-tense event naming patterns (e.g., "Created", "Updated").
 const NON_ASSET_SUFFIXES: &[&str] = &[
     // Explicit non-asset suffixes
-    "key", "event", "log", "data", "info", "params",
+    "key",
+    "event",
+    "log",
+    "data",
+    "info",
+    "params",
     // Past-tense event naming patterns (common event naming convention)
-    "created", "updated", "deleted", "transferred", "minted", "burned",
-    "deposited", "withdrawn", "swapped", "claimed", "staked", "unstaked",
-    "swap",  // AssetSwap is a common event name
+    "created",
+    "updated",
+    "deleted",
+    "transferred",
+    "minted",
+    "burned",
+    "deposited",
+    "withdrawn",
+    "swapped",
+    "claimed",
+    "staked",
+    "unstaked",
+    "swap", // AssetSwap is a common event name
 ];
 
 pub struct ExcessiveTokenAbilitiesLint;
@@ -287,36 +302,37 @@ impl LintRule for ExcessiveTokenAbilitiesLint {
 
 fn check_excessive_token_abilities(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     // Look for struct definitions
-    if node.kind() == "struct_definition" {
-        if let Some(name_node) = node.child_by_field_name("name") {
-            let struct_name = name_node
-                .utf8_text(source.as_bytes())
-                .unwrap_or("")
-                .to_lowercase();
+    if node.kind() == "struct_definition"
+        && let Some(name_node) = node.child_by_field_name("name")
+    {
+        let struct_name = name_node
+            .utf8_text(source.as_bytes())
+            .unwrap_or("")
+            .to_lowercase();
 
-            // Skip if this is a non-asset struct (events, keys, data, etc.)
-            let is_non_asset = NON_ASSET_SUFFIXES
-                .iter()
-                .any(|suffix| struct_name.ends_with(suffix) || struct_name.contains(&format!("{}_", suffix)));
-            if is_non_asset {
-                // Recurse and return early
-                let mut cursor = node.walk();
-                for child in node.children(&mut cursor) {
-                    check_excessive_token_abilities(child, source, ctx);
-                }
-                return;
+        // Skip if this is a non-asset struct (events, keys, data, etc.)
+        let is_non_asset = NON_ASSET_SUFFIXES.iter().any(|suffix| {
+            struct_name.ends_with(suffix) || struct_name.contains(&format!("{}_", suffix))
+        });
+        if is_non_asset {
+            // Recurse and return early
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                check_excessive_token_abilities(child, source, ctx);
             }
+            return;
+        }
 
-            // Check if this looks like a token/asset struct
-            let is_token = TOKEN_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
+        // Check if this looks like a token/asset struct
+        let is_token = TOKEN_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
 
-            if is_token {
-                // Check if it has both copy AND drop abilities
-                let (has_copy, has_drop) = get_copy_drop_abilities(node, source);
+        if is_token {
+            // Check if it has both copy AND drop abilities
+            let (has_copy, has_drop) = get_copy_drop_abilities(node, source);
 
-                if has_copy && has_drop {
-                    let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-                    ctx.report_node(
+            if has_copy && has_drop {
+                let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
+                ctx.report_node(
                         &EXCESSIVE_TOKEN_ABILITIES,
                         node,
                         format!(
@@ -326,7 +342,6 @@ fn check_excessive_token_abilities(node: Node, source: &str, ctx: &mut LintConte
                             original_name
                         ),
                     );
-                }
             }
         }
     }
@@ -429,8 +444,8 @@ pub static SHARED_CAPABILITY: LintDescriptor = LintDescriptor {
 /// These MUST be at the end of the name (word boundary) to avoid false positives
 /// like "Capacity" or "Capital".
 const CAPABILITY_SUFFIXES: &[&str] = &[
-    "Cap",          // AdminCap, OwnerCap, MintCap
-    "Capability",   // AdminCapability (verbose form)
+    "Cap",        // AdminCap, OwnerCap, MintCap
+    "Capability", // AdminCapability (verbose form)
 ];
 
 /// Full capability names to match exactly (case-insensitive after first char).
@@ -451,10 +466,7 @@ const CAPABILITY_NAMES: &[&str] = &[
 ];
 
 /// Functions that share objects publicly.
-const SHARE_FUNCTIONS: &[&str] = &[
-    "share_object",
-    "public_share_object",
-];
+const SHARE_FUNCTIONS: &[&str] = &["share_object", "public_share_object"];
 
 pub struct SharedCapabilityLint;
 
@@ -472,24 +484,21 @@ fn check_shared_capability(node: Node, source: &str, ctx: &mut LintContext<'_>) 
     // Look for function calls
     if node.kind() == "call_expression" || node.kind() == "macro_call" {
         let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check if this is a share_object or public_share_object call
         let is_share_call = SHARE_FUNCTIONS.iter().any(|func| {
-            node_text.contains(&format!("{}(", func)) || 
-            node_text.contains(&format!("{}::", func))
+            node_text.contains(&format!("{}(", func)) || node_text.contains(&format!("{}::", func))
         });
-        
+
         if is_share_call {
             // Check if the argument looks like a capability
             if is_capability_argument(node_text) {
                 ctx.report_node(
                     &SHARED_CAPABILITY,
                     node,
-                    format!(
-                        "Capability object appears to be shared via `share_object`. \
+                    "Capability object appears to be shared via `share_object`. \
                          Capabilities should be transferred to a specific owner, not shared publicly. \
-                         Use `transfer::transfer(cap, owner_address)` instead."
-                    ),
+                         Use `transfer::transfer(cap, owner_address)` instead.".to_string(),
                 );
             }
         }
@@ -506,23 +515,23 @@ fn check_shared_capability(node: Node, source: &str, ctx: &mut LintContext<'_>) 
 fn is_capability_argument(call_text: &str) -> bool {
     // Check for common capability suffixes/names in the call
     let call_lower = call_text.to_lowercase();
-    
+
     // Check exact capability names (case-insensitive)
     for name in CAPABILITY_NAMES {
         if call_lower.contains(&name.to_lowercase()) {
             return true;
         }
     }
-    
+
     // Check for "Cap" suffix but NOT "Capacity", "Capital", "Recap", etc.
     // We need to check for word boundaries on BOTH sides of "cap"
     for suffix in CAPABILITY_SUFFIXES {
         let suffix_lower = suffix.to_lowercase();
         let mut search_pos = 0;
-        
+
         while let Some(pos) = call_lower[search_pos..].find(&suffix_lower) {
             let actual_pos = search_pos + pos;
-            
+
             // Check char BEFORE "cap" - must be word boundary (not alphabetic)
             // This prevents matching "recap", "escape", etc.
             let char_before = if actual_pos > 0 {
@@ -530,18 +539,18 @@ fn is_capability_argument(call_text: &str) -> bool {
             } else {
                 None
             };
-            
+
             let valid_prefix = match char_before {
-                None => true, // Start of string is valid
+                None => true,                  // Start of string is valid
                 Some(c) => !c.is_alphabetic(), // Non-alpha before is valid (e.g., "_cap", " cap")
             };
-            
+
             if !valid_prefix {
                 // Move past this match and continue searching
                 search_pos = actual_pos + suffix_lower.len();
                 continue;
             }
-            
+
             // Check char AFTER "cap" - must be word boundary (not alphabetic)
             // This prevents matching "capacity", "capital", etc.
             let after_pos = actual_pos + suffix_lower.len();
@@ -549,19 +558,19 @@ fn is_capability_argument(call_text: &str) -> bool {
                 // Suffix at end of string is valid
                 return true;
             }
-            
+
             let next_char = call_lower.chars().nth(after_pos);
-            if let Some(c) = next_char {
-                if !c.is_alphabetic() {
-                    return true;
-                }
+            if let Some(c) = next_char
+                && !c.is_alphabetic()
+            {
+                return true;
             }
-            
+
             // Move past this match and continue searching
             search_pos = actual_pos + suffix_lower.len();
         }
     }
-    
+
     false
 }
 
@@ -615,7 +624,7 @@ pub static SUSPICIOUS_OVERFLOW_CHECK: LintDescriptor = LintDescriptor {
     name: "suspicious_overflow_check",
     category: LintCategory::Security,
     description: "Manual overflow check detected - these are error-prone. Consider using built-in checked arithmetic (see: Cetus $223M hack)",
-    group: RuleGroup::Preview,  // Preview due to FP risk
+    group: RuleGroup::Preview, // Preview due to FP risk
     fix: FixDescriptor::none(),
 };
 
@@ -643,30 +652,31 @@ impl LintRule for SuspiciousOverflowCheckLint {
 
 fn check_suspicious_overflow(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     // Look for function definitions
-    if node.kind() == "function_definition" {
-        if let Some(name_node) = node.child_by_field_name("name") {
-            let func_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-            let func_name_lower = func_name.to_lowercase();
-            
-            // Check if function name suggests overflow checking
-            let is_overflow_function = OVERFLOW_CHECK_PATTERNS
-                .iter()
-                .any(|pat| func_name_lower.contains(pat));
-            
-            if is_overflow_function {
-                // Check if the function body contains bit shifts AND comparisons
-                let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-                let has_bit_shift = func_text.contains("<<") || func_text.contains(">>");
-                let has_comparison = func_text.contains(" > ") || 
-                                    func_text.contains(" >= ") ||
-                                    func_text.contains(" < ") ||
-                                    func_text.contains(" <= ");
-                let has_hex_constant = func_text.contains("0x");
-                
-                // If we have bit shifts AND comparisons AND hex constants,
-                // this is very likely a manual overflow check
-                if has_bit_shift && has_comparison && has_hex_constant {
-                    ctx.report_node(
+    if node.kind() == "function_definition"
+        && let Some(name_node) = node.child_by_field_name("name")
+    {
+        let func_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
+        let func_name_lower = func_name.to_lowercase();
+
+        // Check if function name suggests overflow checking
+        let is_overflow_function = OVERFLOW_CHECK_PATTERNS
+            .iter()
+            .any(|pat| func_name_lower.contains(pat));
+
+        if is_overflow_function {
+            // Check if the function body contains bit shifts AND comparisons
+            let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+            let has_bit_shift = func_text.contains("<<") || func_text.contains(">>");
+            let has_comparison = func_text.contains(" > ")
+                || func_text.contains(" >= ")
+                || func_text.contains(" < ")
+                || func_text.contains(" <= ");
+            let has_hex_constant = func_text.contains("0x");
+
+            // If we have bit shifts AND comparisons AND hex constants,
+            // this is very likely a manual overflow check
+            if has_bit_shift && has_comparison && has_hex_constant {
+                ctx.report_node(
                         &SUSPICIOUS_OVERFLOW_CHECK,
                         node,
                         format!(
@@ -677,7 +687,6 @@ fn check_suspicious_overflow(node: Node, source: &str, ctx: &mut LintContext<'_>
                             func_name
                         ),
                     );
-                }
             }
         }
     }
@@ -737,10 +746,7 @@ pub static STALE_ORACLE_PRICE: LintDescriptor = LintDescriptor {
 };
 
 /// Function names that indicate potentially stale oracle price retrieval.
-const UNSAFE_PRICE_FUNCTIONS: &[&str] = &[
-    "get_price_unsafe",
-    "price_unsafe",
-];
+const UNSAFE_PRICE_FUNCTIONS: &[&str] = &["get_price_unsafe", "price_unsafe"];
 
 pub struct StaleOraclePriceLint;
 
@@ -758,12 +764,12 @@ fn check_stale_oracle_price(node: Node, source: &str, ctx: &mut LintContext<'_>)
     // Look for function calls
     if node.kind() == "call_expression" {
         let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check if this calls an unsafe price function
-        let is_unsafe_price_call = UNSAFE_PRICE_FUNCTIONS.iter().any(|func| {
-            node_text.contains(func)
-        });
-        
+        let is_unsafe_price_call = UNSAFE_PRICE_FUNCTIONS
+            .iter()
+            .any(|func| node_text.contains(func));
+
         if is_unsafe_price_call {
             ctx.report_node(
                 &STALE_ORACLE_PRICE,
@@ -840,7 +846,7 @@ const OWNERSHIP_TRANSFER_PATTERNS: &[&str] = &[
     "change_admin",
     "update_admin",
     "transfer_owner",
-    "set_owner", 
+    "set_owner",
     "change_owner",
     "update_owner",
     "transfer_authority",
@@ -848,12 +854,7 @@ const OWNERSHIP_TRANSFER_PATTERNS: &[&str] = &[
 ];
 
 /// Patterns that indicate a two-step transfer (safe).
-const TWO_STEP_PATTERNS: &[&str] = &[
-    "pending",
-    "propose",
-    "accept",
-    "claim",
-];
+const TWO_STEP_PATTERNS: &[&str] = &["pending", "propose", "accept", "claim"];
 
 pub struct SingleStepOwnershipTransferLint;
 
@@ -869,34 +870,35 @@ impl LintRule for SingleStepOwnershipTransferLint {
 
 fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     // Look for function definitions
-    if node.kind() == "function_definition" {
-        if let Some(name_node) = node.child_by_field_name("name") {
-            let func_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-            let func_name_lower = func_name.to_lowercase();
-            
-            // Check if function name suggests ownership transfer
-            let is_ownership_transfer = OWNERSHIP_TRANSFER_PATTERNS
+    if node.kind() == "function_definition"
+        && let Some(name_node) = node.child_by_field_name("name")
+    {
+        let func_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
+        let func_name_lower = func_name.to_lowercase();
+
+        // Check if function name suggests ownership transfer
+        let is_ownership_transfer = OWNERSHIP_TRANSFER_PATTERNS
+            .iter()
+            .any(|pat| func_name_lower.contains(pat));
+
+        if is_ownership_transfer {
+            let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+            let func_text_lower = func_text.to_lowercase();
+
+            // Check if this appears to be a two-step pattern (safe)
+            let is_two_step = TWO_STEP_PATTERNS
                 .iter()
-                .any(|pat| func_name_lower.contains(pat));
-            
-            if is_ownership_transfer {
-                let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-                let func_text_lower = func_text.to_lowercase();
-                
-                // Check if this appears to be a two-step pattern (safe)
-                let is_two_step = TWO_STEP_PATTERNS
-                    .iter()
-                    .any(|pat| func_text_lower.contains(pat));
-                
-                // If it's a transfer function but doesn't use two-step pattern, flag it
-                if !is_two_step {
-                    // Additional check: make sure there's an assignment to admin/owner field
-                    let has_admin_assignment = func_text_lower.contains(".admin =") ||
-                                               func_text_lower.contains(".owner =") ||
-                                               func_text_lower.contains(".authority =");
-                    
-                    if has_admin_assignment {
-                        ctx.report_node(
+                .any(|pat| func_text_lower.contains(pat));
+
+            // If it's a transfer function but doesn't use two-step pattern, flag it
+            if !is_two_step {
+                // Additional check: make sure there's an assignment to admin/owner field
+                let has_admin_assignment = func_text_lower.contains(".admin =")
+                    || func_text_lower.contains(".owner =")
+                    || func_text_lower.contains(".authority =");
+
+                if has_admin_assignment {
+                    ctx.report_node(
                             &SINGLE_STEP_OWNERSHIP_TRANSFER,
                             node,
                             format!(
@@ -907,7 +909,6 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
                                 func_name
                             ),
                         );
-                    }
                 }
             }
         }
@@ -983,24 +984,25 @@ fn check_unchecked_coin_split(node: Node, source: &str, ctx: &mut LintContext<'_
     if node.kind() == "function_definition" {
         let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
         let func_text_lower = func_text.to_lowercase();
-        
+
         // Check if function contains coin::split
         if func_text_lower.contains("coin::split") || func_text_lower.contains("split(") {
             // Check if there's a balance check before the split
             // Look for patterns like: coin::value, .value(), >= amount, > amount
-            let has_balance_check = func_text_lower.contains("coin::value") ||
-                                    func_text_lower.contains(".value()") ||
-                                    func_text_lower.contains("balance::value") ||
-                                    func_text_lower.contains(">= amount") ||
-                                    func_text_lower.contains("> amount") ||
-                                    func_text_lower.contains("assert!");
-            
+            let has_balance_check = func_text_lower.contains("coin::value")
+                || func_text_lower.contains(".value()")
+                || func_text_lower.contains("balance::value")
+                || func_text_lower.contains(">= amount")
+                || func_text_lower.contains("> amount")
+                || func_text_lower.contains("assert!");
+
             if !has_balance_check {
                 // Get function name for reporting
-                let func_name = node.child_by_field_name("name")
+                let func_name = node
+                    .child_by_field_name("name")
                     .and_then(|n| n.utf8_text(source.as_bytes()).ok())
                     .unwrap_or("unknown");
-                
+
                 ctx.report_node(
                     &UNCHECKED_COIN_SPLIT,
                     node,
@@ -1048,7 +1050,7 @@ fn check_unchecked_coin_split(node: Node, source: &str, ctx: &mut LintContext<'_
 /// ```move
 /// // BAD - OTW without drop cannot be consumed
 /// struct MY_TOKEN {}
-/// 
+///
 /// fun init(witness: MY_TOKEN, ctx: &mut TxContext) {
 ///     // witness cannot be dropped after use!
 /// }
@@ -1059,7 +1061,7 @@ fn check_unchecked_coin_split(node: Node, source: &str, ctx: &mut LintContext<'_
 /// ```move
 /// // GOOD - OTW with drop
 /// struct MY_TOKEN has drop {}
-/// 
+///
 /// fun init(witness: MY_TOKEN, ctx: &mut TxContext) {
 ///     // witness is dropped automatically
 /// }
@@ -1086,28 +1088,26 @@ impl LintRule for MissingWitnessDropLint {
 
 fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     // Look for struct definitions
-    if node.kind() == "struct_definition" {
-        if let Some(name_node) = node.child_by_field_name("name") {
-            let struct_name = name_node
-                .utf8_text(source.as_bytes())
-                .unwrap_or("");
-            
-            // OTW pattern: SCREAMING_SNAKE_CASE, same as module name, empty body
-            // Check if it looks like an OTW (all uppercase with underscores)
-            let is_screaming_case = struct_name.chars().all(|c| c.is_uppercase() || c == '_');
-            
-            if is_screaming_case && !struct_name.is_empty() {
-                // Check if it has empty body (no fields)
-                let struct_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-                let has_empty_body = struct_text.contains("{}") || 
-                                     struct_text.contains("{ }");
-                
-                if has_empty_body {
-                    // Check if it has drop ability
-                    let has_drop = has_drop_ability(node, source);
-                    
-                    if !has_drop {
-                        ctx.report_node(
+    if node.kind() == "struct_definition"
+        && let Some(name_node) = node.child_by_field_name("name")
+    {
+        let struct_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
+
+        // OTW pattern: SCREAMING_SNAKE_CASE, same as module name, empty body
+        // Check if it looks like an OTW (all uppercase with underscores)
+        let is_screaming_case = struct_name.chars().all(|c| c.is_uppercase() || c == '_');
+
+        if is_screaming_case && !struct_name.is_empty() {
+            // Check if it has empty body (no fields)
+            let struct_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+            let has_empty_body = struct_text.contains("{}") || struct_text.contains("{ }");
+
+            if has_empty_body {
+                // Check if it has drop ability
+                let has_drop = has_drop_ability(node, source);
+
+                if !has_drop {
+                    ctx.report_node(
                             &MISSING_WITNESS_DROP,
                             node,
                             format!(
@@ -1117,7 +1117,6 @@ fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_
                                 struct_name
                             ),
                         );
-                    }
                 }
             }
         }
@@ -1195,26 +1194,26 @@ fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_
     // Look for function definitions
     if node.kind() == "function_definition" {
         let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check if function is public (not entry)
-        let is_public = func_text.starts_with("public fun") || 
-                        func_text.contains("public fun ");
+        let is_public = func_text.starts_with("public fun") || func_text.contains("public fun ");
         let is_entry = func_text.contains("entry ");
-        
+
         // Entry functions are OK because they can't be composed
         if is_public && !is_entry {
             // Check if function takes Random as parameter or returns random value
             let func_lower = func_text.to_lowercase();
-            let has_random_param = func_lower.contains("&random") || 
-                                   func_lower.contains(": random");
-            let returns_random = func_lower.contains("-> u64") && 
-                                 (func_lower.contains("generate") || func_lower.contains("random"));
-            
+            let has_random_param =
+                func_lower.contains("&random") || func_lower.contains(": random");
+            let returns_random = func_lower.contains("-> u64")
+                && (func_lower.contains("generate") || func_lower.contains("random"));
+
             if has_random_param || returns_random {
-                let func_name = node.child_by_field_name("name")
+                let func_name = node
+                    .child_by_field_name("name")
                     .and_then(|n| n.utf8_text(source.as_bytes()).ok())
                     .unwrap_or("unknown");
-                
+
                 ctx.report_node(
                     &PUBLIC_RANDOM_ACCESS,
                     node,
@@ -1298,30 +1297,31 @@ fn check_unbounded_vector_growth(node: Node, source: &str, ctx: &mut LintContext
     if node.kind() == "function_definition" {
         let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
         let func_lower = func_text.to_lowercase();
-        
+
         // Check if function has vector push operations
-        let has_push = func_lower.contains("vector::push_back") || 
-                       func_lower.contains(".push_back(") ||
-                       func_lower.contains("vec_set::insert") ||
-                       func_lower.contains("vec_map::insert");
-        
+        let has_push = func_lower.contains("vector::push_back")
+            || func_lower.contains(".push_back(")
+            || func_lower.contains("vec_set::insert")
+            || func_lower.contains("vec_map::insert");
+
         if has_push {
             // Check if there's a length check before the push
-            let has_length_check = func_lower.contains("vector::length") ||
-                                   func_lower.contains(".length()") ||
-                                   func_lower.contains("< max") ||
-                                   func_lower.contains("< MAX") ||
-                                   func_lower.contains("<= max") ||
-                                   func_lower.contains("<= MAX") ||
-                                   func_lower.contains("e_too_many") ||
-                                   func_lower.contains("e_max_") ||
-                                   func_lower.contains("e_limit");
-            
+            let has_length_check = func_lower.contains("vector::length")
+                || func_lower.contains(".length()")
+                || func_lower.contains("< max")
+                || func_lower.contains("< MAX")
+                || func_lower.contains("<= max")
+                || func_lower.contains("<= MAX")
+                || func_lower.contains("e_too_many")
+                || func_lower.contains("e_max_")
+                || func_lower.contains("e_limit");
+
             if !has_length_check {
-                let func_name = node.child_by_field_name("name")
+                let func_name = node
+                    .child_by_field_name("name")
                     .and_then(|n| n.utf8_text(source.as_bytes()).ok())
                     .unwrap_or("unknown");
-                
+
                 ctx.report_node(
                     &UNBOUNDED_VECTOR_GROWTH,
                     node,
@@ -1375,7 +1375,7 @@ fn check_unbounded_vector_growth(node: Node, source: &str, ctx: &mut LintContext
 /// ```move
 /// const FEE_RECIPIENT: address = @fee_recipient;
 /// // Or use a config object
-/// 
+///
 /// public fun send_fee(config: &Config, coin: Coin<SUI>) {
 ///     transfer::public_transfer(coin, config.fee_recipient);
 /// }
@@ -1402,36 +1402,40 @@ impl LintRule for HardcodedAddressLint {
 
 /// Addresses that are commonly legitimate and shouldn't be flagged
 const KNOWN_SAFE_ADDRESSES: &[&str] = &[
-    "@0x0",      // Zero address (null)
-    "@0x1",      // System address
-    "@0x2",      // Sui framework
-    "@0x3",      // Sui system
-    "@0x5",      // Sui system
-    "@0x6",      // Clock object
-    "@0x8",      // Random object
-    "@0xdee9",   // DeepBook
+    "@0x0",    // Zero address (null)
+    "@0x1",    // System address
+    "@0x2",    // Sui framework
+    "@0x3",    // Sui system
+    "@0x5",    // Sui system
+    "@0x6",    // Clock object
+    "@0x8",    // Random object
+    "@0xdee9", // DeepBook
 ];
 
 fn check_hardcoded_address(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     // Look for address literals in function bodies (not at module/const level)
     if node.kind() == "function_definition" {
         let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Find @0x... patterns that aren't in known safe list
         let mut i = 0;
         let bytes = func_text.as_bytes();
         while i < bytes.len() {
-            if bytes[i] == b'@' && i + 3 < bytes.len() && bytes[i+1] == b'0' && bytes[i+2] == b'x' {
+            if bytes[i] == b'@'
+                && i + 3 < bytes.len()
+                && bytes[i + 1] == b'0'
+                && bytes[i + 2] == b'x'
+            {
                 // Found @0x, extract the address
                 let start = i;
                 let mut end = i + 3;
                 while end < bytes.len() && (bytes[end].is_ascii_hexdigit() || bytes[end] == b'_') {
                     end += 1;
                 }
-                
+
                 let addr = &func_text[start..end];
                 let addr_lower = addr.to_lowercase();
-                
+
                 // Skip known safe addresses - must be exact match or followed by non-hex
                 let is_safe = KNOWN_SAFE_ADDRESSES.iter().any(|safe| {
                     let safe_lower = safe.to_lowercase();
@@ -1444,34 +1448,37 @@ fn check_hardcoded_address(node: Node, source: &str, ctx: &mut LintContext<'_>) 
                         // Check what comes after
                         let remainder = &addr_lower[safe_lower.len()..];
                         // If there's more hex digits, it's not a match
-                        !remainder.chars().next().map_or(true, |c| c.is_ascii_hexdigit())
+                        !remainder
+                            .chars()
+                            .next()
+                            .is_none_or(|c| c.is_ascii_hexdigit())
                     } else {
                         false
                     }
                 });
-                
+
                 // Skip short addresses (likely constants)
                 let is_short = addr.len() < 10;
-                
+
                 if !is_safe && !is_short {
-                    let func_name = node.child_by_field_name("name")
+                    let func_name = node
+                        .child_by_field_name("name")
                         .and_then(|n| n.utf8_text(source.as_bytes()).ok())
                         .unwrap_or("unknown");
-                    
+
                     ctx.report_node(
                         &HARDCODED_ADDRESS,
                         node,
                         format!(
                             "Function `{}` contains hardcoded address `{}`. \
                              Consider using a constant or configuration parameter for flexibility.",
-                            func_name,
-                            addr
+                            func_name, addr
                         ),
                     );
                     // Only report once per function
                     break;
                 }
-                
+
                 i = end;
             } else {
                 i += 1;

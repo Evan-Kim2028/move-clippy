@@ -21,7 +21,7 @@ pub(crate) fn slice<'a>(source: &'a str, node: Node) -> &'a str {
 pub(crate) fn extract_braced_items(text: &str) -> Option<&str> {
     let open = text.find('{')?;
     let close = text[open + 1..].find('}')? + (open + 1);
-    Some(text.get(open + 1..close)?)
+    text.get(open + 1..close)
 }
 
 pub(crate) fn compact_ws(text: &str) -> String {

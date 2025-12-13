@@ -263,11 +263,10 @@ impl LintRule for ExplicitSelfAssignmentsLint {
 /// Count the number of ignored field patterns (`: _` or just `_` in field position)
 fn count_ignored_fields(text: &str) -> usize {
     // Count patterns like `field: _` or `field_name: _`
-    let explicit_ignores = text.matches(": _").count();
 
     // Also count standalone `_` that aren't part of identifiers
     // This is more conservative - we only count `: _` patterns
-    explicit_ignores
+    text.matches(": _").count()
 }
 
 // ============================================================================
@@ -391,7 +390,8 @@ impl LintRule for EmptyVectorLiteralLint {
 
                 // Check for suppression before creating diagnostic
                 let node_start = node.start_byte();
-                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name)
+                {
                     return;
                 }
 
@@ -448,19 +448,19 @@ impl LintRule for TypedAbortCodeLint {
             }
 
             // Check abort statements
-            if node.kind() == "abort_expression" {
-                if let Some(code_node) = node.child_by_field_name("value") {
-                    let code_text = slice(source, code_node).trim();
-                    if is_numeric_literal(code_text) {
-                        ctx.report_node(
-                            self.descriptor(),
-                            node,
-                            format!(
-                                "Prefer named error constant over numeric abort code `{}`",
-                                code_text
-                            ),
-                        );
-                    }
+            if node.kind() == "abort_expression"
+                && let Some(code_node) = node.child_by_field_name("value")
+            {
+                let code_text = slice(source, code_node).trim();
+                if is_numeric_literal(code_text) {
+                    ctx.report_node(
+                        self.descriptor(),
+                        node,
+                        format!(
+                            "Prefer named error constant over numeric abort code `{}`",
+                            code_text
+                        ),
+                    );
                 }
             }
 
@@ -470,19 +470,17 @@ impl LintRule for TypedAbortCodeLint {
                 if text.starts_with("assert!")
                     && !text.starts_with("assert_eq!")
                     && !text.starts_with("assert_ne!")
+                    && let Some(abort_code) = extract_assert_abort_code_for_typed(text)
+                    && is_numeric_literal(abort_code)
                 {
-                    if let Some(abort_code) = extract_assert_abort_code_for_typed(text) {
-                        if is_numeric_literal(abort_code) {
-                            ctx.report_node(
-                                self.descriptor(),
-                                node,
-                                format!(
-                                    "Prefer named error constant over numeric abort code `{}`",
-                                    abort_code
-                                ),
-                            );
-                        }
-                    }
+                    ctx.report_node(
+                        self.descriptor(),
+                        node,
+                        format!(
+                            "Prefer named error constant over numeric abort code `{}`",
+                            abort_code
+                        ),
+                    );
                 }
             }
         });
@@ -733,20 +731,18 @@ impl LintRule for UnneededReturnLint {
             if node.kind() != "function_definition" {
                 return;
             }
-            
+
             // Find the function body block
             // Try field name first, then iterate children
-            let body = node.child_by_field_name("body")
-                .or_else(|| {
-                    let mut cursor = node.walk();
-                    node.children(&mut cursor)
-                        .find(|c| c.kind() == "block")
-                });
-            
+            let body = node.child_by_field_name("body").or_else(|| {
+                let mut cursor = node.walk();
+                node.children(&mut cursor).find(|c| c.kind() == "block")
+            });
+
             let Some(body) = body else {
                 return;
             };
-            
+
             if body.kind() != "block" {
                 return;
             }
@@ -754,7 +750,7 @@ impl LintRule for UnneededReturnLint {
             if let Some(ret) = trailing_return_expression(body) {
                 // Extract the expression after "return"
                 let ret_text = slice(source, ret);
-                
+
                 // The return expression looks like "return expr" or "return expr;"
                 // We want to extract just "expr"
                 let replacement = if let Some(stripped) = ret_text.strip_prefix("return") {
@@ -773,7 +769,8 @@ impl LintRule for UnneededReturnLint {
 
                 // Check for suppression
                 let node_start = ret.start_byte();
-                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name)
+                {
                     return;
                 }
 
@@ -783,7 +780,9 @@ impl LintRule for UnneededReturnLint {
                     level: ctx.settings().level_for(self.descriptor().name),
                     file: None,
                     span: Span::from_range(ret.range()),
-                    message: "Remove `return`; the last expression in a block already returns implicitly".to_string(),
+                    message:
+                        "Remove `return`; the last expression in a block already returns implicitly"
+                            .to_string(),
                     help: Some(format!("Replace with `{}`", replacement)),
                     suggestion: Some(Suggestion {
                         message: "Remove `return` keyword".to_string(),

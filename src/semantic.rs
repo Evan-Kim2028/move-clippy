@@ -1,3 +1,9 @@
+// Allow patterns that are intentional in semantic analysis
+// - unused_variables: Move compiler iterators yield (key, value) pairs but we often only need value
+// - unreachable_patterns: Match arms for exhaustiveness that may not be reached in practice
+#![allow(unused_variables)]
+#![allow(unreachable_patterns)]
+
 use crate::diagnostics::Diagnostic;
 use crate::error::{ClippyResult, MoveClippyError};
 use crate::lint::{FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup};
@@ -369,7 +375,7 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
 
 /// Return descriptors for all semantic lints.
 pub fn descriptors() -> &'static [&'static LintDescriptor] {
-    &DESCRIPTORS
+    DESCRIPTORS
 }
 
 /// Look up a semantic lint descriptor by name.
@@ -391,7 +397,7 @@ mod full {
     use move_compiler::shared::{Identifier, files::MappedFiles, program_info::TypingProgramInfo};
     use move_compiler::shared::{SaveFlag, SaveHook};
     use move_compiler::sui_mode::linters;
-    use move_compiler::{naming::ast as N, typing::ast as T, expansion::ast as E};
+    use move_compiler::{expansion::ast as E, naming::ast as N, typing::ast as T};
     use move_ir_types::location::Loc;
     use move_package::BuildConfig;
     use move_package::compilation::build_plan::BuildPlan;
@@ -712,7 +718,7 @@ mod full {
                             || name == "cap"
                             || name.starts_with("admin")
                     })
-                    .map(|(_, var, _)| var.clone())
+                    .map(|(_, var, _)| *var)
                     .collect();
 
                 if cap_params.is_empty() {
@@ -725,9 +731,9 @@ mod full {
                 };
 
                 for cap_var in &cap_params {
-                    let is_used = seq_items.iter().any(|item| {
-                        check_var_used_in_seq_item(item, cap_var)
-                    });
+                    let is_used = seq_items
+                        .iter()
+                        .any(|item| check_var_used_in_seq_item(item, cap_var));
 
                     if !is_used {
                         let loc = fdef.loc;
@@ -777,29 +783,21 @@ mod full {
             T::UnannotatedExp_::Copy { var: v, .. } => v.value.id == var.value.id,
             T::UnannotatedExp_::Move { var: v, .. } => v.value.id == var.value.id,
             T::UnannotatedExp_::BorrowLocal(_, v) => v.value.id == var.value.id,
-            
+
             // Recursive cases - arguments is now Box<Exp>
-            T::UnannotatedExp_::ModuleCall(call) => {
-                check_var_used_in_exp(&call.arguments, var)
-            }
-            T::UnannotatedExp_::Builtin(_, args) => {
-                check_var_used_in_exp(args, var)
-            }
-            T::UnannotatedExp_::Vector(_, _, _, args) => {
-                check_var_used_in_exp(args, var)
-            }
-            T::UnannotatedExp_::Pack(_, _, _, fields) => {
-                fields.iter().any(|(_, _, (_, (_, exp)))| check_var_used_in_exp(exp, var))
-            }
-            T::UnannotatedExp_::PackVariant(_, _, _, _, fields) => {
-                fields.iter().any(|(_, _, (_, (_, exp)))| check_var_used_in_exp(exp, var))
-            }
-            T::UnannotatedExp_::ExpList(items) => {
-                items.iter().any(|item| match item {
-                    T::ExpListItem::Single(e, _) => check_var_used_in_exp(e, var),
-                    T::ExpListItem::Splat(_, e, _) => check_var_used_in_exp(e, var),
-                })
-            }
+            T::UnannotatedExp_::ModuleCall(call) => check_var_used_in_exp(&call.arguments, var),
+            T::UnannotatedExp_::Builtin(_, args) => check_var_used_in_exp(args, var),
+            T::UnannotatedExp_::Vector(_, _, _, args) => check_var_used_in_exp(args, var),
+            T::UnannotatedExp_::Pack(_, _, _, fields) => fields
+                .iter()
+                .any(|(_, _, (_, (_, exp)))| check_var_used_in_exp(exp, var)),
+            T::UnannotatedExp_::PackVariant(_, _, _, _, fields) => fields
+                .iter()
+                .any(|(_, _, (_, (_, exp)))| check_var_used_in_exp(exp, var)),
+            T::UnannotatedExp_::ExpList(items) => items.iter().any(|item| match item {
+                T::ExpListItem::Single(e, _) => check_var_used_in_exp(e, var),
+                T::ExpListItem::Splat(_, e, _) => check_var_used_in_exp(e, var),
+            }),
             T::UnannotatedExp_::Borrow(_, inner, _) => check_var_used_in_exp(inner, var),
             T::UnannotatedExp_::TempBorrow(_, inner) => check_var_used_in_exp(inner, var),
             T::UnannotatedExp_::Dereference(inner) => check_var_used_in_exp(inner, var),
@@ -810,7 +808,9 @@ mod full {
             T::UnannotatedExp_::IfElse(cond, then_e, else_e_opt) => {
                 check_var_used_in_exp(cond, var)
                     || check_var_used_in_exp(then_e, var)
-                    || else_e_opt.as_ref().map_or(false, |else_e| check_var_used_in_exp(else_e, var))
+                    || else_e_opt
+                        .as_ref()
+                        .is_some_and(|else_e| check_var_used_in_exp(else_e, var))
             }
             T::UnannotatedExp_::While(_, cond, body) => {
                 check_var_used_in_exp(cond, var) || check_var_used_in_exp(body, var)
@@ -833,13 +833,16 @@ mod full {
             T::UnannotatedExp_::Annotate(inner, _) => check_var_used_in_exp(inner, var),
             T::UnannotatedExp_::Match(scrutinee, arms) => {
                 check_var_used_in_exp(scrutinee, var)
-                    || arms.value.iter().any(|arm| check_var_used_in_exp(&arm.value.rhs, var))
+                    || arms
+                        .value
+                        .iter()
+                        .any(|arm| check_var_used_in_exp(&arm.value.rhs, var))
             }
             T::UnannotatedExp_::VariantMatch(scrutinee, _, arms) => {
                 check_var_used_in_exp(scrutinee, var)
                     || arms.iter().any(|(_, rhs)| check_var_used_in_exp(rhs, var))
             }
-            
+
             // Base cases that don't use variables
             T::UnannotatedExp_::Unit { .. }
             | T::UnannotatedExp_::Value(_)
@@ -847,7 +850,7 @@ mod full {
             | T::UnannotatedExp_::Continue(_)
             | T::UnannotatedExp_::UnresolvedError
             | T::UnannotatedExp_::ErrorConstant { .. } => false,
-            
+
             // Catch-all for other cases
             _ => false,
         }
@@ -926,10 +929,10 @@ mod full {
                 let module_name = module_sym.as_str();
                 let func_sym = call.name.value();
                 let func_name = func_sym.as_str();
-                
+
                 // Check for transfer::public_share_object or transfer::share_object
-                if module_name == "transfer" 
-                    && (func_name == "public_share_object" || func_name == "share_object") 
+                if module_name == "transfer"
+                    && (func_name == "public_share_object" || func_name == "share_object")
                 {
                     // Check if argument type contains CoinMetadata
                     // For simplicity, we check if any type argument contains "CoinMetadata"
@@ -1000,8 +1003,9 @@ mod full {
                 };
 
                 // Track variables that have been validated as non-zero
-                let mut validated_vars: std::collections::HashSet<u16> = std::collections::HashSet::new();
-                
+                let mut validated_vars: std::collections::HashSet<u16> =
+                    std::collections::HashSet::new();
+
                 for item in seq_items.iter() {
                     check_division_in_seq_item(
                         item,
@@ -1041,7 +1045,10 @@ mod full {
     }
 
     /// Check if an expression is an assertion that validates a variable is non-zero.
-    fn check_for_nonzero_assertion(exp: &T::Exp, validated_vars: &mut std::collections::HashSet<u16>) {
+    fn check_for_nonzero_assertion(
+        exp: &T::Exp,
+        validated_vars: &mut std::collections::HashSet<u16>,
+    ) {
         // Look for assert!(var != 0, ...) or assert!(var > 0, ...)
         if let T::UnannotatedExp_::Builtin(builtin, args) = &exp.exp.value {
             let builtin_str = format!("{:?}", builtin);
@@ -1055,23 +1062,23 @@ mod full {
                 } else {
                     Some(args.as_ref())
                 };
-                
-                if let Some(first_arg) = first_arg {
-                    if let T::UnannotatedExp_::BinopExp(left, op, _, right) = &first_arg.exp.value {
-                        let op_str = format!("{:?}", op);
-                        // Check for != 0 or > 0
-                        if op_str.contains("Neq") || op_str.contains("Gt") {
-                            // Check if comparing with 0
-                            if is_zero_value(right) {
-                                if let Some(var_id) = extract_var_id(left) {
-                                    validated_vars.insert(var_id);
-                                }
-                            }
-                            if is_zero_value(left) {
-                                if let Some(var_id) = extract_var_id(right) {
-                                    validated_vars.insert(var_id);
-                                }
-                            }
+
+                if let Some(first_arg) = first_arg
+                    && let T::UnannotatedExp_::BinopExp(left, op, _, right) = &first_arg.exp.value
+                {
+                    let op_str = format!("{:?}", op);
+                    // Check for != 0 or > 0
+                    if op_str.contains("Neq") || op_str.contains("Gt") {
+                        // Check if comparing with 0
+                        if is_zero_value(right)
+                            && let Some(var_id) = extract_var_id(left)
+                        {
+                            validated_vars.insert(var_id);
+                        }
+                        if is_zero_value(left)
+                            && let Some(var_id) = extract_var_id(right)
+                        {
+                            validated_vars.insert(var_id);
                         }
                     }
                 }
@@ -1118,7 +1125,10 @@ mod full {
                     } else {
                         // If it's a constant or complex expression, assume it might be safe
                         // (conservative approach to reduce FPs)
-                        matches!(&right.exp.value, T::UnannotatedExp_::Value(_) | T::UnannotatedExp_::Constant(_, _))
+                        matches!(
+                            &right.exp.value,
+                            T::UnannotatedExp_::Value(_) | T::UnannotatedExp_::Constant(_, _)
+                        )
                     };
 
                     if !divisor_validated {
@@ -1149,19 +1159,40 @@ mod full {
                 check_division_in_exp(right, validated_vars, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::ModuleCall(call) => {
-                check_division_in_exp(&call.arguments, validated_vars, out, settings, file_map, func_name);
+                check_division_in_exp(
+                    &call.arguments,
+                    validated_vars,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::UnannotatedExp_::Block((_, seq)) => {
                 let mut local_validated = validated_vars.clone();
                 for item in seq.iter() {
-                    check_division_in_seq_item(item, &mut local_validated, out, settings, file_map, func_name);
+                    check_division_in_seq_item(
+                        item,
+                        &mut local_validated,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
                 }
             }
             T::UnannotatedExp_::IfElse(cond, then_e, else_e_opt) => {
                 check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
                 check_division_in_exp(then_e, validated_vars, out, settings, file_map, func_name);
                 if let Some(else_e) = else_e_opt {
-                    check_division_in_exp(else_e, validated_vars, out, settings, file_map, func_name);
+                    check_division_in_exp(
+                        else_e,
+                        validated_vars,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
                 }
             }
             _ => {}
@@ -1196,7 +1227,8 @@ mod full {
                 };
 
                 // Track price-related variables that have been validated
-                let mut validated_prices: std::collections::HashSet<u16> = std::collections::HashSet::new();
+                let mut validated_prices: std::collections::HashSet<u16> =
+                    std::collections::HashSet::new();
 
                 for item in seq_items.iter() {
                     check_oracle_price_in_seq_item(
@@ -1227,7 +1259,14 @@ mod full {
             T::SequenceItem_::Seq(exp) => {
                 // Check for assert statements that validate price > 0
                 check_for_price_validation(exp, validated_prices);
-                check_oracle_price_in_exp(exp, validated_prices, out, settings, file_map, func_name);
+                check_oracle_price_in_exp(
+                    exp,
+                    validated_prices,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::SequenceItem_::Bind(bindings, _, exp) => {
                 // Track bindings of price-related variables
@@ -1241,14 +1280,24 @@ mod full {
                         }
                     }
                 }
-                check_oracle_price_in_exp(exp, validated_prices, out, settings, file_map, func_name);
+                check_oracle_price_in_exp(
+                    exp,
+                    validated_prices,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             _ => {}
         }
     }
 
     /// Check for price validation assertions.
-    fn check_for_price_validation(exp: &T::Exp, validated_prices: &mut std::collections::HashSet<u16>) {
+    fn check_for_price_validation(
+        exp: &T::Exp,
+        validated_prices: &mut std::collections::HashSet<u16>,
+    ) {
         if let T::UnannotatedExp_::Builtin(builtin, args) = &exp.exp.value {
             let builtin_str = format!("{:?}", builtin);
             if builtin_str.contains("Assert") {
@@ -1261,23 +1310,23 @@ mod full {
                 } else {
                     Some(args.as_ref())
                 };
-                
-                if let Some(first_arg) = first_arg {
-                    if let T::UnannotatedExp_::BinopExp(left, op, _, right) = &first_arg.exp.value {
-                        let op_str = format!("{:?}", op);
-                        // Check for > 0 or != 0 comparisons
-                        if op_str.contains("Gt") || op_str.contains("Neq") {
-                            // Check if comparing a price variable with 0
-                            if is_zero_value(right) {
-                                if let Some(var_id) = extract_var_id(left) {
-                                    validated_prices.insert(var_id);
-                                }
-                            }
-                            if is_zero_value(left) {
-                                if let Some(var_id) = extract_var_id(right) {
-                                    validated_prices.insert(var_id);
-                                }
-                            }
+
+                if let Some(first_arg) = first_arg
+                    && let T::UnannotatedExp_::BinopExp(left, op, _, right) = &first_arg.exp.value
+                {
+                    let op_str = format!("{:?}", op);
+                    // Check for > 0 or != 0 comparisons
+                    if op_str.contains("Gt") || op_str.contains("Neq") {
+                        // Check if comparing a price variable with 0
+                        if is_zero_value(right)
+                            && let Some(var_id) = extract_var_id(left)
+                        {
+                            validated_prices.insert(var_id);
+                        }
+                        if is_zero_value(left)
+                            && let Some(var_id) = extract_var_id(right)
+                        {
+                            validated_prices.insert(var_id);
                         }
                     }
                 }
@@ -1300,22 +1349,60 @@ mod full {
                 // Check for multiplication or division involving price
                 if op_str.contains("Mul") || op_str.contains("Div") {
                     // Check if either operand is an unvalidated price variable
-                    check_price_operand(left, validated_prices, out, settings, file_map, func_name, &exp.exp.loc);
-                    check_price_operand(right, validated_prices, out, settings, file_map, func_name, &exp.exp.loc);
+                    check_price_operand(
+                        left,
+                        validated_prices,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                        &exp.exp.loc,
+                    );
+                    check_price_operand(
+                        right,
+                        validated_prices,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                        &exp.exp.loc,
+                    );
                 }
 
                 // Recurse
-                check_oracle_price_in_exp(left, validated_prices, out, settings, file_map, func_name);
-                check_oracle_price_in_exp(right, validated_prices, out, settings, file_map, func_name);
+                check_oracle_price_in_exp(
+                    left,
+                    validated_prices,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                check_oracle_price_in_exp(
+                    right,
+                    validated_prices,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::UnannotatedExp_::ModuleCall(call) => {
-                check_oracle_price_in_exp(&call.arguments, validated_prices, out, settings, file_map, func_name);
+                check_oracle_price_in_exp(
+                    &call.arguments,
+                    validated_prices,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             _ => {}
         }
     }
 
     /// Check if an operand is an unvalidated price variable.
+    #[allow(clippy::ptr_arg)] // TODO: Function is a stub, will be properly implemented later
     fn check_price_operand(
         exp: &T::Exp,
         validated_prices: &std::collections::HashSet<u16>,
@@ -1457,14 +1544,35 @@ mod full {
         match &exp.exp.value {
             T::UnannotatedExp_::Block((_, seq)) => {
                 for item in seq.iter() {
-                    check_unused_return_in_seq_item(item, important_fns, out, settings, file_map, func_name);
+                    check_unused_return_in_seq_item(
+                        item,
+                        important_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
                 }
             }
             T::UnannotatedExp_::IfElse(cond, then_e, else_e_opt) => {
                 check_unused_return_in_exp(cond, important_fns, out, settings, file_map, func_name);
-                check_unused_return_in_exp(then_e, important_fns, out, settings, file_map, func_name);
+                check_unused_return_in_exp(
+                    then_e,
+                    important_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
                 if let Some(else_e) = else_e_opt {
-                    check_unused_return_in_exp(else_e, important_fns, out, settings, file_map, func_name);
+                    check_unused_return_in_exp(
+                        else_e,
+                        important_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
                 }
             }
             _ => {}
@@ -1508,9 +1616,11 @@ mod full {
                 }
 
                 // Check if function has mutable reference parameters (state modification)
-                let has_mut_param = fdef.signature.parameters.iter().any(|(_, _, ty)| {
-                    is_mutable_ref_type(ty)
-                });
+                let has_mut_param = fdef
+                    .signature
+                    .parameters
+                    .iter()
+                    .any(|(_, _, ty)| is_mutable_ref_type(ty));
 
                 if !has_mut_param {
                     continue;
@@ -1593,11 +1703,11 @@ mod full {
                 }
                 Err(errors) => {
                     let rendered = report_diagnostics_to_buffer_with_env_color(&files, errors);
-                    return Err(MoveClippyError::semantic(format!(
+                    Err(MoveClippyError::semantic(format!(
                         "Move compilation failed while running Sui lints:\n{}",
                         String::from_utf8_lossy(&rendered)
                     ))
-                    .into_anyhow());
+                    .into_anyhow())
                 }
             }
         })?;

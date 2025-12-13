@@ -124,7 +124,10 @@ pub fn is_simple_expression(expr: &str) -> bool {
         return true;
     }
 
-    if let Some(rest) = trimmed.strip_prefix("0x").or_else(|| trimmed.strip_prefix("0X")) {
+    if let Some(rest) = trimmed
+        .strip_prefix("0x")
+        .or_else(|| trimmed.strip_prefix("0X"))
+    {
         return !rest.is_empty() && rest.chars().all(|c| c.is_ascii_hexdigit());
     }
 
@@ -171,7 +174,10 @@ mod tests {
         let src = "assert!(foo == bar, 0);";
         assert_eq!(extract_assert_condition(src), Some("foo == bar"));
         let nested = "assert!(   (vector::length(v) == 0), \"\" );";
-        assert_eq!(extract_assert_condition(nested), Some("vector::length(v) == 0"));
+        assert_eq!(
+            extract_assert_condition(nested),
+            Some("vector::length(v) == 0")
+        );
     }
 
     #[test]
@@ -187,13 +193,19 @@ mod tests {
     fn test_is_some_receiver() {
         assert_eq!(extract_is_some_receiver("foo.is_some()"), Some("foo"));
         assert_eq!(extract_is_some_receiver("(foo.is_some());"), Some("foo"));
-        assert!(extract_is_some_receiver("foo.bar.is_some()" ).is_none());
+        assert!(extract_is_some_receiver("foo.bar.is_some()").is_none());
     }
 
     #[test]
     fn test_parse_length_comparison() {
-        assert_eq!(parse_length_comparison("i < vec.length()"), Some(("i", "vec")));
-        assert_eq!(parse_length_comparison("( idx   < data.length() );"), Some(("idx", "data")));
+        assert_eq!(
+            parse_length_comparison("i < vec.length()"),
+            Some(("i", "vec"))
+        );
+        assert_eq!(
+            parse_length_comparison("( idx   < data.length() );"),
+            Some(("idx", "data"))
+        );
         assert!(parse_length_comparison("i <= vec.length()").is_none());
     }
 }

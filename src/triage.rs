@@ -198,9 +198,13 @@ pub struct Finding {
     /// The lint message
     pub message: String,
 
-    /// Source code snippet (optional, for context)
+    /// Source code snippet (5 lines centered on finding)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub snippet: Option<String>,
+
+    /// First line number of snippet (1-based)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub snippet_start_line: Option<u32>,
 
     /// Triage status
     pub status: TriageStatus,
@@ -260,6 +264,7 @@ impl Finding {
             column,
             message,
             snippet: None,
+            snippet_start_line: None,
             status: TriageStatus::NeedsReview,
             severity,
             notes: None,
@@ -267,6 +272,31 @@ impl Finding {
             reviewed_at: None,
             reviewed_by: None,
         }
+    }
+
+    /// Create a new finding with a code snippet
+    pub fn new_with_snippet(
+        lint: String,
+        category: String,
+        repo: String,
+        file: String,
+        line: u32,
+        column: u32,
+        message: String,
+        snippet: String,
+        snippet_start_line: u32,
+    ) -> Self {
+        let mut finding = Self::new(lint, category, repo, file, line, column, message);
+        finding.snippet = Some(snippet);
+        finding.snippet_start_line = Some(snippet_start_line);
+        finding
+    }
+
+    /// Set the snippet for this finding
+    pub fn with_snippet(mut self, snippet: String, start_line: u32) -> Self {
+        self.snippet = Some(snippet);
+        self.snippet_start_line = Some(start_line);
+        self
     }
 
     /// Update the triage status with optional notes
@@ -347,15 +377,23 @@ pub struct TriageDatabase {
 
 impl Default for TriageDatabase {
     fn default() -> Self {
-        Self::new()
+        Self {
+            version: Self::SCHEMA_VERSION.to_string(),
+            updated_at: Utc::now(),
+            summary_cache: None,
+            findings: HashMap::new(),
+        }
     }
 }
 
 impl TriageDatabase {
+    /// Current schema version
+    pub const SCHEMA_VERSION: &'static str = "1.1";
+
     /// Create a new empty database
     pub fn new() -> Self {
         Self {
-            version: "1.0".to_string(),
+            version: Self::SCHEMA_VERSION.to_string(),
             updated_at: Utc::now(),
             summary_cache: None,
             findings: HashMap::new(),
@@ -529,34 +567,34 @@ impl FindingFilter {
     }
 
     pub fn matches(&self, finding: &Finding) -> bool {
-        if let Some(status) = self.status {
-            if finding.status != status {
-                return false;
-            }
+        if let Some(status) = self.status
+            && finding.status != status
+        {
+            return false;
         }
 
-        if let Some(ref lint) = self.lint {
-            if &finding.lint != lint {
-                return false;
-            }
+        if let Some(ref lint) = self.lint
+            && &finding.lint != lint
+        {
+            return false;
         }
 
-        if let Some(ref repo) = self.repo {
-            if &finding.repo != repo {
-                return false;
-            }
+        if let Some(ref repo) = self.repo
+            && &finding.repo != repo
+        {
+            return false;
         }
 
-        if let Some(severity) = self.severity {
-            if finding.severity != severity {
-                return false;
-            }
+        if let Some(severity) = self.severity
+            && finding.severity != severity
+        {
+            return false;
         }
 
-        if let Some(ref category) = self.category {
-            if &finding.category != category {
-                return false;
-            }
+        if let Some(ref category) = self.category
+            && &finding.category != category
+        {
+            return false;
         }
 
         true
@@ -674,10 +712,7 @@ pub fn generate_markdown_report(db: &TriageDatabase) -> String {
 
             for f in findings {
                 let notes = f.notes.as_deref().unwrap_or("No notes");
-                out.push_str(&format!(
-                    "- `{}:{}` - {}\n",
-                    f.file, f.line, notes
-                ));
+                out.push_str(&format!("- `{}:{}` - {}\n", f.file, f.line, notes));
             }
             out.push('\n');
         }
@@ -695,9 +730,18 @@ pub fn generate_markdown_report(db: &TriageDatabase) -> String {
     for repo in repos {
         let findings = &by_repo[repo];
         let total = findings.len();
-        let confirmed = findings.iter().filter(|f| f.status == TriageStatus::Confirmed).count();
-        let fp = findings.iter().filter(|f| f.status == TriageStatus::FalsePositive).count();
-        let needs_review = findings.iter().filter(|f| f.status == TriageStatus::NeedsReview).count();
+        let confirmed = findings
+            .iter()
+            .filter(|f| f.status == TriageStatus::Confirmed)
+            .count();
+        let fp = findings
+            .iter()
+            .filter(|f| f.status == TriageStatus::FalsePositive)
+            .count();
+        let needs_review = findings
+            .iter()
+            .filter(|f| f.status == TriageStatus::NeedsReview)
+            .count();
 
         out.push_str(&format!(
             "| {} | {} | {} | {} | {} |\n",
@@ -717,9 +761,18 @@ pub fn generate_markdown_report(db: &TriageDatabase) -> String {
 
     for (lint, findings) in lints.iter().take(20) {
         let total = findings.len();
-        let confirmed = findings.iter().filter(|f| f.status == TriageStatus::Confirmed).count();
-        let fp = findings.iter().filter(|f| f.status == TriageStatus::FalsePositive).count();
-        let needs_review = findings.iter().filter(|f| f.status == TriageStatus::NeedsReview).count();
+        let confirmed = findings
+            .iter()
+            .filter(|f| f.status == TriageStatus::Confirmed)
+            .count();
+        let fp = findings
+            .iter()
+            .filter(|f| f.status == TriageStatus::FalsePositive)
+            .count();
+        let needs_review = findings
+            .iter()
+            .filter(|f| f.status == TriageStatus::NeedsReview)
+            .count();
 
         out.push_str(&format!(
             "| {} | {} | {} | {} | {} |\n",
@@ -801,6 +854,159 @@ fn truncate(s: &str, max_len: usize) -> String {
     }
 }
 
+/// Extract a code snippet from a file centered on a specific line.
+///
+/// Returns (snippet, start_line) where start_line is 1-based.
+pub fn extract_snippet(
+    file_path: &std::path::Path,
+    line: u32,
+    context_lines: u32,
+) -> Option<(String, u32)> {
+    let content = std::fs::read_to_string(file_path).ok()?;
+    let lines: Vec<&str> = content.lines().collect();
+
+    if lines.is_empty() || line == 0 || line as usize > lines.len() {
+        return None;
+    }
+
+    // Calculate start and end indices (0-based)
+    let target_idx = (line - 1) as usize;
+    let start_idx = target_idx.saturating_sub(context_lines as usize);
+    let end_idx = (target_idx + context_lines as usize + 1).min(lines.len());
+
+    let snippet = lines[start_idx..end_idx].join("\n");
+    let start_line = (start_idx + 1) as u32; // Convert back to 1-based
+
+    Some((snippet, start_line))
+}
+
+/// Format a snippet with line numbers for display.
+///
+/// The `highlight_line` is the 1-based line number to highlight with '>'.
+pub fn format_snippet_with_lines(snippet: &str, start_line: u32, highlight_line: u32) -> String {
+    let mut out = String::new();
+
+    for (i, line) in snippet.lines().enumerate() {
+        let line_num = start_line + i as u32;
+        let prefix = if line_num == highlight_line { ">" } else { " " };
+        out.push_str(&format!("{} {:>4} | {}\n", prefix, line_num, line));
+    }
+
+    out
+}
+
+// ============================================================================
+// Path Filtering
+// ============================================================================
+
+/// Default patterns to exclude from triage imports.
+/// Note: We use file-level patterns for test files rather than directory patterns
+/// to avoid false positives when lint output paths contain "tests" directories.
+pub const DEFAULT_EXCLUDE_PATTERNS: &[&str] = &[
+    "**/test_*.move",  // test_foo.move
+    "**/*_test.move",  // foo_test.move
+    "**/*_tests.move", // foo_tests.move
+    "**/deps-*/**",    // deps-mainnet/, deps-testnet/
+    "**/vendor/**",    // vendor directories
+    "**/build/**",     // build output
+];
+
+/// Check if a file path matches any of the exclude patterns.
+pub fn should_exclude_path(file_path: &str, patterns: &[String]) -> bool {
+    // Normalize path separators
+    let path = file_path.replace('\\', "/");
+
+    for pattern in patterns {
+        if matches_glob_pattern(&path, pattern) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Simple glob pattern matching.
+/// Supports: * (wildcard), ** (any path segments)
+fn matches_glob_pattern(path: &str, pattern: &str) -> bool {
+    let pattern = pattern.replace('\\', "/");
+
+    // Handle **/ prefix (matches any path prefix)
+    if let Some(suffix_pattern) = pattern.strip_prefix("**/") {
+        // If suffix pattern contains /, it's a path segment pattern like "deps-*/**"
+        if suffix_pattern.contains('/') {
+            // Extract the segment pattern (e.g., "deps-*" from "deps-*/**")
+            let segment = suffix_pattern.split('/').next().unwrap_or("");
+            return path_contains_segment(path, segment);
+        }
+
+        // Otherwise it's a filename pattern like "test_*.move" or "*_test.move"
+        let filename = path.rsplit('/').next().unwrap_or(path);
+        return filename_matches(filename, suffix_pattern);
+    }
+
+    // Simple filename matching for patterns like "*.move" or "*_test.move"
+    if !pattern.contains('/') {
+        let filename = path.rsplit('/').next().unwrap_or(path);
+        return filename_matches(filename, &pattern);
+    }
+
+    path == pattern
+}
+
+/// Check if a filename matches a pattern with wildcards.
+fn filename_matches(filename: &str, pattern: &str) -> bool {
+    if pattern == "*" {
+        return true;
+    }
+
+    // Handle prefix* pattern (e.g., "test_*")
+    if let Some(prefix) = pattern.strip_suffix('*') {
+        return filename.starts_with(prefix);
+    }
+
+    // Handle *suffix pattern (e.g., "*.move")
+    if let Some(suffix) = pattern.strip_prefix('*') {
+        return filename.ends_with(suffix);
+    }
+
+    // Handle prefix*suffix pattern (e.g., "test_*.move")
+    if let Some((prefix, rest)) = pattern.split_once('*') {
+        return filename.starts_with(prefix) && filename.ends_with(rest);
+    }
+
+    filename == pattern
+}
+
+/// Check if a path contains a segment matching the pattern.
+/// Pattern can contain '*' for wildcards (e.g., "deps-*" matches "deps-mainnet").
+fn path_contains_segment(path: &str, pattern: &str) -> bool {
+    for segment in path.split('/') {
+        if segment_matches(segment, pattern) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Check if a segment matches a pattern with optional wildcards.
+fn segment_matches(segment: &str, pattern: &str) -> bool {
+    if pattern.is_empty() {
+        return false;
+    }
+
+    // Handle wildcard patterns like "deps-*"
+    if let Some(prefix) = pattern.strip_suffix('*') {
+        return segment.starts_with(prefix);
+    }
+
+    // Handle wildcard patterns like "*_test"
+    if let Some(suffix) = pattern.strip_prefix('*') {
+        return segment.ends_with(suffix);
+    }
+
+    // Exact match
+    segment == pattern
+}
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -866,7 +1072,7 @@ mod tests {
         let mut db = TriageDatabase::new();
 
         // Add initial finding
-        let mut finding = Finding::new(
+        let finding = Finding::new(
             "test_lint".to_string(),
             "style".to_string(),
             "repo1".to_string(),
@@ -935,5 +1141,53 @@ mod tests {
         assert_eq!(summary.confirmed, 3);
         assert_eq!(summary.false_positive, 2);
         assert_eq!(summary.wont_fix, 2);
+    }
+
+    #[test]
+    fn test_path_filtering() {
+        // Test exact segment matching
+        let patterns = vec!["**/tests/**".to_string()];
+        assert!(should_exclude_path("/project/tests/unit.move", &patterns));
+        assert!(should_exclude_path(
+            "/project/src/tests/file.move",
+            &patterns
+        ));
+        assert!(!should_exclude_path("/project/src/main.move", &patterns));
+
+        // Test wildcard segment matching (deps-*)
+        let patterns = vec!["**/deps-*/**".to_string()];
+        assert!(should_exclude_path(
+            "/project/deps-mainnet/file.move",
+            &patterns
+        ));
+        assert!(should_exclude_path(
+            "/project/deps-testnet/sub/file.move",
+            &patterns
+        ));
+        assert!(!should_exclude_path("/project/src/deps.move", &patterns));
+
+        // Test suffix patterns
+        let patterns = vec!["*_test.move".to_string()];
+        assert!(should_exclude_path("/project/unit_test.move", &patterns));
+        assert!(!should_exclude_path("/project/main.move", &patterns));
+
+        // Test with DEFAULT_EXCLUDE_PATTERNS (no longer includes **/tests/**)
+        let patterns: Vec<String> = DEFAULT_EXCLUDE_PATTERNS
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert!(should_exclude_path(
+            "/project/deps-mainnet/file.move",
+            &patterns
+        ));
+        assert!(should_exclude_path(
+            "/project/src/unit_test.move",
+            &patterns
+        ));
+        assert!(should_exclude_path("/project/build/output.move", &patterns));
+        assert!(should_exclude_path("/project/test_foo.move", &patterns));
+        assert!(!should_exclude_path("/project/src/main.move", &patterns));
+        // This should NOT be excluded (tests dir pattern removed)
+        assert!(!should_exclude_path("/project/tests/unit.move", &patterns));
     }
 }

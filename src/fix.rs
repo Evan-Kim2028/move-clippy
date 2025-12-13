@@ -16,14 +16,14 @@ use thiserror::Error;
 pub enum FixError {
     #[error("Overlapping edits detected at byte {0}")]
     OverlappingEdits(usize),
-    
+
     #[error("Edit range [{start}..{end}) exceeds source length {source_len}")]
     InvalidRange {
         start: usize,
         end: usize,
         source_len: usize,
     },
-    
+
     #[error("Edit start {start} is after edit end {end}")]
     InvalidEditOrder { start: usize, end: usize },
 }
@@ -171,7 +171,7 @@ pub fn apply_fixes(source: &str, edits: &[TextEdit]) -> Result<String, FixError>
 
 /// Apply a single edit to source code (convenience wrapper).
 pub fn apply_fix(source: &str, edit: &TextEdit) -> Result<String, FixError> {
-    apply_fixes(source, &[edit.clone()])
+    apply_fixes(source, std::slice::from_ref(edit))
 }
 
 #[cfg(test)]
@@ -223,13 +223,19 @@ mod tests {
     #[test]
     fn test_validate_edit_invalid_order() {
         let edit = TextEdit::new(10, 5, "hello".to_string());
-        assert!(matches!(edit.validate(20), Err(FixError::InvalidEditOrder { .. })));
+        assert!(matches!(
+            edit.validate(20),
+            Err(FixError::InvalidEditOrder { .. })
+        ));
     }
 
     #[test]
     fn test_validate_edit_exceeds_length() {
         let edit = TextEdit::new(0, 15, "hello".to_string());
-        assert!(matches!(edit.validate(10), Err(FixError::InvalidRange { .. })));
+        assert!(matches!(
+            edit.validate(10),
+            Err(FixError::InvalidRange { .. })
+        ));
     }
 
     #[test]
@@ -238,7 +244,10 @@ mod tests {
             TextEdit::new(0, 10, "a".to_string()),
             TextEdit::new(5, 15, "b".to_string()),
         ];
-        assert!(matches!(validate_edits(&edits, 20), Err(FixError::OverlappingEdits(_))));
+        assert!(matches!(
+            validate_edits(&edits, 20),
+            Err(FixError::OverlappingEdits(_))
+        ));
     }
 
     #[test]
@@ -278,9 +287,9 @@ mod tests {
     fn test_apply_multiple_edits_preserves_offsets() {
         let source = "one two three";
         let edits = vec![
-            TextEdit::replace(0, 3, "1".to_string()),   // "one" → "1"
-            TextEdit::replace(4, 7, "2".to_string()),   // "two" → "2"
-            TextEdit::replace(8, 13, "3".to_string()),  // "three" → "3"
+            TextEdit::replace(0, 3, "1".to_string()),  // "one" → "1"
+            TextEdit::replace(4, 7, "2".to_string()),  // "two" → "2"
+            TextEdit::replace(8, 13, "3".to_string()), // "three" → "3"
         ];
         let result = apply_fixes(source, &edits).unwrap();
         assert_eq!(result, "1 2 3");
@@ -291,9 +300,9 @@ mod tests {
         // Edits should work regardless of input order
         let source = "abc def ghi";
         let edits = vec![
-            TextEdit::replace(8, 11, "3".to_string()),  // Last edit
-            TextEdit::replace(0, 3, "1".to_string()),   // First edit
-            TextEdit::replace(4, 7, "2".to_string()),   // Middle edit
+            TextEdit::replace(8, 11, "3".to_string()), // Last edit
+            TextEdit::replace(0, 3, "1".to_string()),  // First edit
+            TextEdit::replace(4, 7, "2".to_string()),  // Middle edit
         ];
         let result = apply_fixes(source, &edits).unwrap();
         assert_eq!(result, "1 2 3");
@@ -312,11 +321,11 @@ mod tests {
     fn test_roundtrip_property() {
         // If we replace A with B, then B with A, we get back to original
         let source = "while (true) { }";
-        
+
         let edit1 = TextEdit::replace(0, 12, "loop".to_string());
         let result1 = apply_fix(source, &edit1).unwrap();
         assert_eq!(result1, "loop { }");
-        
+
         let edit2 = TextEdit::replace(0, 4, "while (true)".to_string());
         let result2 = apply_fix(&result1, &edit2).unwrap();
         assert_eq!(result2, "while (true) { }");

@@ -3,29 +3,30 @@
 //! These tests verify that lints generate correct fix suggestions and that
 //! applying those fixes produces valid code.
 
-use move_clippy::fix::{apply_fix, TextEdit};
-use move_clippy::lint::{LintRegistry, LintSettings};
 use move_clippy::LintEngine;
+use move_clippy::fix::{TextEdit, apply_fix};
+use move_clippy::lint::{LintRegistry, LintSettings};
 
 /// Helper to lint source and extract the first fix suggestion.
 fn get_first_fix(source: &str) -> Option<String> {
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
-    
+
     let diagnostics = engine.lint_source(source).unwrap();
-    
+
     diagnostics
         .into_iter()
         .find_map(|d| d.suggestion.map(|s| s.replacement))
 }
 
 /// Helper to apply the first fix suggestion found.
+#[allow(dead_code)] // Helper for future tests
 fn apply_first_fix(source: &str) -> Option<String> {
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
-    
+
     let diagnostics = engine.lint_source(source).unwrap();
-    
+
     for diag in diagnostics {
         if let Some(suggestion) = diag.suggestion {
             // The suggestion.replacement contains the full replacement text
@@ -38,7 +39,7 @@ fn apply_first_fix(source: &str) -> Option<String> {
             return apply_fix(source, &edit).ok();
         }
     }
-    
+
     None
 }
 
@@ -60,7 +61,7 @@ fn while_true_to_loop_generates_fix() {
 
     let fix = get_first_fix(source);
     assert!(fix.is_some(), "while_true_to_loop should generate a fix");
-    
+
     let fixed = fix.unwrap();
     assert!(fixed.contains("loop"), "Fix should contain 'loop'");
     assert!(fixed.contains("break"), "Fix should preserve body");
@@ -75,10 +76,10 @@ fn while_true_to_loop_simple() {
             }
         }
     "#;
-    
+
     let fix = get_first_fix(source);
     assert!(fix.is_some(), "Should generate a fix");
-    
+
     let fixed = fix.unwrap();
     assert!(fixed.contains("loop"), "Should contain loop");
     assert!(fixed.contains("break"), "Should contain break");
@@ -99,7 +100,7 @@ fn while_true_to_loop_with_body() {
 
     let fix = get_first_fix(source);
     assert!(fix.is_some());
-    
+
     let fixed = fix.unwrap();
     assert!(fixed.starts_with("loop"));
     assert!(fixed.contains("let x = 1"));
@@ -125,11 +126,11 @@ fn roundtrip_while_true_to_loop() {
     // Apply fix
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
-    
+
     let diags1 = engine.lint_source(source).unwrap();
     let initial_count = diags1.len();
     assert!(initial_count > 0, "Should have at least one diagnostic");
-    
+
     // After applying fix, linting should produce no diagnostics for that lint
     // Note: We can't actually apply the fix here without byte offset information
     // This is a placeholder test showing the structure
@@ -152,7 +153,10 @@ fn idempotency_while_true_already_loop() {
     "#;
 
     let fix = get_first_fix(source);
-    assert!(fix.is_none(), "Already correct code should not generate fixes");
+    assert!(
+        fix.is_none(),
+        "Already correct code should not generate fixes"
+    );
 }
 
 // ============================================================================
@@ -169,10 +173,10 @@ fn while_true_fix_preserves_behavior() {
             }
         }
     "#;
-    
+
     let fix = get_first_fix(source);
     assert!(fix.is_some(), "Should generate a fix");
-    
+
     let fixed = fix.unwrap();
     assert!(fixed.contains("loop"), "Should contain loop");
     assert!(fixed.contains("let x = 1"), "Should preserve body");
@@ -182,12 +186,12 @@ fn while_true_fix_preserves_behavior() {
 #[test]
 fn while_true_fix_is_machine_applicable() {
     let source = "while (true) { break }";
-    
+
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
-    
+
     let diagnostics = engine.lint_source(source).unwrap();
-    
+
     for diag in diagnostics {
         if diag.lint.name == "while_true_to_loop" {
             assert!(diag.suggestion.is_some(), "Should have a suggestion");
@@ -217,7 +221,7 @@ fn empty_vector_generates_fix() {
 
     let fix = get_first_fix(source);
     assert!(fix.is_some(), "empty_vector_literal should generate a fix");
-    
+
     let fixed = fix.unwrap();
     assert_eq!(fixed, "vector[]", "Fix should be vector[]");
 }
@@ -233,8 +237,11 @@ fn empty_vector_with_type_param_generates_fix() {
     "#;
 
     let fix = get_first_fix(source);
-    assert!(fix.is_some(), "empty_vector_literal with type param should generate a fix");
-    
+    assert!(
+        fix.is_some(),
+        "empty_vector_literal with type param should generate a fix"
+    );
+
     let fixed = fix.unwrap();
     assert_eq!(fixed, "vector<u64>", "Fix should preserve type parameter");
 }
@@ -250,10 +257,16 @@ fn empty_vector_complex_type_generates_fix() {
     "#;
 
     let fix = get_first_fix(source);
-    assert!(fix.is_some(), "empty_vector_literal with complex type should generate a fix");
-    
+    assert!(
+        fix.is_some(),
+        "empty_vector_literal with complex type should generate a fix"
+    );
+
     let fixed = fix.unwrap();
-    assert_eq!(fixed, "vector<vector<u8>>", "Fix should preserve complex type parameter");
+    assert_eq!(
+        fixed, "vector<vector<u8>>",
+        "Fix should preserve complex type parameter"
+    );
 }
 
 #[test]
@@ -265,12 +278,12 @@ fn empty_vector_fix_is_machine_applicable() {
             }
         }
     "#;
-    
+
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
-    
+
     let diagnostics = engine.lint_source(source).unwrap();
-    
+
     let mut found_empty_vector = false;
     for diag in diagnostics {
         if diag.lint.name == "empty_vector_literal" {
@@ -282,10 +295,16 @@ fn empty_vector_fix_is_machine_applicable() {
                 move_clippy::diagnostics::Applicability::MachineApplicable,
                 "Fix should be machine-applicable"
             );
-            assert_eq!(suggestion.replacement, "vector[]", "Replacement should be vector[]");
+            assert_eq!(
+                suggestion.replacement, "vector[]",
+                "Replacement should be vector[]"
+            );
         }
     }
-    assert!(found_empty_vector, "Should find empty_vector_literal diagnostic");
+    assert!(
+        found_empty_vector,
+        "Should find empty_vector_literal diagnostic"
+    );
 }
 
 #[test]
@@ -300,15 +319,18 @@ fn empty_vector_no_fix_for_correct_code() {
 
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
-    
+
     let diagnostics = engine.lint_source(source).unwrap();
-    
+
     let empty_vector_diags: Vec<_> = diagnostics
         .iter()
         .filter(|d| d.lint.name == "empty_vector_literal")
         .collect();
-    
-    assert!(empty_vector_diags.is_empty(), "Correct code should not trigger lint");
+
+    assert!(
+        empty_vector_diags.is_empty(),
+        "Correct code should not trigger lint"
+    );
 }
 
 // ============================================================================
@@ -325,9 +347,12 @@ fn abilities_order_generates_fix() {
 
     let fix = get_first_fix(source);
     assert!(fix.is_some(), "abilities_order should generate a fix");
-    
+
     let fixed = fix.unwrap();
-    assert_eq!(fixed, "has key, store", "Fix should reorder to canonical order");
+    assert_eq!(
+        fixed, "has key, store",
+        "Fix should reorder to canonical order"
+    );
 }
 
 #[test]
@@ -339,10 +364,16 @@ fn abilities_order_three_abilities() {
     "#;
 
     let fix = get_first_fix(source);
-    assert!(fix.is_some(), "abilities_order should generate a fix for 3 abilities");
-    
+    assert!(
+        fix.is_some(),
+        "abilities_order should generate a fix for 3 abilities"
+    );
+
     let fixed = fix.unwrap();
-    assert_eq!(fixed, "has key, copy, drop", "Fix should reorder to canonical order");
+    assert_eq!(
+        fixed, "has key, copy, drop",
+        "Fix should reorder to canonical order"
+    );
 }
 
 #[test]
@@ -355,15 +386,18 @@ fn abilities_order_no_fix_for_correct_order() {
 
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
-    
+
     let diagnostics = engine.lint_source(source).unwrap();
-    
+
     let order_diags: Vec<_> = diagnostics
         .iter()
         .filter(|d| d.lint.name == "abilities_order")
         .collect();
-    
-    assert!(order_diags.is_empty(), "Correct order should not trigger lint");
+
+    assert!(
+        order_diags.is_empty(),
+        "Correct order should not trigger lint"
+    );
 }
 
 // ============================================================================
@@ -383,7 +417,7 @@ fn unneeded_return_generates_fix() {
 
     let fix = get_first_fix(source);
     assert!(fix.is_some(), "unneeded_return should generate a fix");
-    
+
     let fixed = fix.unwrap();
     assert_eq!(fixed, "a + b", "Fix should remove 'return' keyword");
 }
@@ -400,11 +434,20 @@ fn unneeded_return_with_complex_expression() {
     "#;
 
     let fix = get_first_fix(source);
-    assert!(fix.is_some(), "unneeded_return should generate a fix for complex expressions");
-    
+    assert!(
+        fix.is_some(),
+        "unneeded_return should generate a fix for complex expressions"
+    );
+
     let fixed = fix.unwrap();
-    assert!(fixed.contains("if"), "Fix should preserve complex expression");
-    assert!(!fixed.starts_with("return"), "Fix should not start with 'return'");
+    assert!(
+        fixed.contains("if"),
+        "Fix should preserve complex expression"
+    );
+    assert!(
+        !fixed.starts_with("return"),
+        "Fix should not start with 'return'"
+    );
 }
 
 #[test]
@@ -419,13 +462,16 @@ fn unneeded_return_no_fix_for_implicit_return() {
 
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
-    
+
     let diagnostics = engine.lint_source(source).unwrap();
-    
+
     let return_diags: Vec<_> = diagnostics
         .iter()
         .filter(|d| d.lint.name == "unneeded_return")
         .collect();
-    
-    assert!(return_diags.is_empty(), "Implicit return should not trigger lint");
+
+    assert!(
+        return_diags.is_empty(),
+        "Implicit return should not trigger lint"
+    );
 }

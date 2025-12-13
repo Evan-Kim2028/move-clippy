@@ -556,29 +556,31 @@ impl LintRule for WhileTrueToLoopLint {
                 // Find the "while" keyword and condition part to replace with "loop"
                 // The while_expression should start with "while" and have a condition
                 let node_text = slice(source, node);
-                
+
                 // Find where the condition ends (look for opening brace or body)
                 let Some(body_start) = node_text.find('{') else {
                     ctx.report_node(
                         self.descriptor(),
                         node,
-                        "Use `loop { ... }` for infinite loops instead of `while (true)`".to_string(),
+                        "Use `loop { ... }` for infinite loops instead of `while (true)`"
+                            .to_string(),
                     );
                     return;
                 };
-                
+
                 // Replace "while (true)" part with "loop"
                 // Find the byte offsets
                 let node_start = node.start_byte();
                 let _replacement_end = node_start + body_start;
-                
+
                 // Create a diagnostic with suggestion
                 let diagnostic = crate::diagnostics::Diagnostic {
                     lint: self.descriptor(),
                     level: ctx.settings().level_for(self.descriptor().name),
                     file: None,
                     span: Span::from_range(node.range()),
-                    message: "Use `loop { ... }` for infinite loops instead of `while (true)`".to_string(),
+                    message: "Use `loop { ... }` for infinite loops instead of `while (true)`"
+                        .to_string(),
                     help: Some("Replace with `loop`".to_string()),
                     suggestion: Some(Suggestion {
                         message: "Replace `while (true)` with `loop`".to_string(),
@@ -586,12 +588,13 @@ impl LintRule for WhileTrueToLoopLint {
                         applicability: Applicability::MachineApplicable,
                     }),
                 };
-                
+
                 // Check for suppression
-                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name)
+                {
                     return;
                 }
-                
+
                 ctx.report_diagnostic(diagnostic);
             }
         });

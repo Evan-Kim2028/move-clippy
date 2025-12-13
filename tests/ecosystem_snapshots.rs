@@ -22,8 +22,8 @@
 //! cargo insta review
 //! ```
 
-use move_clippy::lint::{LintRegistry, LintSettings};
 use move_clippy::LintEngine;
+use move_clippy::lint::{LintRegistry, LintSettings};
 use std::collections::BTreeMap;
 use std::path::Path;
 use walkdir::WalkDir;
@@ -54,11 +54,7 @@ fn lint_directory(path: &Path) -> BTreeMap<String, Vec<String>> {
     for entry in WalkDir::new(path)
         .into_iter()
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .map_or(false, |ext| ext == "move")
-        })
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "move"))
     {
         let file_path = entry.path();
         let relative_path = file_path
@@ -77,7 +73,12 @@ fn lint_directory(path: &Path) -> BTreeMap<String, Vec<String>> {
         let messages: Vec<String> = match engine.lint_source(&source) {
             Ok(diags) => diags
                 .iter()
-                .map(|d| format!("{}:{}: {} - {}", d.span.start.row, d.span.start.column, d.lint.name, d.message))
+                .map(|d| {
+                    format!(
+                        "{}:{}: {} - {}",
+                        d.span.start.row, d.span.start.column, d.lint.name, d.message
+                    )
+                })
                 .collect(),
             Err(_) => continue,
         };
@@ -98,7 +99,7 @@ fn format_snapshot(results: &BTreeMap<String, Vec<String>>) -> String {
     }
 
     let mut output = String::new();
-    
+
     for (file, messages) in results {
         output.push_str(&format!("=== {} ===\n", file));
         for msg in messages {
@@ -113,7 +114,7 @@ fn format_snapshot(results: &BTreeMap<String, Vec<String>>) -> String {
 // ============================================================================
 // Embedded Test Fixtures
 // ============================================================================
-// 
+//
 // Instead of requiring external repos (which creates CI complexity), we embed
 // representative Move code samples that exercise our lints.
 

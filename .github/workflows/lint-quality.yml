@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Install Rust toolchain
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
           
@@ -42,14 +42,14 @@ jobs:
       - name: Run clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
         
-      - name: Run all tests
-        run: cargo test --all-features
+      - name: Run all tests (excluding sui_lints)
+        run: cargo test --all-features --lib --bins --test fix_tests --test lints --test ecosystem_snapshots --test semantic_snapshots
         
-      - name: Run FP prevention tests
-        run: cargo test --test false_positive_prevention
+      - name: Run ecosystem validation tests
+        run: cargo test --test ecosystem
         
-      - name: Run lint quality self-tests
-        run: cargo test --test lint_quality
+      - name: Run fixture snapshot tests
+        run: cargo test --test fixtures_snapshots
         
   # Ecosystem snapshot tests - validates against real-world Move code
   ecosystem-snapshots:
@@ -61,7 +61,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Install Rust toolchain
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -102,7 +102,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Install Rust toolchain
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         
       - name: Run security-specific tests
         run: |

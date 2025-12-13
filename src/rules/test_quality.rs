@@ -56,14 +56,14 @@ impl LintRule for TestAbortCodeLint {
             }
 
             // Parse assert!(condition, CODE) - look for numeric second arg
-            if let Some(abort_code) = extract_assert_abort_code(text) {
-                if is_numeric_literal(abort_code) {
-                    ctx.report_node(
+            if let Some(abort_code) = extract_assert_abort_code(text)
+                && is_numeric_literal(abort_code)
+            {
+                ctx.report_node(
                         self.descriptor(),
                         node,
                         "Avoid numeric abort codes in test assertions; use `assert!(cond)` or a named constant",
                     );
-                }
             }
         });
     }
@@ -206,8 +206,8 @@ impl LintRule for RedundantTestPrefixLint {
             };
             let fn_name = slice(source, name_node).trim();
 
-            if fn_name.starts_with("test_") {
-                let suggested_name = &fn_name[5..]; // Remove "test_" prefix
+            if let Some(suggested_name) = fn_name.strip_prefix("test_") {
+                // Remove "test_" prefix
                 ctx.report_node(
                     self.descriptor(),
                     name_node,

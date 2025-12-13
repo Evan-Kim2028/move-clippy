@@ -250,7 +250,7 @@ fn get_git_commit(repo_path: &Path) -> Option<String> {
 // ============================================================================
 // Ecosystem Test Definitions
 // ============================================================================
-// 
+//
 // All repos are cloned to ../ecosystem-test-repos/ using the clone-repos.sh script.
 // Run: cd ../ecosystem-test-repos && ./clone-repos.sh
 

@@ -438,7 +438,7 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
 ];
 
 pub fn is_semantic_lint(name: &str) -> bool {
-    SEMANTIC_LINT_NAMES.iter().any(|n| *n == name)
+    SEMANTIC_LINT_NAMES.contains(&name)
 }
 
 // ============================================================================
@@ -496,6 +496,12 @@ pub fn all_known_lints() -> HashSet<&'static str> {
 /// Registry of syntax-only lint rules used by the fast-mode engine.
 pub struct LintRegistry {
     rules: Vec<Box<dyn LintRule>>,
+}
+
+impl Default for LintRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl LintRegistry {
@@ -601,10 +607,10 @@ impl LintRegistry {
             if full_mode && FULL_MODE_SUPERSEDED_LINTS.iter().any(|l| l == name) {
                 continue;
             }
-            if let Some(ref only) = only_set {
-                if !only.contains(name) {
-                    continue;
-                }
+            if let Some(ref only) = only_set
+                && !only.contains(name)
+            {
+                continue;
             }
             if skip_set.contains(name) || disabled_set.contains(name) {
                 continue;

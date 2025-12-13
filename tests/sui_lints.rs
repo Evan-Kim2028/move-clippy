@@ -119,6 +119,7 @@ fn modernize_fixture(root: &Path) -> ClippyResult<()> {
     })
 }
 
+#[allow(clippy::field_reassign_with_default)] // Intentional for clarity
 fn run_migration(root: &Path) -> ClippyResult<()> {
     let mut config = BuildConfig::default();
     config.dev_mode = true;
@@ -199,11 +200,11 @@ fn format_diagnostics(root: &Path, mut diagnostics: Vec<Diagnostic>) -> String {
                 row = diag.span.start.row,
                 col = diag.span.start.column,
             );
-            if let Some(help) = diag.help {
-                if !help.is_empty() {
-                    line.push_str("\n  help: ");
-                    line.push_str(&help);
-                }
+            if let Some(help) = diag.help
+                && !help.is_empty()
+            {
+                line.push_str("\n  help: ");
+                line.push_str(&help);
             }
             line
         })

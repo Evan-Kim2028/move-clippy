@@ -122,6 +122,22 @@ pub enum TriageAction {
         /// Repository name to associate with findings.
         #[arg(long)]
         repo: String,
+
+        /// Use default exclude patterns (tests, deps, vendor).
+        #[arg(long)]
+        exclude_defaults: bool,
+
+        /// Additional glob patterns to exclude (can be repeated).
+        #[arg(long = "exclude", value_name = "PATTERN")]
+        exclude_patterns: Vec<String>,
+
+        /// Disable snippet capture (faster, smaller database).
+        #[arg(long)]
+        no_snippets: bool,
+
+        /// Preview import without modifying database.
+        #[arg(long)]
+        dry_run: bool,
     },
 
     /// Show summary statistics.
@@ -140,6 +156,37 @@ pub enum TriageAction {
         /// Sort by: total, confirmed, fp, fp_rate.
         #[arg(long, default_value = "total")]
         sort: String,
+    },
+
+    /// Bulk update multiple findings matching criteria.
+    BulkUpdate {
+        /// Filter by lint name.
+        #[arg(long)]
+        lint: Option<String>,
+
+        /// Filter by path substring.
+        #[arg(long)]
+        path_contains: Option<String>,
+
+        /// Filter by repository.
+        #[arg(long)]
+        repo: Option<String>,
+
+        /// Filter by current status.
+        #[arg(long)]
+        current_status: Option<String>,
+
+        /// New status to set (required).
+        #[arg(long)]
+        status: String,
+
+        /// Notes to add to all updated findings.
+        #[arg(long)]
+        notes: Option<String>,
+
+        /// Preview changes without applying.
+        #[arg(long)]
+        dry_run: bool,
     },
 }
 
