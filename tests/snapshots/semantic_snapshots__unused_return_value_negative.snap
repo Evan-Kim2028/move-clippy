@@ -1,0 +1,14 @@
+---
+source: tests/semantic_snapshots.rs
+expression: output
+---
+1:1 - modern_module_syntax: Use Move 2024 module label syntax: `module pkg::mod;`
+13:26 - modern_method_syntax: Prefer method syntax: `coin.split(...)`
+14:9 - modern_method_syntax: Prefer method syntax: `split_coin.public_transfer(...)`
+23:9 - modern_method_syntax: Prefer method syntax: `taken.destroy_zero(...)`
+32:13 - modern_method_syntax: Prefer method syntax: `coin.split(...)`
+33:13 - modern_method_syntax: Prefer method syntax: `ctx.sender(...)`
+14:9 - pure_function_transfer: Non-entry public functions should return objects instead of transferring internally. This makes the function more composable.
+31:9 - pure_function_transfer: Non-entry public functions should return objects instead of transferring internally. This makes the function more composable.
+8:5 - unchecked_coin_split: Function `split_coin_used` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort.
+27:5 - unchecked_coin_split: Function `split_inline_transfer` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort.

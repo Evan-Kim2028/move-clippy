@@ -14,6 +14,10 @@ Move Clippy includes security lints based on real audit findings and published s
 | `suspicious_overflow_check` | Security | Fast (tree-sitter) | Cetus $223M Hack 2024 |
 | `unfrozen_coin_metadata` | Security | Semantic (--mode full) | MoveBit 2023 |
 | `unused_capability_param` | Security | Semantic (--mode full) | SlowMist 2024 |
+| `unchecked_division` | Security | Semantic (--mode full) | Common Pattern |
+| `oracle_zero_price` | Security | Semantic (--mode full) | Bluefin Audit 2024 |
+| `unused_return_value` | Security | Semantic (--mode full) | Move Best Practices |
+| `missing_access_control` | Security | Semantic (--mode full) | SlowMist 2024 |
 
 ---
 
@@ -388,6 +392,180 @@ public fun admin_action(cap: &AdminCap, pool: &mut Pool) {
     pool.value = 0;
 }
 ```
+
+---
+
+### `oracle_zero_price`
+
+**Severity:** High  
+**Stability:** Preview  
+**Auto-fix:** None
+
+Detects oracle price values used in arithmetic without zero validation.
+
+#### Security References
+
+| Source | Date | URL | Verification |
+|--------|------|-----|--------------|
+| Bluefin Audit | 2024-05-01 | MoveBit Security Report | "Oracle price not checked for zero value" |
+| Common Pattern | N/A | DeFi best practices | Price oracle validation is standard practice |
+
+#### Why This Matters
+
+If an oracle returns a zero price (due to staleness, malfunction, or manipulation), using it in calculations can:
+1. **Division by zero** - causes transaction abort
+2. **Zero valuation** - allows liquidation/withdrawal exploits
+3. **Free assets** - multiplication by zero gives free tokens
+
+#### Vulnerable Pattern
+
+```move
+public fun calculate_collateral_value(
+    oracle: &PriceOracle,
+    amount: u64
+): u64 {
+    let price = oracle::get_price(oracle);
+    // BUG: If price is 0, collateral value is 0!
+    amount * price / PRECISION
+}
+```
+
+#### Correct Pattern
+
+```move
+const E_ZERO_PRICE: u64 = 1;
+
+public fun calculate_collateral_value(
+    oracle: &PriceOracle,
+    amount: u64
+): u64 {
+    let price = oracle::get_price(oracle);
+    assert!(price > 0, E_ZERO_PRICE);  // Validation!
+    amount * price / PRECISION
+}
+```
+
+---
+
+### `unused_return_value`
+
+**Severity:** Medium  
+**Stability:** Preview  
+**Auto-fix:** None
+
+Detects when important function return values are ignored.
+
+#### Security References
+
+| Source | Date | URL | Verification |
+|--------|------|-----|--------------|
+| Common Pattern | N/A | Move best practices | Resource-returning functions must consume results |
+
+#### Why This Matters
+
+In Move, functions like `coin::split`, `coin::take`, `balance::split`, etc. return new resource objects that must be:
+1. Transferred to an address
+2. Joined back to the original
+3. Explicitly destroyed
+
+Ignoring the return value causes the transaction to fail OR (worse) silently lose the asset.
+
+#### Vulnerable Pattern
+
+```move
+public fun split_payment(coin: &mut Coin<SUI>, ctx: &mut TxContext) {
+    // BUG: split() returns a Coin, but we ignore it!
+    coin::split(coin, 100, ctx);
+    // The split coin is lost!
+}
+```
+
+#### Correct Pattern
+
+```move
+public fun split_payment(
+    coin: &mut Coin<SUI>,
+    recipient: address,
+    ctx: &mut TxContext
+) {
+    let payment = coin::split(coin, 100, ctx);  // Bind the result
+    transfer::public_transfer(payment, recipient);  // Use it
+}
+```
+
+#### Flagged Functions
+
+The lint tracks these important resource-returning functions:
+- `coin::split`, `coin::take`
+- `balance::split`, `balance::withdraw_all`
+- `option::extract`, `option::destroy_some`
+- `vector::pop_back`
+- `table::remove`, `bag::remove`
+
+---
+
+### `missing_access_control`
+
+**Severity:** High  
+**Stability:** Preview  
+**Auto-fix:** None
+
+Detects public functions that modify state without capability-based access control.
+
+#### Security References
+
+| Source | Date | URL | Verification |
+|--------|------|-----|--------------|
+| SlowMist | 2024-09-10 | https://github.com/slowmist/Sui-MOVE-Smart-Contract-Auditing-Primer | "Missing Permission Control" |
+| Common Pattern | N/A | Sui capability pattern | Standard security pattern for privileged operations |
+
+#### Why This Matters
+
+In Sui Move, privileged operations (admin functions, state modifications) should be protected by capability parameters. Without this:
+1. **Anyone** can call the function
+2. **State corruption** can occur
+3. **Asset theft** becomes possible
+
+#### Vulnerable Pattern
+
+```move
+// BUG: Public function modifying state, no access control!
+public fun withdraw_all(vault: &mut Vault): u64 {
+    let amount = vault.balance;
+    vault.balance = 0;
+    amount
+}
+```
+
+#### Correct Pattern
+
+```move
+public struct AdminCap has key { id: UID }
+
+// Correct: Requires AdminCap to call
+public fun withdraw_all(
+    _cap: &AdminCap,  // Capability required
+    vault: &mut Vault
+): u64 {
+    let amount = vault.balance;
+    vault.balance = 0;
+    amount
+}
+```
+
+#### Detection Heuristics
+
+The lint flags public functions when:
+1. Function has a `&mut` parameter (state modification)
+2. No parameter name contains: `cap`, `Cap`, `admin`, `witness`
+3. Function name doesn't suggest it's a getter: `get_`, `is_`, `has_`, `view_`, `check_`
+
+#### Limitations
+
+This lint is **heuristic-based** and may have false positives for:
+- Getter functions that take `&mut` for efficiency (not actual modification)
+- Functions using alternative authorization patterns (object ownership, witness patterns)
+- Internal functions that should be `public(package)` instead
 
 ---
 
