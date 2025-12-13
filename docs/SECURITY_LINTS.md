@@ -8,6 +8,10 @@ Move Clippy includes security lints based on real audit findings and published s
 |------|----------|-----------------|--------|
 | `droppable_hot_potato` | Security | Fast (tree-sitter) | Trail of Bits 2025, Mirage Audits 2025 |
 | `excessive_token_abilities` | Security | Fast (tree-sitter) | Mirage Audits 2025, MoveBit 2023 |
+| `shared_capability` | Security | Fast (tree-sitter) | OtterSec 2024, MoveBit 2023 |
+| `stale_oracle_price` | Security | Fast (tree-sitter) | Bluefin Audit 2024 |
+| `single_step_ownership_transfer` | Security | Fast (tree-sitter) | Bluefin Audit 2024 |
+| `suspicious_overflow_check` | Security | Fast (tree-sitter) | Cetus $223M Hack 2024 |
 | `unfrozen_coin_metadata` | Security | Semantic (--mode full) | MoveBit 2023 |
 | `unused_capability_param` | Security | Semantic (--mode full) | SlowMist 2024 |
 
@@ -124,6 +128,186 @@ struct TokenCoin has key, store {
 The lint flags structs containing these keywords with both `copy` AND `drop`:
 - `token`, `coin`, `asset`, `balance`, `share`
 - `stake`, `bond`, `note`, `credit`, `fund`
+
+---
+
+### `shared_capability`
+
+**Severity:** High  
+**Stability:** Stable  
+**Auto-fix:** None
+
+Detects capability objects (AdminCap, TreasuryCap, etc.) being shared instead of transferred.
+
+#### Security References
+
+| Source | Date | URL | Verification |
+|--------|------|-----|--------------|
+| OtterSec | 2024 | Suilend audit report | Access control bypass findings |
+| MoveBit | 2023-07-07 | https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html | "Capabilities should not be shared" |
+
+#### Why This Matters
+
+Capabilities are used to gate privileged operations. If a capability is shared (publicly accessible), **anyone** can use it to perform admin actions. This defeats the entire purpose of capability-based access control.
+
+#### Vulnerable Pattern
+
+```move
+// CRITICAL - Anyone can now mint tokens!
+public fun init(witness: TOKEN, ctx: &mut TxContext) {
+    let (treasury, metadata) = coin::create_currency(...);
+    transfer::public_share_object(treasury);  // BAD - public minting!
+}
+```
+
+#### Correct Pattern
+
+```move
+// Capability transferred to deployer
+public fun init(witness: TOKEN, ctx: &mut TxContext) {
+    let (treasury, metadata) = coin::create_currency(...);
+    transfer::public_transfer(treasury, tx_context::sender(ctx));  // GOOD
+}
+```
+
+---
+
+### `stale_oracle_price`
+
+**Severity:** High  
+**Stability:** Stable  
+**Auto-fix:** None
+
+Detects use of `get_price_unsafe` oracle functions that return stale prices without timestamp validation.
+
+#### Security References
+
+| Source | Date | URL | Verification |
+|--------|------|-----|--------------|
+| Bluefin Audit | 2024-02 | MoveBit Audit Contest | Finding: "Oracle price can be stale" |
+| Pyth Documentation | Current | https://docs.pyth.network/price-feeds/use-real-time-data/sui | "Always use `get_price_no_older_than`" |
+
+#### Why This Matters
+
+Stale oracle prices can lead to:
+1. **Arbitrage**: Old prices allow risk-free profit
+2. **Bad liquidations**: Users liquidated at wrong prices
+3. **Protocol insolvency**: Undercollateralized loans
+
+#### Vulnerable Pattern
+
+```move
+// BAD - Price could be hours or days old!
+public fun get_value(price_info: &PriceInfoObject): u64 {
+    let price = pyth::get_price_unsafe(price_info);
+    price.price
+}
+```
+
+#### Correct Pattern
+
+```move
+// GOOD - Price guaranteed fresh within 60 seconds
+public fun get_value(price_info: &PriceInfoObject, clock: &Clock): u64 {
+    let price = pyth::get_price_no_older_than(price_info, clock, 60);
+    price.price
+}
+```
+
+---
+
+### `single_step_ownership_transfer`
+
+**Severity:** Medium  
+**Stability:** Stable  
+**Auto-fix:** None
+
+Detects single-step admin/owner transfer functions that immediately change ownership.
+
+#### Security References
+
+| Source | Date | URL | Verification |
+|--------|------|-----|--------------|
+| Bluefin Audit | 2024-02 | MoveBit Audit Contest | Finding: "Single-step admin transfer is dangerous" |
+| OpenZeppelin | Best Practice | https://docs.openzeppelin.com/contracts/4.x/api/access#Ownable2Step | Two-step ownership pattern |
+
+#### Why This Matters
+
+Single-step ownership transfers are dangerous because:
+1. **Typo risk**: Wrong address = permanent loss of control
+2. **No recovery**: Once transferred, cannot undo
+3. **Phishing**: Social engineering to transfer to attacker
+
+#### Vulnerable Pattern
+
+```move
+// DANGEROUS - One typo and admin is lost forever!
+public fun transfer_admin(exchange: &mut Exchange, new_admin: address) {
+    exchange.admin = new_admin;
+}
+```
+
+#### Correct Pattern
+
+```move
+// Two-step: propose, then accept
+public fun propose_admin(exchange: &mut Exchange, new_admin: address) {
+    exchange.pending_admin = option::some(new_admin);
+}
+
+public fun accept_admin(exchange: &mut Exchange, ctx: &TxContext) {
+    assert!(option::is_some(&exchange.pending_admin), E_NO_PENDING);
+    let pending = option::extract(&mut exchange.pending_admin);
+    assert!(tx_context::sender(ctx) == pending, E_NOT_PENDING_ADMIN);
+    exchange.admin = pending;
+}
+```
+
+---
+
+### `suspicious_overflow_check` ⚠️ Preview
+
+**Severity:** Critical  
+**Stability:** Preview (requires `--preview` flag)  
+**Auto-fix:** None
+
+Detects manual overflow check patterns that are error-prone.
+
+#### Security References
+
+| Source | Date | URL | Verification |
+|--------|------|-----|--------------|
+| Cetus $223M Hack | 2024-05 | https://www.halborn.com/blog/post/explained-the-cetus-exploit-may-2024 | Overflow check used wrong bit mask |
+| SlowMist Analysis | 2024-05 | https://slowmist.medium.com/cetus-hack-analysis | "checked_shlw function had mask error" |
+
+#### Why This Matters
+
+The Cetus protocol lost $223M because their manual overflow check function had a bug. Manual bit manipulation for overflow detection is extremely error-prone and should use standard library functions.
+
+#### Vulnerable Pattern
+
+```move
+// This is the ACTUAL BUG from Cetus (simplified)
+public fun checked_shlw(n: u256, shift: u8): (u256, bool) {
+    let mask = 0xffff...ffff << (256 - shift);  // WRONG MASK!
+    if (n & mask != 0) {
+        (0, true)  // overflow
+    } else {
+        (n << shift, false)
+    }
+}
+```
+
+#### Correct Pattern
+
+```move
+// Use standard library overflow-checked math
+use std::u256::overflowing_mul;
+
+public fun safe_mul(a: u256, b: u256): (u256, bool) {
+    overflowing_mul(a, b)  // Battle-tested implementation
+}
+```
 
 ---
 
@@ -247,6 +431,8 @@ These lints complement (do not duplicate) Sui's built-in compiler lints:
 - [Sui Official Security Best Practices](https://blog.sui.io/security-best-practices/)
 - [Trail of Bits Flash Loan Security](https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/)
 - [Mirage Audits Ability Mistakes](https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes)
+- [Cetus Hack Analysis (Halborn)](https://www.halborn.com/blog/post/explained-the-cetus-exploit-may-2024)
+- [Pyth Oracle Documentation](https://docs.pyth.network/price-feeds/use-real-time-data/sui)
 
 ---
 
@@ -254,6 +440,7 @@ These lints complement (do not duplicate) Sui's built-in compiler lints:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.0 | 2025-12-13 | Added security lints: `shared_capability`, `stale_oracle_price`, `single_step_ownership_transfer`, `suspicious_overflow_check` (preview) |
 | 0.2.0 | 2025-12-13 | Added security lints: `droppable_hot_potato`, `excessive_token_abilities`, `unfrozen_coin_metadata`, `unused_capability_param` |
 
 ## Contributing

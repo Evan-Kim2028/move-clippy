@@ -393,9 +393,13 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     // Security lints (audit-backed, see docs/SECURITY_LINTS.md)
     "droppable_hot_potato",
     "excessive_token_abilities",
+    "shared_capability",
+    "stale_oracle_price",
+    "single_step_ownership_transfer",
     // Preview lints (require --preview flag)
     "pure_function_transfer",
     "unsafe_arithmetic",
+    "suspicious_overflow_check",
 ];
 
 const FULL_MODE_SUPERSEDED_LINTS: &[&str] = &["public_mut_tx_context", "unnecessary_public_entry"];
@@ -534,9 +538,13 @@ impl LintRegistry {
             // Security lints (audit-backed)
             .with_rule(crate::rules::DroppableHotPotatoLint)
             .with_rule(crate::rules::ExcessiveTokenAbilitiesLint)
+            .with_rule(crate::rules::SharedCapabilityLint)
+            .with_rule(crate::rules::StaleOraclePriceLint)
+            .with_rule(crate::rules::SingleStepOwnershipTransferLint)
             // Preview lints (only included when preview mode enabled)
             .with_rule(crate::rules::PureFunctionTransferLint)
             .with_rule(crate::rules::UnsafeArithmeticLint)
+            .with_rule(crate::rules::SuspiciousOverflowCheckLint)
     }
 
     pub fn default_rules_filtered(
@@ -669,12 +677,24 @@ impl LintRegistry {
                 "excessive_token_abilities" => {
                     reg = reg.with_rule(crate::rules::ExcessiveTokenAbilitiesLint);
                 }
+                "shared_capability" => {
+                    reg = reg.with_rule(crate::rules::SharedCapabilityLint);
+                }
+                "stale_oracle_price" => {
+                    reg = reg.with_rule(crate::rules::StaleOraclePriceLint);
+                }
+                "single_step_ownership_transfer" => {
+                    reg = reg.with_rule(crate::rules::SingleStepOwnershipTransferLint);
+                }
                 // Preview lints
                 "pure_function_transfer" => {
                     reg = reg.with_rule(crate::rules::PureFunctionTransferLint);
                 }
                 "unsafe_arithmetic" => {
                     reg = reg.with_rule(crate::rules::UnsafeArithmeticLint);
+                }
+                "suspicious_overflow_check" => {
+                    reg = reg.with_rule(crate::rules::SuspiciousOverflowCheckLint);
                 }
                 other => unreachable!("unexpected fast lint name: {other}"),
             }
@@ -717,11 +737,15 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "typed_abort_code"
         // Security lints (audit-backed, stable)
         | "droppable_hot_potato"
-        | "excessive_token_abilities" => RuleGroup::Stable,
+        | "excessive_token_abilities"
+        | "shared_capability"
+        | "stale_oracle_price"
+        | "single_step_ownership_transfer" => RuleGroup::Stable,
 
         // Preview lints (higher FP risk, require --preview flag)
         | "pure_function_transfer"
-        | "unsafe_arithmetic" => RuleGroup::Preview,
+        | "unsafe_arithmetic"
+        | "suspicious_overflow_check" => RuleGroup::Preview,
 
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,

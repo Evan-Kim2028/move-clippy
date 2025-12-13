@@ -20,7 +20,14 @@ pub use modernization::{
 };
 
 // Security lints (audit-backed)
-pub use security::{DroppableHotPotatoLint, ExcessiveTokenAbilitiesLint};
+pub use security::{
+    DroppableHotPotatoLint, 
+    ExcessiveTokenAbilitiesLint, 
+    SharedCapabilityLint,
+    SingleStepOwnershipTransferLint,
+    StaleOraclePriceLint,
+    SuspiciousOverflowCheckLint,
+};
 
 // Style lints
 pub use style::{
