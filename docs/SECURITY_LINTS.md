@@ -4,20 +4,25 @@ Move Clippy includes security lints based on real audit findings and published s
 
 ## Overview
 
-| Lint | Category | Detection Method | Source |
-|------|----------|-----------------|--------|
-| `droppable_hot_potato` | Security | Fast (tree-sitter) | Trail of Bits 2025, Mirage Audits 2025 |
-| `excessive_token_abilities` | Security | Fast (tree-sitter) | Mirage Audits 2025, MoveBit 2023 |
-| `shared_capability` | Security | Fast (tree-sitter) | OtterSec 2024, MoveBit 2023 |
-| `stale_oracle_price` | Security | Fast (tree-sitter) | Bluefin Audit 2024 |
-| `single_step_ownership_transfer` | Security | Fast (tree-sitter) | Bluefin Audit 2024 |
-| `suspicious_overflow_check` | Security | Fast (tree-sitter) | Cetus $223M Hack 2024 |
-| `unfrozen_coin_metadata` | Security | Semantic (--mode full) | MoveBit 2023 |
-| `unused_capability_param` | Security | Semantic (--mode full) | SlowMist 2024 |
-| `unchecked_division` | Security | Semantic (--mode full) | Common Pattern |
-| `oracle_zero_price` | Security | Semantic (--mode full) | Bluefin Audit 2024 |
-| `unused_return_value` | Security | Semantic (--mode full) | Move Best Practices |
-| `missing_access_control` | Security | Semantic (--mode full) | SlowMist 2024 |
+| Lint | Category | Detection Method | Source | Status |
+|------|----------|-----------------|--------|--------|
+| `droppable_hot_potato` | Security | Fast (tree-sitter) | Trail of Bits 2025, Mirage Audits 2025 | **Stable** |
+| `excessive_token_abilities` | Security | Fast (tree-sitter) | Mirage Audits 2025, MoveBit 2023 | **⚠️ Deprecated** |
+| `shared_capability` | Security | Fast (tree-sitter) | OtterSec 2024, MoveBit 2023 | **Stable** |
+| `stale_oracle_price` | Security | Fast (tree-sitter) | Bluefin Audit 2024 | **Stable** |
+| `single_step_ownership_transfer` | Security | Fast (tree-sitter) | Bluefin Audit 2024 | **Stable** |
+| `suspicious_overflow_check` | Security | Fast (tree-sitter) | Cetus $223M Hack 2024 | **Preview** |
+| `unchecked_coin_split` | Security | Fast (tree-sitter) | Move Best Practices | **Preview** |
+| `missing_witness_drop` | Security | Fast (tree-sitter) | OtterSec 2024 | **Stable** |
+| `public_random_access` | Security | Fast (tree-sitter) | Sui Docs | **Stable** |
+| `unbounded_vector_growth` | Security | Fast (tree-sitter) | Move Best Practices | **Preview** |
+| `hardcoded_address` | Security | Fast (tree-sitter) | Security Best Practices | **Preview** |
+| `unfrozen_coin_metadata` | Security | Semantic (--mode full) | MoveBit 2023 | **Stable** |
+| `unused_capability_param` | Security | Semantic (--mode full) | SlowMist 2024 | **Stable** |
+| `unchecked_division` | Security | Semantic (--mode full) | Common Pattern | **Stable** |
+| `oracle_zero_price` | Security | Semantic (--mode full) | Bluefin Audit 2024 | **Preview** |
+| `unused_return_value` | Security | Semantic (--mode full) | Move Best Practices | **Preview** |
+| `missing_access_control` | Security | Semantic (--mode full) | SlowMist 2024 | **Preview** |
 
 ---
 
@@ -80,8 +85,16 @@ The lint flags structs containing these keywords with `drop` ability:
 
 ### `excessive_token_abilities`
 
+> ⚠️ **DEPRECATED** (v0.4.0): This lint has been deprecated due to a 100% false positive rate
+> in ecosystem testing. The keyword-based detection cannot distinguish actual tokens from
+> accounting structs, metadata structs, events, and DTOs that legitimately use `copy` + `drop`.
+> 
+> A proper implementation requires semantic-level analysis from the Move compiler to understand
+> struct usage patterns. See [Issue #1](https://github.com/Evan-Kim2028/move-clippy/issues/1)
+> for tracking the semantic replacement.
+
 **Severity:** Critical  
-**Stability:** Stable  
+**Stability:** ~~Stable~~ **Deprecated**  
 **Auto-fix:** None
 
 Detects token/asset structs with both `copy` and `drop` abilities.
@@ -618,6 +631,7 @@ These lints complement (do not duplicate) Sui's built-in compiler lints:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.4.0 | 2025-12-13 | **BREAKING**: Deprecated `excessive_token_abilities` (100% FP rate). Refined `droppable_hot_potato` with witness filtering. Added `unchecked_coin_split`, `missing_witness_drop`, `public_random_access`, `unbounded_vector_growth`, `hardcoded_address`. |
 | 0.3.0 | 2025-12-13 | Added security lints: `shared_capability`, `stale_oracle_price`, `single_step_ownership_transfer`, `suspicious_overflow_check` (preview) |
 | 0.2.0 | 2025-12-13 | Added security lints: `droppable_hot_potato`, `excessive_token_abilities`, `unfrozen_coin_metadata`, `unused_capability_param` |
 

@@ -8,7 +8,8 @@
 /docs/local_lint_plan/
 
 # Ecosystem validation and triage (internal only)
-/tests/ecosystem_validation/
+/tests/ecosystem_validation/findings/*.json
+/tests/ecosystem_validation/triage.json
 triage.json
 
 # Backup files created by --fix

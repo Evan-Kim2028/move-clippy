@@ -77,17 +77,28 @@ pub static DROPPABLE_HOT_POTATO: LintDescriptor = LintDescriptor {
 ///
 /// Note: We require the name to contain both a "hot potato indicator" keyword
 /// AND NOT be an event struct (which legitimately has copy+drop).
+/// Also excludes empty structs (0 fields) which are typically witness types.
 const HOT_POTATO_KEYWORDS: &[&str] = &[
     "receipt",    // FlashLoanReceipt
     "promise",    // RepaymentPromise
     "ticket",     // BorrowTicket
     "potato",     // HotPotato (explicit)
-    "obligation", // RepaymentObligation
     "voucher",    // LoanVoucher
+    // NOTE: "obligation" removed - too many FPs with witness types like ObligationOwnership
 ];
 
 /// Keywords that indicate a struct is an event (and legitimately has copy+drop).
 const EVENT_KEYWORDS: &[&str] = &["event", "emitted", "log"];
+
+/// Keywords that indicate a struct is a witness type (legitimately has drop only).
+/// These are empty marker structs used for type-level access control.
+const WITNESS_KEYWORDS: &[&str] = &[
+    "ownership",    // ObligationOwnership - witness for Ownership pattern
+    "collaterals",  // ObligationCollaterals - witness for WitTable
+    "debts",        // ObligationDebts - witness for WitTable
+    "witness",      // Explicit witness
+    "marker",       // Marker type
+];
 
 pub struct DroppableHotPotatoLint;
 
@@ -115,6 +126,25 @@ fn check_droppable_hot_potato(node: Node, source: &str, ctx: &mut LintContext<'_
         let is_event = EVENT_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
         if is_event {
             // Recurse and return early
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                check_droppable_hot_potato(child, source, ctx);
+            }
+            return;
+        }
+
+        // Skip if this is a witness type (witness types legitimately have drop only)
+        let is_witness = WITNESS_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
+        if is_witness {
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                check_droppable_hot_potato(child, source, ctx);
+            }
+            return;
+        }
+
+        // Skip empty structs (0 fields) - these are typically witness/marker types
+        if is_empty_struct(node, source) {
             let mut cursor = node.walk();
             for child in node.children(&mut cursor) {
                 check_droppable_hot_potato(child, source, ctx);
@@ -191,6 +221,14 @@ fn has_copy_ability(struct_node: Node, source: &str) -> bool {
     false
 }
 
+/// Check if a struct has an empty body (0 fields).
+/// Used to detect witness/marker types.
+fn is_empty_struct(struct_node: Node, source: &str) -> bool {
+    let struct_text = struct_node.utf8_text(source.as_bytes()).unwrap_or("");
+    // Check for empty body patterns like "{}" or "{ }"
+    struct_text.contains("{}") || struct_text.contains("{ }")
+}
+
 // ============================================================================
 // excessive_token_abilities - Detects tokens with copy+drop (infinite money)
 // ============================================================================
@@ -240,26 +278,40 @@ fn has_copy_ability(struct_node: Node, source: &str) -> bool {
 ///     balance: Balance,
 /// }
 /// ```
+///
+/// # Status: DEPRECATED
+///
+/// This lint is deprecated due to unacceptably high false positive rates.
+/// Keyword-based detection cannot reliably distinguish tokens from:
+/// - Accounting structs (Balances, RewardBalance)
+/// - Metadata structs (Asset, DepositedAsset)
+/// - Event structs (AssetSupplied, TokenTransferred)
+/// - Data transfer objects
+///
+/// See: https://github.com/Evan-Kim2028/move-clippy/issues/1
+/// Future: Implement at semantic level with type information from Move compiler.
 pub static EXCESSIVE_TOKEN_ABILITIES: LintDescriptor = LintDescriptor {
     name: "excessive_token_abilities",
     category: LintCategory::Security,
-    description: "Token struct has copy+drop abilities, enabling infinite duplication (see: Mirage Audits 2025, MoveBit 2023)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Token struct has copy+drop abilities - high FP rate, use semantic analysis instead",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
 };
 
 /// Keywords that indicate a struct represents a valuable asset.
-/// These patterns come from real-world token implementations.
+/// 
+/// IMPORTANT: This lint has HIGH FALSE POSITIVE risk with broader keywords.
+/// We intentionally use a very narrow set (only "token" and "coin") because:
+/// - "balance" causes FPs with accounting structs (Balances, RewardBalance)
+/// - "asset" causes FPs with metadata structs (Asset, DepositedAsset)  
+/// - "share" causes FPs with data structs (ShareInfo, NeedsRebalance)
+/// - "stake" causes FPs with position tracking structs
 ///
-/// Note: We exclude:
-/// - Event structs (legitimately have copy+drop)
-/// - Key structs used as map keys (legitimately have copy+drop)
+/// For comprehensive token detection, use semantic analysis (--mode full).
 const TOKEN_KEYWORDS: &[&str] = &[
-    "token", // MyToken
-    "coin",  // GameCoin
-    "asset", // DigitalAsset
-    "share", // PoolShare
-    "stake", // StakePosition
+    "token", // MyToken, GameToken
+    "coin",  // GameCoin, MyCoin
+    // Removed: "balance", "share", "stake", "asset" - too many FPs
 ];
 
 /// Keywords that indicate a struct is a key/event, not a valuable asset.
@@ -272,6 +324,10 @@ const NON_ASSET_SUFFIXES: &[&str] = &[
     "data",
     "info",
     "params",
+    "config",
+    "metadata",
+    "registry",
+    "registered",
     // Past-tense event naming patterns (common event naming convention)
     "created",
     "updated",
@@ -285,7 +341,14 @@ const NON_ASSET_SUFFIXES: &[&str] = &[
     "claimed",
     "staked",
     "unstaked",
-    "swap", // AssetSwap is a common event name
+    "swap",
+    // Additional event-like suffixes found in ecosystem
+    "supplied",
+    "synced",
+    "supported",
+    "removed",
+    "applied",
+    "redeemed",
 ];
 
 pub struct ExcessiveTokenAbilitiesLint;
@@ -623,7 +686,7 @@ fn is_capability_argument(call_text: &str) -> bool {
 pub static SUSPICIOUS_OVERFLOW_CHECK: LintDescriptor = LintDescriptor {
     name: "suspicious_overflow_check",
     category: LintCategory::Security,
-    description: "Manual overflow check detected - these are error-prone. Consider using built-in checked arithmetic (see: Cetus $223M hack)",
+    description: "Manual overflow check detected - these are error-prone. Consider using built-in checked arithmetic (see Cetus $223M hack)",
     group: RuleGroup::Preview, // Preview due to FP risk
     fix: FixDescriptor::none(),
 };
@@ -706,7 +769,7 @@ fn check_suspicious_overflow(node: Node, source: &str, ctx: &mut LintContext<'_>
 ///
 /// # Security References
 ///
-/// - **Bluefin MoveBit Audit (2024-05)**: "Oracle does not check outdated prices"
+/// - **Bluefin MoveBit Audit (2024-05)**: "Dangerous Single-Step Ownership Transfer"
 ///   Finding: Protocol used `pyth::get_price_unsafe` which doesn't guarantee freshness
 ///   URL: https://www.movebit.xyz/blog/post/Bluefin-vulnerabilities-explanation-1.html
 ///   Verified: 2025-12-13
@@ -815,7 +878,7 @@ fn check_stale_oracle_price(node: Node, source: &str, ctx: &mut LintContext<'_>)
 /// # Example
 ///
 /// ```move
-/// // VULNERABLE - single step, no confirmation
+/// // VULNERABLE - enables theft
 /// public fun transfer_admin(exchange: &mut Exchange, new_admin: address) {
 ///     exchange.admin = new_admin;  // Typo = permanent loss!
 /// }
@@ -873,13 +936,15 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
     if node.kind() == "function_definition"
         && let Some(name_node) = node.child_by_field_name("name")
     {
-        let func_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-        let func_name_lower = func_name.to_lowercase();
+        let func_name = name_node
+            .utf8_text(source.as_bytes())
+            .unwrap_or("")
+            .to_lowercase();
 
         // Check if function name suggests ownership transfer
         let is_ownership_transfer = OWNERSHIP_TRANSFER_PATTERNS
             .iter()
-            .any(|pat| func_name_lower.contains(pat));
+            .any(|pat| func_name.contains(pat));
 
         if is_ownership_transfer {
             let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
@@ -955,7 +1020,7 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
 ///
 /// ```move
 /// public fun withdraw(user_coin: &mut Coin<SUI>, amount: u64, ctx: &mut TxContext): Coin<SUI> {
-///     assert!(coin::value(user_coin) >= amount, E_INSUFFICIENT_BALANCE);
+///     assert!(coin::value(user_coin) >= amount, E_INSUFFICIENT);
 ///     coin::split(user_coin, amount, ctx)
 /// }
 /// ```
@@ -1623,6 +1688,91 @@ mod tests {
     }
 
     // =========================================================================
+    // FP Prevention Tests - droppable_hot_potato
+    // =========================================================================
+
+    #[test]
+    fn test_empty_witness_struct_not_hot_potato() {
+        // Empty structs with drop are typically witness/marker types, not hot potatoes
+        // Example: ObligationOwnership, ObligationCollaterals from Scallop
+        let source = r#"
+            module example::witness {
+                struct ObligationOwnership has drop {}
+                struct ObligationCollaterals has drop {}
+                struct ObligationDebts has drop {}
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty(), "Empty witness structs should not be flagged");
+    }
+
+    #[test]
+    fn test_witness_keyword_struct_not_hot_potato() {
+        // Structs with witness-related keywords should not be flagged
+        let source = r#"
+            module example::witness {
+                struct MarkerType has drop {
+                    value: u64,
+                }
+                struct WitnessStruct has drop {
+                    id: ID,
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty(), "Witness-keyword structs should not be flagged");
+    }
+
+    // =========================================================================
+    // FP Prevention Tests - excessive_token_abilities
+    // =========================================================================
+
+    #[test]
+    fn test_asset_metadata_struct_not_token() {
+        // Metadata structs with "Asset" in name should not be flagged
+        // Example: Asset, DepositedAsset from Bluefin
+        let source = r#"
+            module example::metadata {
+                struct Asset has store, copy, drop {
+                    symbol: String,
+                    decimals: u8,
+                }
+                struct DepositedAsset has store, copy, drop {
+                    name: String,
+                    quantity: u64,
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty(), "Asset metadata structs should not be flagged");
+    }
+
+    #[test]
+    fn test_event_suffix_struct_not_token() {
+        // Event structs should not be flagged even if they have "Asset" in name
+        let source = r#"
+            module example::events {
+                struct AssetSupplied has copy, drop {
+                    pool_id: ID,
+                    amount: u64,
+                }
+                struct AssetSynced has copy, drop {
+                    timestamp: u64,
+                }
+                struct CoinDecimalsRegistered has copy, drop {
+                    coin_type: String,
+                }
+            }
+        "#;
+
+        let messages = lint_source(source);
+        assert!(messages.is_empty(), "Event structs should not be flagged as tokens");
+    }
+
+    // =========================================================================
     // SharedCapabilityLint tests
     // =========================================================================
 
@@ -2080,7 +2230,7 @@ mod tests {
         let source = r#"
             module example::game {
                 entry fun roll_dice(r: &Random, ctx: &mut TxContext) {
-                    let result = random::new_generator(r, ctx).generate_u64();
+                    let result = random::new_generator(r, ctx).generate_bool();
                 }
             }
         "#;
