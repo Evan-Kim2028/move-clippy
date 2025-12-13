@@ -1,5 +1,5 @@
 use move_clippy::create_default_engine;
-use move_clippy::lint::{resolve_lint_alias, is_lint_alias, all_known_lints_with_aliases};
+use move_clippy::lint::{all_known_lints_with_aliases, is_lint_alias, resolve_lint_alias};
 
 #[test]
 fn modern_module_syntax_flags_legacy_block_form() {
@@ -64,7 +64,10 @@ use my_pkg::m::{Self, Foo};
 #[test]
 fn resolve_lint_alias_returns_canonical_for_known_lint() {
     // Known canonical names should return unchanged
-    assert_eq!(resolve_lint_alias("modern_module_syntax"), "modern_module_syntax");
+    assert_eq!(
+        resolve_lint_alias("modern_module_syntax"),
+        "modern_module_syntax"
+    );
     assert_eq!(resolve_lint_alias("prefer_to_string"), "prefer_to_string");
     assert_eq!(resolve_lint_alias("constant_naming"), "constant_naming");
 }

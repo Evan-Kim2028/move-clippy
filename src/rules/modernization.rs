@@ -1,6 +1,10 @@
 use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
 use tree_sitter::Node;
 
+use super::patterns::{
+    extract_assert_condition, extract_is_some_receiver, is_simple_equality_comparison,
+    parse_length_comparison,
+};
 use super::util::{
     compact_ws, is_simple_ident, parse_ref_ident, parse_ref_mut_ident, slice, split_args,
     split_call, walk,
@@ -56,86 +60,6 @@ impl LintRule for EqualityInAssertLint {
     }
 }
 
-/// Extract the condition from assert!(condition) or assert!(condition, msg)
-fn extract_assert_condition(text: &str) -> Option<&str> {
-    let start = text.find("assert!")? + 7;
-    let rest = text.get(start..)?.trim();
-    
-    if !rest.starts_with('(') {
-        return None;
-    }
-    
-    let inner_start = 1;
-    let inner_end = rest.rfind(')')?;
-    let inner = rest.get(inner_start..inner_end)?.trim();
-    
-    // Get just the condition (before any comma for error message)
-    let mut depth: usize = 0;
-    for (i, c) in inner.char_indices() {
-        match c {
-            '(' | '[' | '{' => depth += 1,
-            ')' | ']' | '}' => depth = depth.saturating_sub(1),
-            ',' if depth == 0 => {
-                return Some(inner.get(..i)?.trim());
-            }
-            _ => {}
-        }
-    }
-    
-    Some(inner)
-}
-
-/// Check if the expression is a simple equality comparison (a == b)
-fn is_simple_equality_comparison(expr: &str) -> bool {
-    // Split on == 
-    let parts: Vec<&str> = expr.split("==").collect();
-    if parts.len() != 2 {
-        return false;
-    }
-    
-    let left = parts[0].trim();
-    let right = parts[1].trim();
-    
-    // Conservative: only flag simple expressions (identifiers, field access, literals)
-    is_simple_expression(left) && is_simple_expression(right)
-}
-
-/// Check if an expression is simple enough to safely suggest assert_eq
-fn is_simple_expression(expr: &str) -> bool {
-    let trimmed = expr.trim();
-    
-    if trimmed.is_empty() {
-        return false;
-    }
-    
-    // Simple identifier
-    if is_simple_ident(trimmed) {
-        return true;
-    }
-    
-    // Field access (a.b.c)
-    if trimmed.contains('.') && !trimmed.contains('(') {
-        return trimmed.split('.').all(|part| is_simple_ident(part.trim()));
-    }
-    
-    // Numeric literal
-    if trimmed.chars().all(|c| c.is_ascii_digit()) && !trimmed.is_empty() {
-        return true;
-    }
-    
-    // Hex literal
-    if trimmed.starts_with("0x") || trimmed.starts_with("0X") {
-        return trimmed[2..].chars().all(|c| c.is_ascii_hexdigit());
-    }
-    
-    // Boolean literals
-    if trimmed == "true" || trimmed == "false" {
-        return true;
-    }
-    
-    false
-}
-
 // ============================================================================
 // ManualOptionCheckLint - P1 (Near-Zero FP)
 // ============================================================================
@@ -162,12 +86,16 @@ impl LintRule for ManualOptionCheckLint {
             }
 
             // Extract condition
-            let condition_node = node.child_by_field_name("condition")
+            let condition_node = node
+                .child_by_field_name("condition")
                 .or_else(|| node.child_by_field_name("eb"));
-            let body_node = node.child_by_field_name("consequence")
+            let body_node = node
+                .child_by_field_name("consequence")
                 .or_else(|| node.child_by_field_name("e"));
 
-            let Some(condition_node) = condition_node else { return };
+            let Some(condition_node) = condition_node else {
+                return;
+            };
             let Some(body_node) = body_node else { return };
 
             let condition = slice(source, condition_node).trim();
@@ -188,23 +116,6 @@ impl LintRule for ManualOptionCheckLint {
                 }
             }
         });
-    }
-}
-
-/// Extract the receiver from an is_some() call
-fn extract_is_some_receiver(condition: &str) -> Option<&str> {
-    let trimmed = condition.trim()
-        .trim_start_matches('(')
-        .trim_end_matches(')')
-        .trim();
-    
-    let receiver = trimmed.strip_suffix(".is_some()")?;
-    
-    // Must be simple identifier
-    if is_simple_ident(receiver.trim()) {
-        Some(receiver.trim())
-    } else {
-        None
     }
 }
 
@@ -234,12 +145,16 @@ impl LintRule for ManualLoopIterationLint {
             }
 
             // Extract condition and body
-            let condition_node = node.child_by_field_name("condition")
+            let condition_node = node
+                .child_by_field_name("condition")
                 .or_else(|| node.child_by_field_name("eb"));
-            let body_node = node.child_by_field_name("body")
+            let body_node = node
+                .child_by_field_name("body")
                 .or_else(|| node.child_by_field_name("e"));
 
-            let Some(condition_node) = condition_node else { return };
+            let Some(condition_node) = condition_node else {
+                return;
+            };
             let Some(body_node) = body_node else { return };
 
             let condition = slice(source, condition_node).trim();
@@ -254,9 +169,9 @@ impl LintRule for ManualLoopIterationLint {
                     format!("{}={} + 1", iter_var, iter_var),
                     format!("{}={}+1", iter_var, iter_var),
                 ];
-                
+
                 let has_increment = increment_patterns.iter().any(|p| body.contains(p));
-                
+
                 if has_increment {
                     ctx.report_node(
                         self.descriptor(),
@@ -269,32 +184,6 @@ impl LintRule for ManualLoopIterationLint {
                 }
             }
         });
-    }
-}
-
-/// Parse a length comparison like "i < vec.length()"
-fn parse_length_comparison(condition: &str) -> Option<(&str, &str)> {
-    let trimmed = condition.trim()
-        .trim_start_matches('(')
-        .trim_end_matches(')')
-        .trim();
-    
-    let parts: Vec<&str> = trimmed.split('<').collect();
-    if parts.len() != 2 {
-        return None;
-    }
-    
-    let iter_var = parts[0].trim();
-    let length_call = parts[1].trim();
-    
-    // Must be: vec.length()
-    let vec_var = length_call.strip_suffix(".length()")?.trim();
-    
-    // Both must be simple identifiers
-    if is_simple_ident(iter_var) && is_simple_ident(vec_var) {
-        Some((iter_var, vec_var))
-    } else {
-        None
     }
 }
 
@@ -431,14 +320,12 @@ const KNOWN_METHOD_TRANSFORMS: &[(&str, &str, &str, usize)] = &[
     ("tx_context", "sender", "sender", 1),
     ("tx_context", "epoch", "epoch", 1),
     ("tx_context", "epoch_timestamp_ms", "epoch_timestamp_ms", 1),
-    
     // === Object Operations ===
     ("object", "delete", "delete", 1),
     ("object", "id", "id", 1),
     ("object", "borrow_id", "borrow_id", 1),
     ("object", "uid_to_inner", "uid_to_inner", 1),
     ("object", "uid_as_inner", "uid_as_inner", 1),
-    
     // === Coin Operations ===
     ("coin", "value", "value", 1),
     ("coin", "into_balance", "into_balance", 1),
@@ -446,13 +333,11 @@ const KNOWN_METHOD_TRANSFORMS: &[(&str, &str, &str, usize)] = &[
     ("coin", "from_balance", "from_balance", 2),
     ("coin", "split", "split", 3),
     ("coin", "join", "join", 2),
-    
     // === Balance Operations ===
     ("balance", "value", "value", 1),
     ("balance", "destroy_zero", "destroy_zero", 1),
     ("balance", "split", "split", 2),
     ("balance", "join", "join", 2),
-    
     // === Option Operations ===
     ("option", "is_some", "is_some", 1),
     ("option", "is_none", "is_none", 1),
@@ -465,7 +350,6 @@ const KNOWN_METHOD_TRANSFORMS: &[(&str, &str, &str, usize)] = &[
     ("option", "swap", "swap", 2),
     ("option", "fill", "fill", 2),
     ("option", "contains", "contains", 2),
-    
     // === String Operations ===
     ("string", "length", "length", 1),
     ("string", "is_empty", "is_empty", 1),
@@ -473,13 +357,11 @@ const KNOWN_METHOD_TRANSFORMS: &[(&str, &str, &str, usize)] = &[
     ("string", "into_bytes", "into_bytes", 1),
     ("string", "append", "append", 2),
     ("string", "sub_string", "sub_string", 3),
-    
     // === ASCII String Operations ===
     ("ascii", "length", "length", 1),
     ("ascii", "is_empty", "is_empty", 1),
     ("ascii", "as_bytes", "as_bytes", 1),
     ("ascii", "into_bytes", "into_bytes", 1),
-    
     // === Table Operations ===
     ("table", "length", "length", 1),
     ("table", "is_empty", "is_empty", 1),
@@ -488,7 +370,6 @@ const KNOWN_METHOD_TRANSFORMS: &[(&str, &str, &str, usize)] = &[
     ("table", "borrow_mut", "borrow_mut", 2),
     ("table", "add", "add", 3),
     ("table", "remove", "remove", 2),
-    
     // === Vector Operations (additional to prefer_vector_methods) ===
     ("vector", "is_empty", "is_empty", 1),
     ("vector", "borrow", "borrow", 2),
@@ -496,18 +377,20 @@ const KNOWN_METHOD_TRANSFORMS: &[(&str, &str, &str, usize)] = &[
     ("vector", "pop_back", "pop_back", 1),
     ("vector", "swap_remove", "swap_remove", 2),
     ("vector", "contains", "contains", 2),
-    
     // === Transfer Operations ===
     ("transfer", "transfer", "transfer", 2),
     ("transfer", "public_transfer", "public_transfer", 2),
     ("transfer", "share_object", "share_object", 1),
     ("transfer", "public_share_object", "public_share_object", 1),
     ("transfer", "freeze_object", "freeze_object", 1),
-    ("transfer", "public_freeze_object", "public_freeze_object", 1),
-    
+    (
+        "transfer",
+        "public_freeze_object",
+        "public_freeze_object",
+        1,
+    ),
     // === Event Operations ===
     ("event", "emit", "emit", 1),
-    
     // === BCS Operations ===
     ("bcs", "to_bytes", "to_bytes", 1),
 ];
@@ -529,32 +412,32 @@ impl LintRule for ModernMethodSyntaxLint {
             };
 
             let callee = compact_ws(callee);
-            
+
             // Try to match against the extended allowlist
             for (module, func, method, expected_args) in KNOWN_METHOD_TRANSFORMS {
                 let pattern = format!("{}::{}", module, func);
                 if callee != pattern {
                     continue;
                 }
-                
+
                 let Some(args) = split_args(args_str) else {
                     continue;
                 };
-                
+
                 if args.len() != *expected_args {
                     continue;
                 }
-                
+
                 // First arg is the receiver
                 let receiver = args[0].trim();
-                
+
                 // Handle &receiver or &mut receiver
                 let clean_receiver = receiver
                     .strip_prefix("&mut ")
                     .or_else(|| receiver.strip_prefix("&"))
                     .unwrap_or(receiver)
                     .trim();
-                
+
                 if !is_simple_ident(clean_receiver) {
                     continue;
                 }
@@ -759,7 +642,7 @@ impl LintRule for PureFunctionTransferLint {
 
             // Check if this function is NOT an entry function
             let (has_public, has_entry) = function_modifiers(node, source);
-            
+
             // Entry functions are allowed to transfer
             if has_entry {
                 return;
@@ -831,8 +714,19 @@ static UNSAFE_ARITHMETIC: LintDescriptor = LintDescriptor {
 
 /// Variable name patterns that suggest financial/balance operations
 const BALANCE_PATTERNS: &[&str] = &[
-    "balance", "reserve", "supply", "total", "amount", "value", "funds",
-    "liquidity", "deposit", "withdraw", "stake", "reward", "fee",
+    "balance",
+    "reserve",
+    "supply",
+    "total",
+    "amount",
+    "value",
+    "funds",
+    "liquidity",
+    "deposit",
+    "withdraw",
+    "stake",
+    "reward",
+    "fee",
 ];
 
 impl LintRule for UnsafeArithmeticLint {
@@ -863,8 +757,10 @@ impl LintRule for UnsafeArithmeticLint {
             // Check for subtraction with balance-like operands
             if op == "-" {
                 let left_is_balance = BALANCE_PATTERNS.iter().any(|p| left.contains(p));
-                let right_is_amount = right.contains("amount") || right.contains("value") 
-                    || right.contains("fee") || right.contains("withdraw");
+                let right_is_amount = right.contains("amount")
+                    || right.contains("value")
+                    || right.contains("fee")
+                    || right.contains("withdraw");
 
                 if left_is_balance && right_is_amount {
                     ctx.report_node(
@@ -877,15 +773,19 @@ impl LintRule for UnsafeArithmeticLint {
 
             // Check for multiplication that could overflow
             if op == "*" {
-                let involves_balance = BALANCE_PATTERNS.iter().any(|p| {
-                    left.contains(p) || right.contains(p)
-                });
+                let involves_balance = BALANCE_PATTERNS
+                    .iter()
+                    .any(|p| left.contains(p) || right.contains(p));
 
                 // Only flag if both operands look like they could be large values
-                let left_looks_large = left.contains("price") || left.contains("rate") 
-                    || left.contains("amount") || left.contains("balance");
-                let right_looks_large = right.contains("price") || right.contains("rate")
-                    || right.contains("amount") || right.contains("balance");
+                let left_looks_large = left.contains("price")
+                    || left.contains("rate")
+                    || left.contains("amount")
+                    || left.contains("balance");
+                let right_looks_large = right.contains("price")
+                    || right.contains("rate")
+                    || right.contains("amount")
+                    || right.contains("balance");
 
                 if involves_balance && (left_looks_large || right_looks_large) {
                     ctx.report_node(

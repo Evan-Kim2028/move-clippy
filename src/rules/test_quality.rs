@@ -110,21 +110,21 @@ fn extract_assert_abort_code(text: &str) -> Option<&str> {
     // Find the opening paren after assert!
     let start = text.find("assert!")? + 7;
     let rest = text.get(start..)?.trim();
-    
+
     if !rest.starts_with('(') {
         return None;
     }
-    
+
     // Find the content inside parens
     let inner_start = 1;
     let inner_end = rest.rfind(')')?;
     let inner = rest.get(inner_start..inner_end)?.trim();
-    
+
     // Split by comma to find the second argument
     // Be careful of nested parens
     let mut depth: usize = 0;
     let mut last_comma = None;
-    
+
     for (i, c) in inner.char_indices() {
         match c {
             '(' | '[' | '{' => depth += 1,
@@ -133,7 +133,7 @@ fn extract_assert_abort_code(text: &str) -> Option<&str> {
             _ => {}
         }
     }
-    
+
     if let Some(comma_pos) = last_comma {
         let abort_code = inner.get(comma_pos + 1..)?.trim();
         Some(abort_code)
@@ -145,12 +145,12 @@ fn extract_assert_abort_code(text: &str) -> Option<&str> {
 /// Check if a string is a numeric literal (decimal or hex)
 fn is_numeric_literal(s: &str) -> bool {
     let trimmed = s.trim();
-    
+
     // Decimal number
     if trimmed.chars().all(|c| c.is_ascii_digit()) && !trimmed.is_empty() {
         return true;
     }
-    
+
     // Hex number
     if let Some(hex) = trimmed.strip_prefix("0x") {
         return hex.chars().all(|c| c.is_ascii_hexdigit()) && !hex.is_empty();
@@ -158,7 +158,7 @@ fn is_numeric_literal(s: &str) -> bool {
     if let Some(hex) = trimmed.strip_prefix("0X") {
         return hex.chars().all(|c| c.is_ascii_hexdigit()) && !hex.is_empty();
     }
-    
+
     false
 }
 
@@ -184,7 +184,7 @@ impl LintRule for RedundantTestPrefixLint {
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
         // First, check if this is a *_tests module
         let module_name = extract_module_name(root, source);
-        
+
         // Only apply in modules ending with _tests
         if !module_name.ends_with("_tests") {
             return;

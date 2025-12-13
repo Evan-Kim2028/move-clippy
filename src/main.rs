@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
+    move_clippy::telemetry::init_tracing();
     match run() {
         Ok(code) => code,
         Err(err) => {

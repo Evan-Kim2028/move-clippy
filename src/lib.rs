@@ -6,12 +6,14 @@
 pub mod cli;
 pub mod config;
 pub mod diagnostics;
+pub mod error;
 pub mod level;
 pub mod lint;
 pub mod parser;
 pub mod rules;
 pub mod semantic;
 pub mod suppression;
+pub mod telemetry;
 pub mod visitor;
 
 use anyhow::Result;

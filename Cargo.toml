@@ -1,16 +1,63 @@
-[package]
-name = "move-clippy"
+[workspace]
+members = ["."]
+resolver = "2"
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+  "cfg(full)",
+  "cfg(telemetry)",
+] }
+
+[workspace.dependencies]
 anyhow = "1.0.100"
 clap = { version = "4.5.53", features = ["derive"] }
 itertools = "0.14.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
+thiserror = "1.0.63"
 toml = "0.9.8"
+tracing = { version = "0.1.40", default-features = true, features = ["std"] }
+tracing-subscriber = { version = "0.3.18", default-features = false, features = ["fmt", "env-filter"] }
 tree-sitter = "0.20.10"
+insta = "1.44.3"
+tempfile = "3.23.0"
+regex = "1.11.1"
+walkdir = "2.5"
+
+[profile.release]
+debug = 1
+split-debuginfo = "packed"
+panic = "abort"
+strip = "debuginfo"
+
+[profile.release-lto]
+inherits = "release"
+lto = true
+codegen-units = 1
+
+[profile.test]
+panic = "abort"
+
+[package]
+name = "move-clippy"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+itertools = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+toml = { workspace = true }
+tracing = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, optional = true }
+tree-sitter = { workspace = true }
 tree-sitter-move = { git = "https://github.com/tzakian/tree-sitter-move", rev = "640ee15e4a7b0d09a4bc95dcc71336c28d97999b" }
 
 # Optional (future) semantic analysis via Mysten's Move fork snapshot
@@ -19,15 +66,19 @@ move-ir-types = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", 
 move-package = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
 
 [features]
-default = []
+default = ["telemetry"]
 full = [
     "move-compiler",
     "move-ir-types",
     "move-package",
 ]
+telemetry = [
+    "dep:tracing",
+    "dep:tracing-subscriber",
+]
 
 [dev-dependencies]
-insta = "1.44.3"
-tempfile = "3.23.0"
-regex = "1.11.1"
-walkdir = "2.5"
+insta = { workspace = true }
+tempfile = { workspace = true }
+regex = { workspace = true }
+walkdir = { workspace = true }

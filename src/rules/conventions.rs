@@ -35,16 +35,17 @@ impl LintRule for AdminCapPositionLint {
             // Collect all parameters with their types
             let mut param_infos: Vec<ParamInfo> = Vec::new();
             let mut cursor = params.walk();
-            
+
             for param in params.children(&mut cursor) {
-                if param.kind() != "function_parameter" && param.kind() != "mut_function_parameter" {
+                if param.kind() != "function_parameter" && param.kind() != "mut_function_parameter"
+                {
                     continue;
                 }
-                
+
                 let Some(ty) = param.child_by_field_name("type") else {
                     continue;
                 };
-                
+
                 let type_text = slice(source, ty).trim();
                 param_infos.push(ParamInfo {
                     node: param,
@@ -67,7 +68,11 @@ struct ParamInfo<'a> {
     is_tx_context: bool,
 }
 
-fn check_cap_position(params: &[ParamInfo], ctx: &mut LintContext<'_>, lint: &'static LintDescriptor) {
+fn check_cap_position(
+    params: &[ParamInfo],
+    ctx: &mut LintContext<'_>,
+    lint: &'static LintDescriptor,
+) {
     if params.is_empty() {
         return;
     }
@@ -87,7 +92,7 @@ fn check_cap_position(params: &[ParamInfo], ctx: &mut LintContext<'_>, lint: &'s
     // If capability is not in expected position, report
     if cap_idx != expected_pos && cap_idx > expected_pos {
         let cap_param = &params[cap_idx];
-        
+
         let position_hint = if tx_context_first {
             "second (after TxContext)"
         } else {
@@ -99,8 +104,7 @@ fn check_cap_position(params: &[ParamInfo], ctx: &mut LintContext<'_>, lint: &'s
             cap_param.node,
             format!(
                 "Capability parameter `{}` should be {} in the parameter list",
-                cap_param.type_text,
-                position_hint
+                cap_param.type_text, position_hint
             ),
         );
     }
@@ -113,9 +117,9 @@ fn is_capability_type(type_text: &str) -> bool {
         .trim_start_matches('&')
         .trim_start_matches("mut ")
         .trim();
-    
+
     // Check for common capability suffixes
-    cleaned.ends_with("Cap") 
+    cleaned.ends_with("Cap")
         || cleaned.ends_with("Capability")
         || cleaned.ends_with("_cap")
         || cleaned.ends_with("AdminCap")
@@ -130,6 +134,6 @@ fn is_tx_context_type(type_text: &str) -> bool {
         .trim_start_matches('&')
         .trim_start_matches("mut ")
         .trim();
-    
+
     cleaned == "TxContext" || cleaned.ends_with("::TxContext")
 }

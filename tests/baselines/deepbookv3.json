@@ -1,0 +1,2004 @@
+{
+  "repo": "deepbookv3",
+  "commit": "c292dbedaa9f20c0ac752640a486a60eff979f6d",
+  "diagnostics": [
+    {
+      "file": "packages/dbtc/sources/dbtc.move",
+      "lint": "modern_method_syntax",
+      "line": 21,
+      "message": "Prefer method syntax: `treasury_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/dbtc/sources/dbtc.move",
+      "lint": "modern_method_syntax",
+      "line": 22,
+      "message": "Prefer method syntax: `metadata_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 168,
+      "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 181,
+      "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 254,
+      "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 280,
+      "message": "Capability parameter `&DepositCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 297,
+      "message": "Capability parameter `&WithdrawCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 452,
+      "message": "Capability parameter `&DepositCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 466,
+      "message": "Capability parameter `&WithdrawCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 586,
+      "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 590,
+      "message": "Capability parameter `&DepositCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "admin_cap_position",
+      "line": 594,
+      "message": "Capability parameter `&WithdrawCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "event_suffix",
+      "line": 64,
+      "message": "Event struct `BalanceKey` should end with `Event` suffix (e.g., `BalanceKeyEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "explicit_self_assignments",
+      "line": 510,
+      "message": "Use `..` to ignore 2 fields instead of explicit `: _` bindings"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 245,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 260,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 374,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 406,
+      "message": "Prefer method syntax: `referral.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 458,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 472,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 548,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 563,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 578,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 587,
+      "message": "Prefer method syntax: `trade_cap.borrow_id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 591,
+      "message": "Prefer method syntax: `deposit_cap.borrow_id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 595,
+      "message": "Prefer method syntax: `withdraw_cap.borrow_id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 228,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 240,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 255,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 282,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 411,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 453,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 467,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 582,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/balance_manager.move",
+      "lint": "pure_function_transfer",
+      "line": 406,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/sources/book/fill.move",
+      "lint": "event_suffix",
+      "line": 12,
+      "message": "Event struct `Fill` should end with `Event` suffix (e.g., `FillEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/book/order_info.move",
+      "lint": "event_suffix",
+      "line": 34,
+      "message": "Event struct `OrderInfo` should end with `Event` suffix (e.g., `OrderInfoEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/helper/big_vector.move",
+      "lint": "event_suffix",
+      "line": 67,
+      "message": "Event struct `SliceRef` should end with `Event` suffix (e.g., `SliceRefEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/helper/big_vector.move",
+      "lint": "explicit_self_assignments",
+      "line": 177,
+      "message": "Use `..` to ignore 5 fields instead of explicit `: _` bindings"
+    },
+    {
+      "file": "packages/deepbook/sources/helper/big_vector.move",
+      "lint": "explicit_self_assignments",
+      "line": 267,
+      "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+    },
+    {
+      "file": "packages/deepbook/sources/helper/big_vector.move",
+      "lint": "explicit_self_assignments",
+      "line": 1266,
+      "message": "Use `..` to ignore 4 fields instead of explicit `: _` bindings"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 271,
+      "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 323,
+      "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 425,
+      "message": "Capability parameter `&TradeCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 949,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 969,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 983,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 1006,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 1029,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 1056,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "admin_cap_position",
+      "line": 1074,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "modern_method_syntax",
+      "line": 902,
+      "message": "Prefer method syntax: `referral.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "modern_method_syntax",
+      "line": 917,
+      "message": "Prefer method syntax: `referral.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "modern_method_syntax",
+      "line": 1700,
+      "message": "Prefer method syntax: `referral.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "modern_method_syntax",
+      "line": 1751,
+      "message": "Prefer method syntax: `pool.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "modern_method_syntax",
+      "line": 1764,
+      "message": "Prefer method syntax: `creation_fee.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "modern_method_syntax",
+      "line": 1765,
+      "message": "Prefer method syntax: `pool.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 190,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 223,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 495,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 534,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 562,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 579,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 626,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 642,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 663,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 688,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 702,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 896,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 1823,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "public_mut_tx_context",
+      "line": 1930,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "pure_function_transfer",
+      "line": 1764,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/sources/pool.move",
+      "lint": "pure_function_transfer",
+      "line": 1765,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "admin_cap_position",
+      "line": 67,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "admin_cap_position",
+      "line": 72,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "admin_cap_position",
+      "line": 106,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "admin_cap_position",
+      "line": 115,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "admin_cap_position",
+      "line": 124,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "admin_cap_position",
+      "line": 133,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "admin_cap_position",
+      "line": 159,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "admin_cap_position",
+      "line": 180,
+      "message": "Capability parameter `&DeepbookAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "event_suffix",
+      "line": 52,
+      "message": "Event struct `PoolKey` should end with `Event` suffix (e.g., `PoolKeyEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "event_suffix",
+      "line": 57,
+      "message": "Event struct `StableCoinKey` should end with `Event` suffix (e.g., `StableCoinKeyEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "event_suffix",
+      "line": 58,
+      "message": "Event struct `BalanceManagerKey` should end with `Event` suffix (e.g., `BalanceManagerKeyEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "event_suffix",
+      "line": 64,
+      "message": "Event struct `AppKey` should end with `Event` suffix (e.g., `AppKeyEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "modern_method_syntax",
+      "line": 95,
+      "message": "Prefer method syntax: `registry.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "modern_method_syntax",
+      "line": 97,
+      "message": "Prefer method syntax: `admin.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "modern_method_syntax",
+      "line": 339,
+      "message": "Prefer method syntax: `registry.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "modern_method_syntax",
+      "line": 340,
+      "message": "Prefer method syntax: `registry.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/sources/registry.move",
+      "lint": "pure_function_transfer",
+      "line": 340,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/sources/state/account.move",
+      "lint": "event_suffix",
+      "line": 13,
+      "message": "Event struct `Account` should end with `Event` suffix (e.g., `AccountEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/state/account.move",
+      "lint": "public_mut_tx_context",
+      "line": 65,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/account.move",
+      "lint": "public_mut_tx_context",
+      "line": 83,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/balances.move",
+      "lint": "event_suffix",
+      "line": 11,
+      "message": "Event struct `Balances` should end with `Event` suffix (e.g., `BalancesEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/state/ewma.move",
+      "lint": "event_suffix",
+      "line": 17,
+      "message": "Event struct `EWMAState` should end with `Event` suffix (e.g., `EWMAStateEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/state/ewma.move",
+      "lint": "event_suffix",
+      "line": 27,
+      "message": "Event struct `EWMAUpdate` should end with `Event` suffix (e.g., `EWMAUpdateEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/state/ewma.move",
+      "lint": "public_mut_tx_context",
+      "line": 35,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/ewma.move",
+      "lint": "public_mut_tx_context",
+      "line": 54,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/ewma.move",
+      "lint": "public_mut_tx_context",
+      "line": 95,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/ewma.move",
+      "lint": "public_mut_tx_context",
+      "line": 140,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/governance.move",
+      "lint": "event_suffix",
+      "line": 36,
+      "message": "Event struct `Proposal` should end with `Event` suffix (e.g., `ProposalEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/state/governance.move",
+      "lint": "public_mut_tx_context",
+      "line": 72,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/governance.move",
+      "lint": "public_mut_tx_context",
+      "line": 120,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/history.move",
+      "lint": "event_suffix",
+      "line": 22,
+      "message": "Event struct `Volumes` should end with `Event` suffix (e.g., `VolumesEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/state/history.move",
+      "lint": "event_suffix",
+      "line": 39,
+      "message": "Event struct `EpochData` should end with `Event` suffix (e.g., `EpochDataEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/state/history.move",
+      "lint": "public_mut_tx_context",
+      "line": 86,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "event_suffix",
+      "line": 64,
+      "message": "Event struct `RebateEventV2` should end with `Event` suffix (e.g., `RebateEventV2Event`)"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 112,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 196,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 221,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 245,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 270,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 302,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 342,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 376,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 414,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 438,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/state.move",
+      "lint": "public_mut_tx_context",
+      "line": 471,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook/sources/state/trade_params.move",
+      "lint": "event_suffix",
+      "line": 8,
+      "message": "Event struct `TradeParams` should end with `Event` suffix (e.g., `TradeParamsEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/vault/deep_price.move",
+      "lint": "event_suffix",
+      "line": 47,
+      "message": "Event struct `OrderDeepPrice` should end with `Event` suffix (e.g., `OrderDeepPriceEvent`)"
+    },
+    {
+      "file": "packages/deepbook/sources/vault/vault.move",
+      "lint": "explicit_self_assignments",
+      "line": 209,
+      "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+    },
+    {
+      "file": "packages/deepbook/sources/vault/vault.move",
+      "lint": "explicit_self_assignments",
+      "line": 231,
+      "message": "Use `..` to ignore 3 fields instead of explicit `: _` bindings"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 44,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 59,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 95,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 125,
+      "message": "Prefer method syntax: `trade_cap.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 126,
+      "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 127,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 158,
+      "message": "Prefer method syntax: `trade_cap.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 164,
+      "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 169,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 204,
+      "message": "Prefer method syntax: `deposit_cap.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 211,
+      "message": "Prefer method syntax: `deposit_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 216,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 246,
+      "message": "Prefer method syntax: `balance_manager_2.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 249,
+      "message": "Prefer method syntax: `deposit_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 250,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 251,
+      "message": "Prefer method syntax: `balance_manager_2.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 288,
+      "message": "Prefer method syntax: `deposit_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 292,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 329,
+      "message": "Prefer method syntax: `withdraw_cap.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 342,
+      "message": "Prefer method syntax: `withdraw_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 347,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 378,
+      "message": "Prefer method syntax: `balance_manager_2.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 385,
+      "message": "Prefer method syntax: `withdraw_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 387,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 388,
+      "message": "Prefer method syntax: `balance_manager_2.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 432,
+      "message": "Prefer method syntax: `withdraw_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 436,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 483,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 508,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 566,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 586,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 623,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 658,
+      "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 660,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 673,
+      "message": "Prefer method syntax: `deposit_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 674,
+      "message": "Prefer method syntax: `withdraw_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 675,
+      "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 720,
+      "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 722,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "pure_function_transfer",
+      "line": 658,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "pure_function_transfer",
+      "line": 660,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "pure_function_transfer",
+      "line": 673,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "pure_function_transfer",
+      "line": 674,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "pure_function_transfer",
+      "line": 675,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "pure_function_transfer",
+      "line": 720,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/tests/balance_manager_tests.move",
+      "lint": "pure_function_transfer",
+      "line": 722,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook/tests/big_vector_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 20,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook/tests/big_vector_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 35,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook/tests/master_tests.move",
+      "lint": "constant_naming",
+      "line": 35,
+      "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `NoError`"
+    },
+    {
+      "file": "packages/deepbook/tests/master_tests.move",
+      "lint": "constant_naming",
+      "line": 36,
+      "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `NoErrorDeepAsBase`"
+    },
+    {
+      "file": "packages/deepbook/tests/master_tests.move",
+      "lint": "constant_naming",
+      "line": 37,
+      "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `NoErrorPayWithInput`"
+    },
+    {
+      "file": "packages/deepbook/tests/master_tests.move",
+      "lint": "constant_naming",
+      "line": 38,
+      "message": "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `NoErrorHasDeepPrice`"
+    },
+    {
+      "file": "packages/deepbook/tests/master_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 3386,
+      "message": "Prefer method syntax: `trade_cap.id(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/master_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 3387,
+      "message": "Prefer method syntax: `trade_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 6395,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 6471,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 6609,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 6685,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 6880,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7082,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7188,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7243,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7353,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7408,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7561,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7667,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7737,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7823,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7836,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 7993,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 8011,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 8215,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 8233,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 8250,
+      "message": "Prefer method syntax: `bm.public_share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook/tests/state/ewma_tests.move",
+      "lint": "public_mut_tx_context",
+      "line": 15,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/helper/oracle.move",
+      "lint": "event_suffix",
+      "line": 32,
+      "message": "Event struct `CoinTypeData` should end with `Event` suffix (e.g., `CoinTypeDataEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/helper/oracle.move",
+      "lint": "event_suffix",
+      "line": 40,
+      "message": "Event struct `ConversionConfig` should end with `Event` suffix (e.g., `ConversionConfigEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "empty_vector_literal",
+      "line": 1057,
+      "message": "Prefer `vector[]` over `vector::empty()`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "manual_loop_iteration",
+      "line": 1061,
+      "message": "Consider `trigger_below.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "manual_loop_iteration",
+      "line": 1068,
+      "message": "Consider `trigger_above.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 314,
+      "message": "Prefer method syntax: `manager.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "modern_method_syntax",
+      "line": 342,
+      "message": "Prefer method syntax: `manager.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 188,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 200,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 217,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 1116,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 1136,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 1145,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 1247,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 1362,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 1408,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 1443,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "public_mut_tx_context",
+      "line": 1475,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "pure_function_transfer",
+      "line": 314,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_manager.move",
+      "lint": "pure_function_transfer",
+      "line": 342,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 134,
+      "message": "Capability parameter `&MaintainerCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 178,
+      "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 200,
+      "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 222,
+      "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 245,
+      "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 291,
+      "message": "Capability parameter `&SupplierCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 333,
+      "message": "Capability parameter `&SupplierCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 417,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 432,
+      "message": "Capability parameter `&MarginPoolCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "admin_cap_position",
+      "line": 455,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "event_suffix",
+      "line": 63,
+      "message": "Event struct `MaintainerFeesWithdrawn` should end with `Event` suffix (e.g., `MaintainerFeesWithdrawnEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "event_suffix",
+      "line": 70,
+      "message": "Event struct `ProtocolFeesWithdrawn` should end with `Event` suffix (e.g., `ProtocolFeesWithdrawnEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "event_suffix",
+      "line": 107,
+      "message": "Event struct `AssetWithdrawn` should end with `Event` suffix (e.g., `AssetWithdrawnEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "modern_method_syntax",
+      "line": 156,
+      "message": "Prefer method syntax: `margin_pool.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool.move",
+      "lint": "pure_function_transfer",
+      "line": 156,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool/protocol_config.move",
+      "lint": "event_suffix",
+      "line": 13,
+      "message": "Event struct `ProtocolConfig` should end with `Event` suffix (e.g., `ProtocolConfigEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool/protocol_config.move",
+      "lint": "event_suffix",
+      "line": 19,
+      "message": "Event struct `MarginPoolConfig` should end with `Event` suffix (e.g., `MarginPoolConfigEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool/protocol_config.move",
+      "lint": "event_suffix",
+      "line": 29,
+      "message": "Event struct `InterestConfig` should end with `Event` suffix (e.g., `InterestConfigEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool/protocol_fees.move",
+      "lint": "modern_method_syntax",
+      "line": 92,
+      "message": "Prefer method syntax: `referral.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool/protocol_fees.move",
+      "lint": "public_mut_tx_context",
+      "line": 155,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_pool/protocol_fees.move",
+      "lint": "pure_function_transfer",
+      "line": 92,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 153,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 176,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 194,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 215,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 237,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 259,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 313,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 323,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 332,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 341,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 353,
+      "message": "Capability parameter `&MarginPauseCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 366,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 387,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 570,
+      "message": "Capability parameter `&MaintainerCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "admin_cap_position",
+      "line": 680,
+      "message": "Capability parameter `&MaintainerCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "event_suffix",
+      "line": 59,
+      "message": "Event struct `PoolConfig` should end with `Event` suffix (e.g., `PoolConfigEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "event_suffix",
+      "line": 69,
+      "message": "Event struct `RiskRatios` should end with `Event` suffix (e.g., `RiskRatiosEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "event_suffix",
+      "line": 76,
+      "message": "Event struct `ConfigKey` should end with `Event` suffix (e.g., `ConfigKeyEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "modern_method_syntax",
+      "line": 144,
+      "message": "Prefer method syntax: `registry.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "modern_method_syntax",
+      "line": 145,
+      "message": "Prefer method syntax: `margin_admin_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "modern_method_syntax",
+      "line": 583,
+      "message": "Prefer method syntax: `margin_pool_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "modern_method_syntax",
+      "line": 720,
+      "message": "Prefer method syntax: `registry.share_object(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "public_mut_tx_context",
+      "line": 589,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "public_mut_tx_context",
+      "line": 607,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "pure_function_transfer",
+      "line": 583,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook_margin/sources/margin_registry.move",
+      "lint": "pure_function_transfer",
+      "line": 720,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 37,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 71,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 106,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 155,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 205,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 229,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 252,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 274,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 294,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 324,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 352,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 374,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/pool_proxy.move",
+      "lint": "public_mut_tx_context",
+      "line": 397,
+      "message": "TxContext parameters should use `&mut TxContext`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/tpsl.move",
+      "lint": "empty_vector_literal",
+      "line": 235,
+      "message": "Prefer `vector[]` over `vector::empty()`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/tpsl.move",
+      "lint": "empty_vector_literal",
+      "line": 236,
+      "message": "Prefer `vector[]` over `vector::empty()`"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/tpsl.move",
+      "lint": "event_suffix",
+      "line": 28,
+      "message": "Event struct `ConditionalOrder` should end with `Event` suffix (e.g., `ConditionalOrderEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/tpsl.move",
+      "lint": "event_suffix",
+      "line": 34,
+      "message": "Event struct `Condition` should end with `Event` suffix (e.g., `ConditionEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/tpsl.move",
+      "lint": "event_suffix",
+      "line": 39,
+      "message": "Event struct `PendingOrder` should end with `Event` suffix (e.g., `PendingOrderEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/sources/tpsl.move",
+      "lint": "event_suffix",
+      "line": 74,
+      "message": "Event struct `ConditionalOrderInsufficientFunds` should end with `Event` suffix (e.g., `ConditionalOrderInsufficientFundsEvent`)"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/helper/test_helpers.move",
+      "lint": "admin_cap_position",
+      "line": 125,
+      "message": "Capability parameter `&MaintainerCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/helper/test_helpers.move",
+      "lint": "admin_cap_position",
+      "line": 188,
+      "message": "Capability parameter `&MaintainerCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/helper/test_helpers.move",
+      "lint": "admin_cap_position",
+      "line": 272,
+      "message": "Capability parameter `&MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/helper/test_helpers.move",
+      "lint": "admin_cap_position",
+      "line": 313,
+      "message": "Capability parameter `MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_manager_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 2511,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_manager_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 2605,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool/protocol_fees_tests.move",
+      "lint": "empty_vector_literal",
+      "line": 259,
+      "message": "Prefer `vector[]` over `vector::empty()`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_math_tests.move",
+      "lint": "admin_cap_position",
+      "line": 45,
+      "message": "Capability parameter `MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "admin_cap_position",
+      "line": 48,
+      "message": "Capability parameter `MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "admin_cap_position",
+      "line": 62,
+      "message": "Capability parameter `&MaintainerCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 1040,
+      "message": "Prefer method syntax: `supplier_cap_1.id(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 1067,
+      "message": "Prefer method syntax: `supplier_cap_2.id(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 1100,
+      "message": "Prefer method syntax: `supplier_cap.id(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 1133,
+      "message": "Prefer method syntax: `supplier_cap.id(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 1193,
+      "message": "Prefer method syntax: `supplier_cap_1.id(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 1214,
+      "message": "Prefer method syntax: `supplier_cap_2.id(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_pool_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 1393,
+      "message": "Prefer method syntax: `supplier_cap.id(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/margin_registry_tests.move",
+      "lint": "admin_cap_position",
+      "line": 55,
+      "message": "Capability parameter `MarginAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/pool_proxy_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 1665,
+      "message": "Prefer method syntax: `balance_manager.id(...)`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 595,
+      "message": "Consider `trigger_prices_below.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 635,
+      "message": "Consider `trigger_prices_above.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 787,
+      "message": "Consider `trigger_prices_below.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 833,
+      "message": "Consider `trigger_prices_above.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 1252,
+      "message": "Consider `trigger_prices_below.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 1288,
+      "message": "Consider `trigger_prices_above.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 1416,
+      "message": "Consider `trigger_prices_below.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 1452,
+      "message": "Consider `trigger_prices_above.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 2701,
+      "message": "Consider `trigger_prices.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "manual_loop_iteration",
+      "line": 2846,
+      "message": "Consider `trigger_prices.do_ref!(|e| ...)` instead of manual while loop with index"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 1503,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 1581,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 1659,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 1699,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 1780,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 1799,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 1901,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 1978,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 2056,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 2133,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 2210,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "merge_test_attributes",
+      "line": 2287,
+      "message": "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"
+    },
+    {
+      "file": "packages/deepbook_margin/tests/tpsl_tests.move",
+      "lint": "modern_method_syntax",
+      "line": 205,
+      "message": "Prefer method syntax: `balance_manager.public_share_object(...)`"
+    },
+    {
+      "file": "packages/margin_liquidation/sources/liquidation_vault.move",
+      "lint": "admin_cap_position",
+      "line": 55,
+      "message": "Capability parameter `&LiquidationAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/margin_liquidation/sources/liquidation_vault.move",
+      "lint": "admin_cap_position",
+      "line": 64,
+      "message": "Capability parameter `&LiquidationAdminCap` should be first in the parameter list"
+    },
+    {
+      "file": "packages/margin_liquidation/sources/liquidation_vault.move",
+      "lint": "event_suffix",
+      "line": 26,
+      "message": "Event struct `BalanceKey` should end with `Event` suffix (e.g., `BalanceKeyEvent`)"
+    },
+    {
+      "file": "packages/margin_liquidation/sources/liquidation_vault.move",
+      "lint": "event_suffix",
+      "line": 34,
+      "message": "Event struct `LiquidationByVault` should end with `Event` suffix (e.g., `LiquidationByVaultEvent`)"
+    },
+    {
+      "file": "packages/margin_liquidation/sources/liquidation_vault.move",
+      "lint": "modern_method_syntax",
+      "line": 49,
+      "message": "Prefer method syntax: `liquidation_admin_cap.public_transfer(...)`"
+    },
+    {
+      "file": "packages/margin_liquidation/sources/liquidation_vault.move",
+      "lint": "modern_method_syntax",
+      "line": 79,
+      "message": "Prefer method syntax: `liquidation_vault.share_object(...)`"
+    },
+    {
+      "file": "packages/margin_liquidation/sources/liquidation_vault.move",
+      "lint": "pure_function_transfer",
+      "line": 79,
+      "message": "Non-entry public functions should return objects instead of transferring internally. This makes the function more composable."
+    },
+    {
+      "file": "packages/token/sources/deep.move",
+      "lint": "event_suffix",
+      "line": 12,
+      "message": "Event struct `TreasuryCapKey` should end with `Event` suffix (e.g., `TreasuryCapKeyEvent`)"
+    }
+  ]
+}

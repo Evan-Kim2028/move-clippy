@@ -1,5 +1,7 @@
 mod util;
 
+pub mod patterns;
+
 pub mod conventions;
 pub mod modernization;
 pub mod style;
@@ -10,10 +12,10 @@ pub use conventions::AdminCapPositionLint;
 
 // Modernization lints
 pub use modernization::{
-    EqualityInAssertLint, ManualLoopIterationLint, ManualOptionCheckLint,
-    ModernMethodSyntaxLint, ModernModuleSyntaxLint, PreferVectorMethodsLint,
-    PublicMutTxContextLint, PureFunctionTransferLint, UnnecessaryPublicEntryLint,
-    UnsafeArithmeticLint, WhileTrueToLoopLint,
+    EqualityInAssertLint, ManualLoopIterationLint, ManualOptionCheckLint, ModernMethodSyntaxLint,
+    ModernModuleSyntaxLint, PreferVectorMethodsLint, PublicMutTxContextLint,
+    PureFunctionTransferLint, UnnecessaryPublicEntryLint, UnsafeArithmeticLint,
+    WhileTrueToLoopLint,
 };
 
 // Style lints

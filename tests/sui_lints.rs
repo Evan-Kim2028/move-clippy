@@ -2,6 +2,8 @@
 
 use insta::assert_snapshot;
 use move_clippy::diagnostics::Diagnostic;
+use move_clippy::error::{ClippyResult, MoveClippyError};
+use move_clippy::instrument_block;
 use move_clippy::lint::LintSettings;
 use move_clippy::semantic;
 use move_compiler::editions::Flavor;
@@ -56,26 +58,28 @@ sui_fixture_tests! {
     true_unnecessary_public_entry,
 }
 
-fn run_fixture(name: &str) -> anyhow::Result<String> {
+fn run_fixture(name: &str) -> ClippyResult<String> {
     let manifest_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let source = manifest_root
         .join(FIXTURE_ROOT)
         .join(format!("{name}.move"));
-    let package_dir = tempfile::tempdir()?;
-    write_manifest(package_dir.path(), "legacy")?;
+    instrument_block!("tests::run_fixture", {
+        let package_dir = tempfile::tempdir()?;
+        write_manifest(package_dir.path(), "legacy")?;
 
-    let sources = package_dir.path().join("sources");
-    fs::create_dir_all(&sources)?;
-    fs::copy(&source, sources.join("main.move"))?;
+        let sources = package_dir.path().join("sources");
+        fs::create_dir_all(&sources)?;
+        fs::copy(&source, sources.join("main.move"))?;
 
-    modernize_fixture(package_dir.path())?;
-    write_manifest(package_dir.path(), "2024")?;
+        modernize_fixture(package_dir.path())?;
+        write_manifest(package_dir.path(), "2024")?;
 
-    let diagnostics = semantic::lint_package(package_dir.path(), &LintSettings::default())?;
-    Ok(format_diagnostics(package_dir.path(), diagnostics))
+        let diagnostics = semantic::lint_package(package_dir.path(), &LintSettings::default())?;
+        Ok(format_diagnostics(package_dir.path(), diagnostics))
+    })
 }
 
-fn write_manifest(dir: &Path, edition: &str) -> anyhow::Result<()> {
+fn write_manifest(dir: &Path, edition: &str) -> ClippyResult<()> {
     let manifest = format!(
         r#"[package]
  name = "sui_lint_fixture"
@@ -107,13 +111,15 @@ random = "0x9"
     Ok(())
 }
 
-fn modernize_fixture(root: &Path) -> anyhow::Result<()> {
-    run_migration(root)?;
-    rewrite_lint_attributes(root)?;
-    Ok(())
+fn modernize_fixture(root: &Path) -> ClippyResult<()> {
+    instrument_block!("tests::modernize_fixture", {
+        run_migration(root)?;
+        rewrite_lint_attributes(root)?;
+        Ok(())
+    })
 }
 
-fn run_migration(root: &Path) -> anyhow::Result<()> {
+fn run_migration(root: &Path) -> ClippyResult<()> {
     let mut config = BuildConfig::default();
     config.dev_mode = true;
     config.test_mode = true;
@@ -131,7 +137,7 @@ fn run_migration(root: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn rewrite_lint_attributes(root: &Path) -> anyhow::Result<()> {
+fn rewrite_lint_attributes(root: &Path) -> ClippyResult<()> {
     let path = root.join("sources/main.move");
     let contents = fs::read_to_string(&path)?;
     let converted = convert_lint_allow_attributes(&contents)?;
@@ -140,8 +146,9 @@ fn rewrite_lint_attributes(root: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn convert_lint_allow_attributes(source: &str) -> anyhow::Result<String> {
-    let regex = Regex::new(r"(?m)(?P<prefix>^\s*)#\[\s*lint_allow\s*\((?P<args>[^)]+)\)\s*]")?;
+fn convert_lint_allow_attributes(source: &str) -> ClippyResult<String> {
+    let regex = Regex::new(r"(?m)(?P<prefix>^\s*)#\[\s*lint_allow\s*\((?P<args>[^)]+)\)\s*]")
+        .map_err(|e| MoveClippyError::fixture(format!("invalid lint attribute pattern: {e}")))?;
     let result = regex.replace_all(source, |caps: &regex::Captures| {
         let converted = format_lint_invocations(&caps["args"]);
         format!("{}#[allow({converted})]", &caps["prefix"])
@@ -149,8 +156,9 @@ fn convert_lint_allow_attributes(source: &str) -> anyhow::Result<String> {
     Ok(result.into_owned())
 }
 
-fn expand_multi_lint_invocations(source: &str) -> anyhow::Result<String> {
-    let regex = Regex::new(r"lint\s*\((?P<args>[^)]+,[^)]*)\)")?;
+fn expand_multi_lint_invocations(source: &str) -> ClippyResult<String> {
+    let regex = Regex::new(r"lint\s*\((?P<args>[^)]+,[^)]*)\)")
+        .map_err(|e| MoveClippyError::fixture(format!("invalid lint invocation pattern: {e}")))?;
     let result = regex.replace_all(source, |caps: &regex::Captures| {
         format_lint_invocations(&caps["args"])
     });

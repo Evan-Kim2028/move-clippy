@@ -1,7 +1,7 @@
 use crate::diagnostics::Diagnostic;
+use crate::error::{ClippyResult, MoveClippyError};
 use crate::lint::{FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup};
 use crate::rules::modernization::{PUBLIC_MUT_TX_CONTEXT, UNNECESSARY_PUBLIC_ENTRY};
-use anyhow::Result;
 use std::path::Path;
 
 /// Semantic lints that rely on Move compiler typing information.
@@ -133,8 +133,10 @@ pub fn find_descriptor(name: &str) -> Option<&'static LintDescriptor> {
 mod full {
     use super::*;
     use crate::diagnostics::Span;
+    use crate::instrument_block;
     use crate::level::LintLevel;
     use crate::suppression;
+    type Result<T> = ClippyResult<T>;
     use move_compiler::editions::Flavor;
     use move_compiler::parser::ast::{Ability_, TargetKind};
     use move_compiler::shared::{Identifier, files::MappedFiles, program_info::TypingProgramInfo};
@@ -146,33 +148,44 @@ mod full {
     use move_package::compilation::build_plan::BuildPlan;
 
     /// Run all semantic lints against the package rooted at `package_path`.
-    pub fn lint_package(package_path: &Path, settings: &LintSettings) -> Result<Vec<Diagnostic>> {
-        let package_root = std::fs::canonicalize(package_path)?;
-        let mut writer = Vec::<u8>::new();
-        let mut build_config = BuildConfig::default();
-        build_config.default_flavor = Some(Flavor::Sui);
-        let resolved_graph =
-            build_config.resolution_graph_for_package(&package_root, None, &mut writer)?;
-        let build_plan = BuildPlan::create(&resolved_graph)?;
+    pub fn lint_package(
+        package_path: &Path,
+        settings: &LintSettings,
+    ) -> ClippyResult<Vec<Diagnostic>> {
+        instrument_block!("semantic::lint_package", {
+            let package_root = std::fs::canonicalize(package_path)?;
+            let mut writer = Vec::<u8>::new();
+            let mut build_config = BuildConfig::default();
+            build_config.default_flavor = Some(Flavor::Sui);
+            let resolved_graph =
+                build_config.resolution_graph_for_package(&package_root, None, &mut writer)?;
+            let build_plan = BuildPlan::create(&resolved_graph)?;
 
-        let hook = SaveHook::new([SaveFlag::Typing, SaveFlag::TypingInfo]);
-        let compiled = build_plan.compile_no_exit(&mut writer, |compiler| {
-            let (attr, filters) = linters::known_filters();
-            compiler
-                .add_save_hook(&hook)
-                .add_custom_known_filters(attr, filters)
-        })?;
+            let hook = SaveHook::new([SaveFlag::Typing, SaveFlag::TypingInfo]);
+            let compiled = build_plan
+                .compile_no_exit(&mut writer, |compiler| {
+                    let (attr, filters) = linters::known_filters();
+                    compiler
+                        .add_save_hook(&hook)
+                        .add_custom_known_filters(attr, filters)
+                })
+                .map_err(|e| {
+                    MoveClippyError::semantic(format!(
+                        "Move compilation failed while running Sui lints: {e}"
+                    ))
+                })?;
 
-        let typing_ast: T::Program = hook.take_typing_ast();
-        let typing_info: std::sync::Arc<TypingProgramInfo> = hook.take_typing_info();
-        let file_map: MappedFiles = compiled.file_map.clone();
+            let typing_ast: T::Program = hook.take_typing_ast();
+            let typing_info: std::sync::Arc<TypingProgramInfo> = hook.take_typing_info();
+            let file_map: MappedFiles = compiled.file_map.clone();
 
-        let mut out = Vec::new();
-        lint_capability_naming(&mut out, settings, &file_map, &typing_info)?;
-        lint_event_naming(&mut out, settings, &file_map, &typing_info)?;
-        lint_getter_naming(&mut out, settings, &file_map, &typing_ast)?;
-        lint_sui_visitors(&mut out, settings, &build_plan, &package_root)?;
-        Ok(out)
+            let mut out = Vec::new();
+            lint_capability_naming(&mut out, settings, &file_map, &typing_info)?;
+            lint_event_naming(&mut out, settings, &file_map, &typing_info)?;
+            lint_getter_naming(&mut out, settings, &file_map, &typing_ast)?;
+            lint_sui_visitors(&mut out, settings, &build_plan, &package_root)?;
+            Ok(out)
+        })
     }
 
     fn diag_from_loc(
@@ -414,7 +427,7 @@ mod full {
         settings: &LintSettings,
         build_plan: &BuildPlan,
         package_root: &Path,
-    ) -> Result<()> {
+    ) -> ClippyResult<()> {
         use move_compiler::diagnostics::report_diagnostics_to_buffer_with_env_color;
         use move_compiler::linters::{LintLevel as CompilerLintLevel, LinterDiagnosticCategory};
         use move_compiler::sui_mode::linters;
@@ -436,10 +449,11 @@ mod full {
                 }
                 Err(errors) => {
                     let rendered = report_diagnostics_to_buffer_with_env_color(&files, errors);
-                    anyhow::bail!(
+                    return Err(MoveClippyError::semantic(format!(
                         "Move compilation failed while running Sui lints:\n{}",
                         String::from_utf8_lossy(&rendered)
-                    );
+                    ))
+                    .into_anyhow());
                 }
             }
         })?;
@@ -561,6 +575,11 @@ mod full {
 pub use full::lint_package;
 
 #[cfg(not(feature = "full"))]
-pub fn lint_package(_package_path: &Path, _settings: &LintSettings) -> Result<Vec<Diagnostic>> {
-    anyhow::bail!("full mode requires building with --features full")
+pub fn lint_package(
+    _package_path: &Path,
+    _settings: &LintSettings,
+) -> ClippyResult<Vec<Diagnostic>> {
+    Err(MoveClippyError::semantic(
+        "full mode requires building with --features full",
+    ))
 }

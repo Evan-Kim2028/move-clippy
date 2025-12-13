@@ -10,7 +10,7 @@ use tree_sitter::Node;
 // ============================================================================
 
 /// Classification of lint rules by stability level.
-/// 
+///
 /// New rules start in `Preview` and graduate to `Stable` after meeting
 /// promotion criteria (see STABILITY.md).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -19,11 +19,11 @@ pub enum RuleGroup {
     /// Enabled by default based on category.
     #[default]
     Stable,
-    
+
     /// New rules that need community validation.
     /// Require `--preview` flag or `preview = true` in config.
     Preview,
-    
+
     /// Rules scheduled for removal in the next major version.
     /// Emit a warning when explicitly enabled.
     Deprecated,
@@ -44,7 +44,7 @@ impl RuleGroup {
 // ============================================================================
 
 /// Safety classification for auto-fixes.
-/// 
+///
 /// - `Safe` fixes preserve runtime behavior exactly
 /// - `Unsafe` fixes may change runtime behavior and require explicit opt-in
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -53,7 +53,7 @@ pub enum FixSafety {
     /// Applied by default with `--fix`.
     #[default]
     Safe,
-    
+
     /// Fix may change runtime behavior (different errors, side effects, etc.).
     /// Requires `--unsafe-fixes` flag to apply.
     Unsafe,
@@ -88,7 +88,7 @@ impl FixDescriptor {
             description,
         }
     }
-    
+
     /// Create an unsafe fix descriptor.
     pub const fn unsafe_fix(description: &'static str) -> Self {
         Self {
@@ -97,7 +97,7 @@ impl FixDescriptor {
             description,
         }
     }
-    
+
     /// Indicate no fix is available.
     pub const fn none() -> Self {
         Self {
@@ -161,7 +161,7 @@ impl LintDescriptor {
             fix: FixDescriptor::none(),
         }
     }
-    
+
     /// Helper to create a stable lint descriptor with a safe fix.
     pub const fn stable_with_fix(
         name: &'static str,
@@ -177,7 +177,7 @@ impl LintDescriptor {
             fix: FixDescriptor::safe(fix_description),
         }
     }
-    
+
     /// Helper to create a preview lint descriptor with no fix.
     pub const fn preview(
         name: &'static str,
@@ -192,7 +192,7 @@ impl LintDescriptor {
             fix: FixDescriptor::none(),
         }
     }
-    
+
     /// Helper to create a preview lint descriptor with a safe fix.
     pub const fn preview_with_fix(
         name: &'static str,
@@ -418,10 +418,10 @@ pub fn is_semantic_lint(name: &str) -> bool {
 // ============================================================================
 
 /// Mapping of old lint names to their current canonical names.
-/// 
+///
 /// When renaming a lint, add an entry here to maintain backward compatibility.
 /// Users can still reference the old name in config files and CLI arguments.
-/// 
+///
 /// Format: (old_name, canonical_name)
 pub const LINT_ALIASES: &[(&str, &str)] = &[
     // Example aliases for potential future renames:
@@ -431,7 +431,7 @@ pub const LINT_ALIASES: &[(&str, &str)] = &[
 ];
 
 /// Resolve a lint name to its canonical form.
-/// 
+///
 /// If the name is an alias, returns the canonical name.
 /// Otherwise, returns the original name unchanged.
 pub fn resolve_lint_alias(name: &str) -> &str {
@@ -695,11 +695,11 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "event_suffix"
         | "empty_vector_literal"
         | "typed_abort_code" => RuleGroup::Stable,
-        
+
         // Preview lints (higher FP risk, require --preview flag)
         | "pure_function_transfer"
         | "unsafe_arithmetic" => RuleGroup::Preview,
-        
+
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,
     }

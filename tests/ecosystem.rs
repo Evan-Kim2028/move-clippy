@@ -250,14 +250,17 @@ fn get_git_commit(repo_path: &Path) -> Option<String> {
 // ============================================================================
 // Ecosystem Test Definitions
 // ============================================================================
+// 
+// All repos are cloned to ../ecosystem-test-repos/ using the clone-repos.sh script.
+// Run: cd ../ecosystem-test-repos && ./clone-repos.sh
 
-/// DeepBook V3 - Sui's native liquidity layer
+/// DeepBook V3 - Sui's native liquidity layer (MystenLabs)
 #[test]
-#[ignore = "requires deepbookv3 repo clone"]
+#[ignore = "requires ecosystem-test-repos clone"]
 fn ecosystem_deepbookv3() {
     let test = EcosystemTest {
         name: "deepbookv3",
-        repo_path: "../deepbookv3",
+        repo_path: "../ecosystem-test-repos/deepbookv3",
         lint_path: Some("packages"),
     };
     test.run().expect("ecosystem test failed");
@@ -265,12 +268,36 @@ fn ecosystem_deepbookv3() {
 
 /// OpenZeppelin Sui - Security-focused Move contracts
 #[test]
-#[ignore = "requires openzeppelin-sui repo clone"]
+#[ignore = "requires ecosystem-test-repos clone"]
 fn ecosystem_openzeppelin_sui() {
     let test = EcosystemTest {
         name: "openzeppelin-sui",
-        repo_path: "../openzeppelin-sui",
-        lint_path: Some("packages"),
+        repo_path: "../ecosystem-test-repos/openzeppelin-sui",
+        lint_path: Some("contracts"),
+    };
+    test.run().expect("ecosystem test failed");
+}
+
+/// Cetus CLMM - Concentrated Liquidity AMM
+#[test]
+#[ignore = "requires ecosystem-test-repos clone"]
+fn ecosystem_cetus_clmm() {
+    let test = EcosystemTest {
+        name: "cetus-clmm",
+        repo_path: "../ecosystem-test-repos/cetus-clmm",
+        lint_path: Some("sui"),
+    };
+    test.run().expect("ecosystem test failed");
+}
+
+/// Scallop Lending - Sui lending protocol
+#[test]
+#[ignore = "requires ecosystem-test-repos clone"]
+fn ecosystem_scallop_lend() {
+    let test = EcosystemTest {
+        name: "scallop-lend",
+        repo_path: "../ecosystem-test-repos/scallop-lend",
+        lint_path: Some("contracts"),
     };
     test.run().expect("ecosystem test failed");
 }

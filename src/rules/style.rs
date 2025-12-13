@@ -50,7 +50,7 @@ fn check_abilities_order(
     lint: &'static LintDescriptor,
 ) {
     let text = slice(source, node);
-    
+
     // Extract abilities from the text (e.g., "has key, copy, store" -> ["key", "copy", "store"])
     // Bind the intermediate string to avoid temporary value dropped while borrowed
     let cleaned = text.replace("has", "");
@@ -67,7 +67,7 @@ fn check_abilities_order(
     // Check if abilities are in correct relative order
     let mut last_pos = 0;
     let mut out_of_order = false;
-    
+
     for ability in &abilities {
         if let Some(pos) = ABILITY_ORDER.iter().position(|&a| a == *ability) {
             if pos < last_pos {
@@ -82,7 +82,7 @@ fn check_abilities_order(
         // Build the correct order
         let mut sorted = abilities.clone();
         sorted.sort_by_key(|a| ABILITY_ORDER.iter().position(|&x| x == *a).unwrap_or(99));
-        
+
         ctx.report_node(
             lint,
             node,
@@ -124,7 +124,8 @@ impl LintRule for DocCommentStyleLint {
 
             // Check if it's a JavaDoc-style or block comment that looks like documentation
             let is_javadoc = text.starts_with("/**");
-            let is_block_doc = text.starts_with("/*") && !text.starts_with("/**") && looks_like_doc(text);
+            let is_block_doc =
+                text.starts_with("/*") && !text.starts_with("/**") && looks_like_doc(text);
 
             if !is_javadoc && !is_block_doc {
                 return;
@@ -149,23 +150,26 @@ fn looks_like_doc(text: &str) -> bool {
         return false;
     }
     // Check if it follows doc comment patterns (lines starting with * after first line)
-    lines.iter().skip(1).any(|line| line.trim().starts_with('*'))
+    lines
+        .iter()
+        .skip(1)
+        .any(|line| line.trim().starts_with('*'))
 }
 
 /// Check if the comment node precedes a documentable item
 fn precedes_documentable_item(node: Node, _source: &str) -> bool {
     // Find the next sibling that isn't whitespace
     let mut sibling = node.next_sibling();
-    
+
     while let Some(s) = sibling {
         let kind = s.kind();
-        
+
         // Skip whitespace and other comments
         if kind == "line_comment" || kind == "block_comment" {
             sibling = s.next_sibling();
             continue;
         }
-        
+
         // Check if it's a documentable item
         return matches!(
             kind,
@@ -179,12 +183,12 @@ fn precedes_documentable_item(node: Node, _source: &str) -> bool {
                 | "use_declaration"
         );
     }
-    
+
     false
 }
 
 // ============================================================================
-// ExplicitSelfAssignmentsLint - P0 (Zero FP) 
+// ExplicitSelfAssignmentsLint - P0 (Zero FP)
 // ============================================================================
 
 pub struct ExplicitSelfAssignmentsLint;
@@ -239,7 +243,7 @@ impl LintRule for ExplicitSelfAssignmentsLint {
 fn count_ignored_fields(text: &str) -> usize {
     // Count patterns like `field: _` or `field_name: _`
     let explicit_ignores = text.matches(": _").count();
-    
+
     // Also count standalone `_` that aren't part of identifiers
     // This is more conservative - we only count `: _` patterns
     explicit_ignores
@@ -297,9 +301,12 @@ impl LintRule for EventSuffixLint {
 
             if is_event_pattern && !name.ends_with("Event") {
                 // Check for past-tense naming (alternative convention from Move Book)
-                let is_past_tense = name.ends_with("ed") || name.ends_with("Created") 
-                    || name.ends_with("Updated") || name.ends_with("Deleted")
-                    || name.ends_with("Transferred") || name.ends_with("Minted")
+                let is_past_tense = name.ends_with("ed")
+                    || name.ends_with("Created")
+                    || name.ends_with("Updated")
+                    || name.ends_with("Deleted")
+                    || name.ends_with("Transferred")
+                    || name.ends_with("Minted")
                     || name.ends_with("Burned");
 
                 if !is_past_tense {
@@ -422,7 +429,10 @@ impl LintRule for TypedAbortCodeLint {
             // Check assert! with numeric abort codes
             if node.kind() == "macro_invocation" {
                 let text = slice(source, node).trim();
-                if text.starts_with("assert!") && !text.starts_with("assert_eq!") && !text.starts_with("assert_ne!") {
+                if text.starts_with("assert!")
+                    && !text.starts_with("assert_eq!")
+                    && !text.starts_with("assert_ne!")
+                {
                     if let Some(abort_code) = extract_assert_abort_code_for_typed(text) {
                         if is_numeric_literal(abort_code) {
                             ctx.report_node(
@@ -448,11 +458,11 @@ fn extract_assert_abort_code_for_typed(text: &str) -> Option<&str> {
     let inner_start = rest.find('(')?;
     let inner_end = rest.rfind(')')?;
     let inner = rest.get(inner_start + 1..inner_end)?.trim();
-    
+
     // Find the last comma at depth 0 to get the abort code
     let mut depth: usize = 0;
     let mut last_comma = None;
-    
+
     for (i, c) in inner.char_indices() {
         match c {
             '(' | '[' | '{' | '<' => depth += 1,
@@ -461,7 +471,7 @@ fn extract_assert_abort_code_for_typed(text: &str) -> Option<&str> {
             _ => {}
         }
     }
-    
+
     if let Some(comma_pos) = last_comma {
         let abort_code = inner.get(comma_pos + 1..)?.trim();
         Some(abort_code)

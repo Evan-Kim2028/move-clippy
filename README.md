@@ -9,6 +9,11 @@ Move linter inspired by Rust Clippy, focused on Move 2024 style and Sui conventi
 - Respects `#[allow(lint::name)]` attributes on modules, structs, functions, constants, and use items.
 - Optional `--mode full` semantic analysis (behind the `full` feature) for capability/event/getter naming.
 
+## Development
+
+- The repository is a single-member Cargo workspace so release/test profile settings (panic = abort, split debuginfo, `release-lto`) and dependency versions stay centralized.
+- Basic tracing instrumentation is available via the `telemetry` feature (on by default). Set `RUST_LOG=move_clippy=info` to inspect spans around semantic linting and fixture modernization.
+
 ## Usage
 
 ```bash
