@@ -427,6 +427,9 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
     "unfrozen_coin_metadata",
     "unused_capability_param",
     "unchecked_division",
+    "oracle_zero_price",
+    "unused_return_value",
+    "missing_access_control",
 ];
 
 pub fn is_semantic_lint(name: &str) -> bool {
