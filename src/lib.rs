@@ -29,6 +29,12 @@ pub mod telemetry;
 pub mod triage;
 pub mod visitor;
 
+#[cfg(feature = "full")]
+pub mod absint_lints;
+
+#[cfg(feature = "full")]
+pub mod cross_module_lints;
+
 use anyhow::Result;
 use tree_sitter::Tree;
 
