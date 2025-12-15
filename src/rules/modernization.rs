@@ -409,8 +409,12 @@ impl LintRule for ManualLoopIterationLint {
                 ];
 
                 let has_increment = increment_patterns.iter().any(|p| body.contains(p));
+                
+                // CRITICAL: Also check for borrow pattern to avoid false positives
+                let borrow_pattern = format!("{}.borrow({})", vec_var, iter_var);
+                let has_borrow = body.contains(&borrow_pattern);
 
-                if has_increment {
+                if has_increment && has_borrow {
                     // Generate auto-fix
                     let suggestion = generate_manual_loop_fix(body, iter_var, vec_var);
                     
