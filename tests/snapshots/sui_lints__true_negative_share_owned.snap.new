@@ -1,0 +1,7 @@
+---
+source: tests/sui_lints.rs
+assertion_line: 29
+expression: output
+---
+sources/main.move:39:9: capability_transfer_v2: Non-coin capability `can_determine_to_be_new::Obj` transferred in `transfer`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:44:9: share_owned_authority: Sharing `can_determine_to_be_new::Obj` (has key+store) in `share` makes it publicly accessible. This is dangerous for authority objects (capabilities). If this is intentional shared state, suppress with #[allow(lint(share_owned_authority))].
