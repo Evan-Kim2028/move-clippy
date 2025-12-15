@@ -85,7 +85,7 @@ const UNUSED_CAP_V2_DIAG: DiagnosticInfo = custom(
     LINT_WARNING_PREFIX,
     Severity::Warning,
     CLIPPY_CATEGORY,
-    1, // unused_capability_param_v2
+    1, // phantom_capability
     "capability parameter is unused",
 );
 
@@ -109,10 +109,10 @@ const UNCHECKED_DIV_V2_DIAG: DiagnosticInfo = custom(
 // Phase II Lint Descriptors (type-based with CFG analysis)
 // ============================================================================
 
-pub static UNUSED_CAPABILITY_PARAM_V2: LintDescriptor = LintDescriptor {
-    name: "unused_capability_param_v2",
+pub static PHANTOM_CAPABILITY: LintDescriptor = LintDescriptor {
+    name: "phantom_capability",
     category: LintCategory::Security,
-    description: "Capability parameter unused or not validated (type-based CFG-aware with guard detection, requires --mode full --preview)",
+    description: "Capability parameter unused or not validated - may be phantom security (type-based CFG-aware, requires --mode full --preview)",
     group: RuleGroup::Preview,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBasedCFG,
@@ -1216,7 +1216,7 @@ impl SimpleExecutionContext for DivExecutionContext {
 // Public API
 // ============================================================================
 
-static DESCRIPTORS: &[&LintDescriptor] = &[&UNUSED_CAPABILITY_PARAM_V2, &UNCHECKED_DIVISION_V2];
+static DESCRIPTORS: &[&LintDescriptor] = &[&PHANTOM_CAPABILITY, &UNCHECKED_DIVISION_V2];
 
 /// Return all Phase II lint descriptors
 pub fn descriptors() -> &'static [&'static LintDescriptor] {

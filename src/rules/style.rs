@@ -189,8 +189,8 @@ fn precedes_documentable_item(node: Node, _source: &str) -> bool {
     while let Some(s) = sibling {
         let kind = s.kind();
 
-        // Skip whitespace and other comments
-        if kind == "line_comment" || kind == "block_comment" {
+        // Skip whitespace, newlines, and other comments
+        if kind == "line_comment" || kind == "block_comment" || kind == "newline" {
             sibling = s.next_sibling();
             continue;
         }

@@ -1,13 +1,13 @@
 module test::events {
-    struct TokenMinted has copy, drop {
+    struct TokenMinting has copy, drop {
         amount: u64
     }
 
-    struct UserRegistered has copy, drop {
+    struct UserRegistration has copy, drop {
         user_id: u64
     }
 
-    struct PoolCreated has copy, drop {
+    struct PoolCreation has copy, drop {
         pool_id: u64
     }
 }

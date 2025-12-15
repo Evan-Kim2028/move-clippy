@@ -91,13 +91,27 @@ impl LintRule for ManualOptionCheckLint {
                 return;
             }
 
-            // Extract condition
-            let condition_node = node
-                .child_by_field_name("condition")
-                .or_else(|| node.child_by_field_name("eb"));
-            let body_node = node
-                .child_by_field_name("consequence")
-                .or_else(|| node.child_by_field_name("e"));
+            // Extract condition and body by walking children
+            // Structure: if ( condition ) block [else block]
+            let mut condition_node = None;
+            let mut body_node = None;
+            
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                match child.kind() {
+                    "dot_expression" | "binary_expression" | "call_expression" | "name_expression" => {
+                        if condition_node.is_none() {
+                            condition_node = Some(child);
+                        }
+                    }
+                    "block" => {
+                        if body_node.is_none() {
+                            body_node = Some(child);
+                        }
+                    }
+                    _ => {}
+                }
+            }
 
             let Some(condition_node) = condition_node else {
                 return;
@@ -552,6 +566,12 @@ impl LintRule for PublicMutTxContextLint {
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
         walk(root, &mut |node| {
             if node.kind() != "function_definition" {
+                return;
+            }
+
+            // Only check public or entry functions
+            let (has_public, has_entry) = function_modifiers(node, source);
+            if !has_public && !has_entry {
                 return;
             }
 

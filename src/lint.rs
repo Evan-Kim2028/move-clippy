@@ -582,7 +582,7 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
     "unused_return_value",
     "missing_access_control",
     // Phase II (AbsInt) lints (require --mode full --preview)
-    "unused_capability_param_v2",
+    "phantom_capability",
     "unchecked_division_v2",
     // Phase III (cross-module) lints (require --mode full --preview)
     "transitive_capability_leak",

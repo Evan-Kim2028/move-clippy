@@ -8,5 +8,5 @@
 //!
 //! Planned helpers:
 //! - Recognize common `assert!` / `abort` guard shapes in typed AST and/or AbsInt IR.
-//! - Provide a small API used by `unchecked_division_v2`, `unused_capability_param_v2`,
+//! - Provide a small API used by `unchecked_division_v2`, `phantom_capability`,
 //!   and future access-control lints.

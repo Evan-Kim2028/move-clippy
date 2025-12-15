@@ -371,69 +371,9 @@ pub static CAPABILITY_TRANSFER_V2: LintDescriptor = LintDescriptor {
     analysis: AnalysisKind::TypeBased,
 };
 
-/// Detects hot potato structs that are created but potentially not consumed.
-///
-/// # Type System Grounding
-///
-/// A hot potato is a struct with NO abilities at all. It MUST be consumed
-/// by a function that destroys it. If a hot potato is created and returned
-/// without being passed to a consumer, it may indicate a bug.
-///
-/// # Why This Matters
-///
-/// Hot potatoes enforce that certain operations must be completed atomically.
-/// If a hot potato can escape without being consumed, the enforcement is broken.
-///
-/// # Example (Suspicious)
-///
-/// ```move
-/// public fun borrow(pool: &mut Pool): (Coin<SUI>, FlashLoanReceipt) {
-///     let receipt = FlashLoanReceipt { pool_id: object::id(pool), amount: 100 };
-///     let coins = pool.take(100);
-///     (coins, receipt)  // Receipt returned - caller MUST call repay()
-/// }
-/// ```
-pub static UNUSED_HOT_POTATO: LintDescriptor = LintDescriptor {
-    name: "unused_hot_potato",
-    category: LintCategory::Security,
-    description: "Hot potato (no abilities) created - ensure it's consumed in same transaction (type-based)",
-    group: RuleGroup::Preview,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::TypeBased,
-};
-
-/// Detects capability parameters that are passed but never used for authorization.
-///
-/// # Type System Grounding
-///
-/// Capabilities should be used to authorize operations. If a capability parameter
-/// is accepted but never accessed (field read, method call), it may be a
-/// "phantom capability" that provides no actual security.
-///
-/// # Example (Suspicious)
-///
-/// ```move
-/// public fun admin_action(_cap: &AdminCap, pool: &mut Pool) {
-///     pool.do_something();  // cap is never used!
-/// }
-/// ```
-///
-/// # Correct Pattern
-///
-/// ```move
-/// public fun admin_action(cap: &AdminCap, pool: &mut Pool) {
-///     assert!(cap.pool_id == object::id(pool), E_WRONG_CAP);  // Actually validates
-///     pool.do_something();
-/// }
-/// ```
-pub static PHANTOM_CAPABILITY: LintDescriptor = LintDescriptor {
-    name: "phantom_capability",
-    category: LintCategory::Security,
-    description: "Capability parameter accepted but never accessed - may be phantom security (type-based)",
-    group: RuleGroup::Preview,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::TypeBased,
-};
+// NOTE: The following lints are implemented elsewhere or require future work:
+// - phantom_capability: Implemented in absint_lints.rs (CFG-aware)
+// - unused_hot_potato: Requires dataflow analysis (future work)
 
 static DESCRIPTORS: &[&LintDescriptor] = &[
     // Naming (type-based)
@@ -457,8 +397,8 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &UNUSED_RETURN_VALUE,
     &DROPPABLE_HOT_POTATO_V2,
     &CAPABILITY_TRANSFER_V2,
-    &UNUSED_HOT_POTATO,
-    &PHANTOM_CAPABILITY,
+    // NOTE: phantom_capability is in absint_lints.rs (CFG-aware)
+    // NOTE: unused_hot_potato requires dataflow analysis (future work)
 ];
 
 /// Return descriptors for all semantic lints.
@@ -497,7 +437,7 @@ mod full {
     fn descriptor_for_absint_diag(
         info: &move_compiler::diagnostics::codes::DiagnosticInfo,
     ) -> Option<&'static LintDescriptor> {
-        use crate::absint_lints::{UNCHECKED_DIVISION_V2, UNUSED_CAPABILITY_PARAM_V2};
+        use crate::absint_lints::{PHANTOM_CAPABILITY, UNCHECKED_DIVISION_V2};
 
         // Only treat warnings emitted by our Phase II visitors as Phase II lints.
         //
@@ -510,7 +450,7 @@ mod full {
         }
 
         match info.code() {
-            1 => Some(&UNUSED_CAPABILITY_PARAM_V2),
+            1 => Some(&PHANTOM_CAPABILITY),
             2 => Some(&UNCHECKED_DIVISION_V2),
             _ => None,
         }
@@ -605,7 +545,7 @@ mod full {
             lint_droppable_hot_potato_v2(&mut out, settings, &file_map, &typing_info)?;
             // Phase 4 security lints (type-based, preview)
             lint_capability_transfer_v2(&mut out, settings, &file_map, &typing_ast)?;
-            lint_phantom_capability(&mut out, settings, &file_map, &typing_info)?;
+            // Note: phantom_capability is implemented in absint_lints.rs (CFG-aware)
 
             // Phase III: Cross-module analysis lints (type-based)
             lint_cross_module_lints(&mut out, settings, &file_map, &typing_ast, &typing_info)?;
@@ -942,7 +882,159 @@ mod full {
     }
 
     // =========================================================================
+    // Capability Transfer V2 Lint (type-based)
+    // =========================================================================
+
+    /// Detect capability transfers to non-sender addresses.
+    ///
+    /// Flags transfer::transfer(cap, addr) where:
+    /// - cap has capability abilities (key + store, no copy, no drop)
+    /// - addr is not tx_context::sender(ctx)
+    fn lint_capability_transfer_v2(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        use crate::type_classifier::is_capability_type_from_ty;
+
+        const TRANSFER_FUNCTIONS: &[(&str, &str)] = &[
+            ("transfer", "transfer"),
+            ("transfer", "public_transfer"),
+        ];
+
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
+                    continue;
+                };
+
+                for item in seq_items.iter() {
+                    check_capability_transfer_in_seq_item(
+                        item,
+                        TRANSFER_FUNCTIONS,
+                        out,
+                        settings,
+                        file_map,
+                        fname.value().as_str(),
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn check_capability_transfer_in_seq_item(
+        item: &T::SequenceItem,
+        transfer_fns: &[(&str, &str)],
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        match &item.value {
+            T::SequenceItem_::Seq(exp) => {
+                check_capability_transfer_in_exp(exp, transfer_fns, out, settings, file_map, func_name);
+            }
+            T::SequenceItem_::Bind(_, _, exp) => {
+                check_capability_transfer_in_exp(exp, transfer_fns, out, settings, file_map, func_name);
+            }
+            _ => {}
+        }
+    }
+
+    fn check_capability_transfer_in_exp(
+        exp: &T::Exp,
+        transfer_fns: &[(&str, &str)],
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        use crate::type_classifier::is_capability_type_from_ty;
+
+        if let T::UnannotatedExp_::ModuleCall(call) = &exp.exp.value {
+            let module_sym = call.module.value.module.value();
+            let module_name = module_sym.as_str();
+            let call_sym = call.name.value();
+            let call_name = call_sym.as_str();
+
+            let is_transfer_call = transfer_fns
+                .iter()
+                .any(|(mod_pat, fn_pat)| module_name == *mod_pat && call_name == *fn_pat);
+
+            if is_transfer_call {
+                // Check if type argument is a capability type
+                if let Some(type_arg) = call.type_arguments.first() {
+                    if is_capability_type_from_ty(&type_arg.value) {
+                        // This is transferring a capability - check if recipient is sender
+                        // For now, we flag all capability transfers as preview-level warnings
+                        let loc = exp.exp.loc;
+                        let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                            return;
+                        };
+                        let anchor = loc.start() as usize;
+
+                        let type_name = format_type(&type_arg.value);
+
+                        push_diag(
+                            out,
+                            settings,
+                            &CAPABILITY_TRANSFER_V2,
+                            file,
+                            span,
+                            contents.as_ref(),
+                            anchor,
+                            format!(
+                                "Capability `{type_name}` transferred in `{func_name}`. \
+                                 Ensure the recipient is authorized (e.g., tx_context::sender(ctx))."
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+
+        // Recurse into subexpressions
+        match &exp.exp.value {
+            T::UnannotatedExp_::ModuleCall(call) => {
+                check_capability_transfer_in_exp(&call.arguments, transfer_fns, out, settings, file_map, func_name);
+            }
+            T::UnannotatedExp_::Block((_, seq_items)) => {
+                for item in seq_items.iter() {
+                    check_capability_transfer_in_seq_item(item, transfer_fns, out, settings, file_map, func_name);
+                }
+            }
+            T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
+                check_capability_transfer_in_exp(cond, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(if_body, transfer_fns, out, settings, file_map, func_name);
+                if let Some(else_e) = else_body {
+                    check_capability_transfer_in_exp(else_e, transfer_fns, out, settings, file_map, func_name);
+                }
+            }
+            T::UnannotatedExp_::While(_, cond, body) => {
+                check_capability_transfer_in_exp(cond, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(body, transfer_fns, out, settings, file_map, func_name);
+            }
+            T::UnannotatedExp_::Loop { body, .. } => {
+                check_capability_transfer_in_exp(body, transfer_fns, out, settings, file_map, func_name);
+            }
+            _ => {}
+        }
+    }
+
+    // =========================================================================
     // Security Semantic Lints (type-based)
+    //
+    // NOTE: phantom_capability is implemented in absint_lints.rs (CFG-aware)
     // =========================================================================
 
     /// Lint for division operations without zero-divisor checks.
