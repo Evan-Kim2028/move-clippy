@@ -11,6 +11,7 @@
 
 use crate::lint::{
     AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
+    TypeSystemGap,
 };
 use tree_sitter::Node;
 
@@ -85,6 +86,7 @@ pub static SUSPICIOUS_OVERFLOW_CHECK: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable, // Promoted: 100% TP rate in ecosystem validation
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ArithmeticSafety),
 };
 
 /// Function name patterns that indicate overflow/bounds checking.
@@ -203,6 +205,7 @@ pub static STALE_ORACLE_PRICE: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::TemporalOrdering),
 };
 
 /// Function names that indicate potentially stale oracle price retrieval.
@@ -299,6 +302,7 @@ pub static SINGLE_STEP_OWNERSHIP_TRANSFER: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::TemporalOrdering),
 };
 
 /// Function name patterns that suggest admin/ownership transfer.
@@ -430,6 +434,7 @@ pub static UNCHECKED_COIN_SPLIT: LintDescriptor = LintDescriptor {
     group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ValueFlow),
 };
 
 pub struct UncheckedCoinSplitLint;
@@ -494,6 +499,7 @@ pub static MISSING_WITNESS_DROP: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
 pub struct MissingWitnessDropLint;
@@ -599,6 +605,7 @@ pub static PUBLIC_RANDOM_ACCESS: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ApiMisuse),
 };
 
 pub struct PublicRandomAccessLint;
@@ -697,6 +704,7 @@ pub static IGNORED_BOOLEAN_RETURN: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ValueFlow),
 };
 
 /// Functions that return bool and should have their results checked
@@ -879,6 +887,7 @@ pub static UNCHECKED_WITHDRAWAL: LintDescriptor = LintDescriptor {
     group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ValueFlow),
 };
 
 pub struct UncheckedWithdrawalLint;
@@ -906,6 +915,7 @@ pub static CAPABILITY_LEAK: LintDescriptor = LintDescriptor {
     group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::CapabilityEscape),
 };
 
 pub struct CapabilityLeakLint;
@@ -918,6 +928,489 @@ impl LintRule for CapabilityLeakLint {
     fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
         // DEPRECATED: Superseded by capability_transfer_v2 in absint_lints.rs
         // The v2 version uses type-based detection (checking abilities) instead of name heuristics
+    }
+}
+
+// ============================================================================
+// NEW LINTS: Type System Gap Coverage
+// ============================================================================
+
+// ============================================================================
+// destroy_zero_unchecked - Detects destroy_zero without prior zero-check
+// ============================================================================
+
+/// Detects calls to `destroy_zero` without a prior check that the value is zero.
+///
+/// # Type System Gap: ValueFlow
+///
+/// The type system allows `destroy_zero(balance)` without verifying the balance
+/// is actually zero. This causes a runtime abort if the balance is non-zero,
+/// potentially leading to fund loss in error handling paths.
+///
+/// # Why This Matters
+///
+/// If `destroy_zero` is called on a non-zero balance:
+/// 1. The transaction aborts
+/// 2. If this is in an error path, the original error is masked
+/// 3. Non-zero balances are lost if the abort is caught incorrectly
+///
+/// # Example (Bad)
+///
+/// ```move
+/// public fun cleanup(b: Balance<SUI>) {
+///     balance::destroy_zero(b);  // Will abort if b > 0!
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun cleanup(b: Balance<SUI>) {
+///     assert!(balance::value(&b) == 0, E_NOT_EMPTY);
+///     balance::destroy_zero(b);
+/// }
+/// ```
+pub static DESTROY_ZERO_UNCHECKED: LintDescriptor = LintDescriptor {
+    name: "destroy_zero_unchecked",
+    category: LintCategory::Security,
+    description: "destroy_zero called without verifying value is zero - may abort unexpectedly (needs CFG for low FP)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ValueFlow),
+};
+
+pub struct DestroyZeroUncheckedLint;
+
+impl LintRule for DestroyZeroUncheckedLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &DESTROY_ZERO_UNCHECKED
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_destroy_zero_unchecked(root, source, ctx);
+    }
+}
+
+fn check_destroy_zero_unchecked(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    if node.kind() == "function_definition" {
+        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        
+        // Check if function calls destroy_zero
+        if func_text.contains("destroy_zero") {
+            // Check if there's a zero-check pattern before it
+            let has_zero_check = func_text.contains("== 0")
+                || func_text.contains("value(&") && func_text.contains("== 0")
+                || func_text.contains("is_zero")
+                || func_text.contains("assert!")
+                    && (func_text.contains("value") || func_text.contains("== 0"));
+
+            if !has_zero_check {
+                let func_name = node
+                    .child_by_field_name("name")
+                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                    .unwrap_or("unknown");
+
+                ctx.report_node(
+                    &DESTROY_ZERO_UNCHECKED,
+                    node,
+                    format!(
+                        "Function `{}` calls `destroy_zero` without verifying the value is zero. \
+                         This will abort if the balance/coin is non-zero. \
+                         Add `assert!(value(&x) == 0, E_NOT_ZERO)` before destroy_zero.",
+                        func_name
+                    ),
+                );
+            }
+        }
+    }
+
+    // Recurse
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_destroy_zero_unchecked(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// otw_pattern_violation - Detects OTW types that don't match module name
+// ============================================================================
+
+/// Detects one-time witness types that don't follow the OTW naming convention.
+///
+/// # Type System Gap: ApiMisuse
+///
+/// The `coin::create_currency` function requires a one-time witness (OTW) type.
+/// The OTW pattern requires:
+/// 1. Struct name matches module name (uppercase)
+/// 2. Has `drop` ability
+/// 3. Has no fields
+///
+/// The type system doesn't enforce the naming convention - it's checked at runtime.
+///
+/// # Example (Bad)
+///
+/// ```move
+/// module my_coin {
+///     struct Token has drop {}  // Wrong name!
+///     
+///     fun init(witness: Token, ctx: &mut TxContext) {
+///         coin::create_currency(witness, ...)  // Runtime abort!
+///     }
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// module my_coin {
+///     struct MY_COIN has drop {}  // Matches module name (uppercase)
+/// }
+/// ```
+pub static OTW_PATTERN_VIOLATION: LintDescriptor = LintDescriptor {
+    name: "otw_pattern_violation",
+    category: LintCategory::Security,
+    description: "One-time witness type name doesn't match module name - will fail at runtime (needs better module name handling)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ApiMisuse),
+};
+
+pub struct OtwPatternViolationLint;
+
+impl LintRule for OtwPatternViolationLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &OTW_PATTERN_VIOLATION
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_otw_pattern(root, source, ctx, None);
+    }
+}
+
+fn check_otw_pattern(node: Node, source: &str, ctx: &mut LintContext<'_>, module_name: Option<&str>) {
+    match node.kind() {
+        "module_definition" => {
+            // Extract module name
+            if let Some(name_node) = node.child_by_field_name("name") {
+                let mod_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
+                // Recurse with module name context
+                let mut cursor = node.walk();
+                for child in node.children(&mut cursor) {
+                    check_otw_pattern(child, source, ctx, Some(mod_name));
+                }
+                return;
+            }
+        }
+        "function_definition" => {
+            let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+            
+            // Check if this function calls create_currency
+            if func_text.contains("create_currency") {
+                if let Some(mod_name) = module_name {
+                    let expected_otw = mod_name.to_uppercase();
+                    
+                    // Check if the expected OTW type is used
+                    if !func_text.contains(&expected_otw) {
+                        let func_name = node
+                            .child_by_field_name("name")
+                            .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                            .unwrap_or("unknown");
+
+                        ctx.report_node(
+                            &OTW_PATTERN_VIOLATION,
+                            node,
+                            format!(
+                                "Function `{}` calls `create_currency` but the OTW type doesn't \
+                                 appear to match the module name. Expected OTW type: `{}`. \
+                                 The OTW must be named after the module in SCREAMING_CASE.",
+                                func_name, expected_otw
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+
+    // Recurse
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_otw_pattern(child, source, ctx, module_name);
+    }
+}
+
+// ============================================================================
+// digest_as_randomness - Detects tx_context::digest used as randomness
+// ============================================================================
+
+/// Detects usage of `tx_context::digest` as a randomness source.
+///
+/// # Type System Gap: ApiMisuse
+///
+/// The `tx_context::digest()` function returns a deterministic hash of the
+/// transaction. While it looks random, it's predictable and can be manipulated
+/// by validators. The Sui documentation explicitly warns against using it for
+/// randomness.
+///
+/// # Why This Matters
+///
+/// Using digest for randomness enables:
+/// 1. Validator manipulation of "random" outcomes
+/// 2. Front-running attacks in games/lotteries
+/// 3. Predictable outcomes in security-sensitive operations
+///
+/// # Example (Bad)
+///
+/// ```move
+/// public fun pick_winner(ctx: &TxContext): u64 {
+///     let seed = tx_context::digest(ctx);
+///     (*vector::borrow(seed, 0) as u64) % num_participants  // Predictable!
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun pick_winner(r: &Random, ctx: &mut TxContext): u64 {
+///     let mut gen = random::new_generator(r, ctx);
+///     random::generate_u64_in_range(&mut gen, 0, num_participants)
+/// }
+/// ```
+pub static DIGEST_AS_RANDOMNESS: LintDescriptor = LintDescriptor {
+    name: "digest_as_randomness",
+    category: LintCategory::Security,
+    description: "tx_context::digest used as randomness source - predictable and manipulable (needs taint analysis for low FP)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ApiMisuse),
+};
+
+pub struct DigestAsRandomnessLint;
+
+impl LintRule for DigestAsRandomnessLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &DIGEST_AS_RANDOMNESS
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_digest_as_randomness(root, source, ctx);
+    }
+}
+
+fn check_digest_as_randomness(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    if node.kind() == "function_definition" {
+        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        
+        // Check if function uses digest
+        if func_text.contains("digest(") || func_text.contains("::digest") {
+            // Check if it's used in arithmetic/modulo operations (randomness pattern)
+            let has_randomness_pattern = func_text.contains(" % ")
+                || func_text.contains("borrow(")  // vector::borrow on digest
+                || func_text.contains("random")
+                || func_text.contains("seed")
+                || func_text.contains("lottery")
+                || func_text.contains("winner");
+
+            if has_randomness_pattern {
+                let func_name = node
+                    .child_by_field_name("name")
+                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                    .unwrap_or("unknown");
+
+                ctx.report_node(
+                    &DIGEST_AS_RANDOMNESS,
+                    node,
+                    format!(
+                        "Function `{}` appears to use `tx_context::digest` as a randomness source. \
+                         Digest is predictable and can be manipulated by validators. \
+                         Use `sui::random` for secure randomness instead.",
+                        func_name
+                    ),
+                );
+            }
+        }
+    }
+
+    // Recurse
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_digest_as_randomness(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// divide_by_zero_literal - Detects division by literal zero
+// ============================================================================
+
+/// Detects division or modulo by zero or by a variable that could be zero.
+///
+/// # Type System Gap: ArithmeticSafety
+///
+/// Move allows division by zero which causes a runtime abort. While
+/// `unchecked_division_v2` handles the general case with CFG analysis,
+/// this lint catches obvious cases with literal zeros or suspicious patterns.
+///
+/// # Example (Bad)
+///
+/// ```move
+/// public fun bad_divide(x: u64): u64 {
+///     x / 0  // Always aborts!
+/// }
+///
+/// public fun bad_modulo(x: u64, n: u64): u64 {
+///     coin::divide_into_n(&mut c, 0, ctx)  // n=0 aborts!
+/// }
+/// ```
+pub static DIVIDE_BY_ZERO_LITERAL: LintDescriptor = LintDescriptor {
+    name: "divide_by_zero_literal",
+    category: LintCategory::Security,
+    description: "Division or modulo by literal zero - will always abort",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ArithmeticSafety),
+};
+
+pub struct DivideByZeroLiteralLint;
+
+impl LintRule for DivideByZeroLiteralLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &DIVIDE_BY_ZERO_LITERAL
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_divide_by_zero(root, source, ctx);
+    }
+}
+
+fn check_divide_by_zero(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+    
+    // Check for division/modulo by literal 0
+    if node.kind() == "binary_expression" {
+        // Look for patterns like "/ 0" or "% 0"
+        if (node_text.contains("/ 0") || node_text.contains("% 0"))
+            && !node_text.contains("/ 0x")  // Exclude hex
+            && !node_text.contains("% 0x")
+        {
+            ctx.report_node(
+                &DIVIDE_BY_ZERO_LITERAL,
+                node,
+                "Division or modulo by literal zero - this will always abort at runtime.".to_string(),
+            );
+        }
+    }
+    
+    // Check for divide_into_n with literal 0
+    if node.kind() == "call_expression" && node_text.contains("divide_into_n") {
+        // Simple check: if the call contains ", 0," or ", 0)" as the n parameter
+        if node_text.contains(", 0,") || node_text.contains(", 0)") {
+            ctx.report_node(
+                &DIVIDE_BY_ZERO_LITERAL,
+                node,
+                "divide_into_n called with n=0 - this will abort at runtime.".to_string(),
+            );
+        }
+    }
+
+    // Recurse
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_divide_by_zero(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// fresh_address_reuse - Detects fresh_object_address used multiple times
+// ============================================================================
+
+/// Detects when `fresh_object_address` result is used multiple times.
+///
+/// # Type System Gap: OwnershipViolation
+///
+/// Each call to `fresh_object_address` generates a unique address for creating
+/// a new UID. If the result is stored and used multiple times, it violates
+/// the uniqueness invariant.
+///
+/// # Example (Bad)
+///
+/// ```move
+/// public fun bad(ctx: &mut TxContext) {
+///     let addr = tx_context::fresh_object_address(ctx);
+///     let uid1 = object::new_uid_from_address(addr);
+///     let uid2 = object::new_uid_from_address(addr);  // Reuse!
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun good(ctx: &mut TxContext) {
+///     let uid1 = object::new(ctx);  // Fresh address internally
+///     let uid2 = object::new(ctx);  // Another fresh address
+/// }
+/// ```
+pub static FRESH_ADDRESS_REUSE: LintDescriptor = LintDescriptor {
+    name: "fresh_address_reuse",
+    category: LintCategory::Security,
+    description: "fresh_object_address result appears to be reused - each UID needs a fresh address (needs usage tracking for low FP)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::OwnershipViolation),
+};
+
+pub struct FreshAddressReuseLint;
+
+impl LintRule for FreshAddressReuseLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &FRESH_ADDRESS_REUSE
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        check_fresh_address_reuse(root, source, ctx);
+    }
+}
+
+fn check_fresh_address_reuse(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    if node.kind() == "function_definition" {
+        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        
+        // Check if function uses fresh_object_address
+        if func_text.contains("fresh_object_address") {
+            // Count occurrences of new_uid_from_address
+            let uid_from_addr_count = func_text.matches("new_uid_from_address").count();
+            let fresh_addr_count = func_text.matches("fresh_object_address").count();
+            
+            // If there are more UID creations than fresh addresses, likely reuse
+            if uid_from_addr_count > fresh_addr_count {
+                let func_name = node
+                    .child_by_field_name("name")
+                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                    .unwrap_or("unknown");
+
+                ctx.report_node(
+                    &FRESH_ADDRESS_REUSE,
+                    node,
+                    format!(
+                        "Function `{}` has {} `new_uid_from_address` calls but only {} \
+                         `fresh_object_address` calls. Each UID needs its own fresh address. \
+                         Consider using `object::new(ctx)` which handles this internally.",
+                        func_name, uid_from_addr_count, fresh_addr_count
+                    ),
+                );
+            }
+        }
+    }
+
+    // Recurse
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_fresh_address_reuse(child, source, ctx);
     }
 }
 
@@ -1374,11 +1867,11 @@ mod tests {
     fn test_unchecked_coin_split_deprecated_no_diagnostics() {
         // DEPRECATED: Sui runtime already enforces balance checks
         let source = r#"
-            module example::payment {
-                public fun split_payment(coin: &mut Coin<SUI>, amount: u64, ctx: &mut TxContext): Coin<SUI> {
-                    coin::split(coin, amount, ctx)
-                }
-            }
+module example::stake {
+    public fun withdraw(user: &mut User, amount: u64): Coin<SUI> {
+        pool::take(amount)
+    }
+}
         "#;
 
         let messages = lint_source(source);
@@ -1393,12 +1886,13 @@ mod tests {
     #[test]
     fn test_coin_split_with_balance_check_ok() {
         let source = r#"
-            module example::payment {
-                public fun split_payment(coin: &mut Coin<SUI>, amount: u64, ctx: &mut TxContext): Coin<SUI> {
-                    assert!(coin::value(coin) >= amount, E_INSUFFICIENT);
-                    coin::split(coin, amount, ctx)
-                }
-            }
+module example::stake {
+    public fun withdraw(user: &mut User, amount: u64): Coin<SUI> {
+        assert!(coin::value(user.coin) >= amount, E_INSUFFICIENT);
+        user.coin = coin::split(user.coin, amount);
+        pool::take(amount)
+    }
+}
         "#;
 
         let messages = lint_source(source);
@@ -1414,9 +1908,9 @@ mod tests {
     #[test]
     fn test_missing_witness_drop_detected() {
         let source = r#"
-            module example::token {
-                struct MY_TOKEN {}
-            }
+module example::token {
+    struct MY_TOKEN {}
+}
         "#;
 
         let messages = lint_source(source);
@@ -1428,9 +1922,9 @@ mod tests {
     #[test]
     fn test_witness_with_drop_ok() {
         let source = r#"
-            module example::token {
-                struct MY_TOKEN has drop {}
-            }
+module example::token {
+    struct MY_TOKEN has drop {}
+}
         "#;
 
         let messages = lint_source(source);
@@ -1441,9 +1935,9 @@ mod tests {
     fn test_regular_struct_not_witness_ok() {
         // Not all caps, so not detected as OTW
         let source = r#"
-            module example::data {
-                struct UserData {}
-            }
+module example::data {
+    struct UserData {}
+}
         "#;
 
         let messages = lint_source(source);
@@ -1457,11 +1951,11 @@ mod tests {
     #[test]
     fn test_public_random_access_detected() {
         let source = r#"
-            module example::game {
-                public fun get_random_number(r: &Random) {
-                    random::new_generator(r).generate_u64()
-                }
-            }
+module example::game {
+    public fun get_random_number(r: &Random) {
+        random::new_generator(r).generate_u64()
+    }
+}
         "#;
 
         let messages = lint_source(source);
@@ -1474,11 +1968,11 @@ mod tests {
     fn test_entry_random_ok() {
         // entry functions are OK for Random
         let source = r#"
-            module example::game {
-                entry fun roll_dice(r: &Random, ctx: &mut TxContext) {
-                    let result = random::new_generator(r, ctx).generate_bool();
-                }
-            }
+module example::game {
+    entry fun roll_dice(r: &Random, ctx: &mut TxContext) {
+        let result = random::new_generator(r, ctx).generate_bool();
+    }
+}
         "#;
 
         let messages = lint_source(source);
