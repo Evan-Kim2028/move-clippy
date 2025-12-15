@@ -1412,30 +1412,26 @@ impl SimpleAbsInt for DestroyZeroVerifierAI<'_> {
                 // Check for destroy_zero calls
                 if (module_name == "balance" || module_name == "coin")
                     && func_name == "destroy_zero"
+                    && let Some(arg) = call.arguments.first()
                 {
-                    if let Some(arg) = call.arguments.first() {
-                        let is_checked = self.is_zero_checked(state, arg);
-                        if !is_checked {
-                            if self.is_root_source_loc(&e.exp.loc) {
-                                let msg =
-                                    "destroy_zero called without verifying value is zero first";
-                                let help = "Add validation: `assert!(balance::value(&b) == 0, E_NOT_ZERO)`";
-                                let d = diag!(
-                                    DESTROY_ZERO_UNCHECKED_V2_DIAG,
-                                    (e.exp.loc, msg),
-                                    (arg.exp.loc, help),
-                                );
-                                context.add_diag(d);
-                            }
-                        }
+                    let is_checked = self.is_zero_checked(state, arg);
+                    if !is_checked && self.is_root_source_loc(&e.exp.loc) {
+                        let msg = "destroy_zero called without verifying value is zero first";
+                        let help = "Add validation: `assert!(balance::value(&b) == 0, E_NOT_ZERO)`";
+                        let d = diag!(
+                            DESTROY_ZERO_UNCHECKED_V2_DIAG,
+                            (e.exp.loc, msg),
+                            (arg.exp.loc, help),
+                        );
+                        context.add_diag(d);
                     }
                 }
 
                 // Check for assert! calls to track zero guards
-                if self.is_assert_call(call) {
-                    if let Some(cond) = call.arguments.first() {
-                        self.track_zero_guard(state, cond, true);
-                    }
+                if self.is_assert_call(call)
+                    && let Some(cond) = call.arguments.first()
+                {
+                    self.track_zero_guard(state, cond, true);
                 }
             }
             _ => {}
@@ -1537,10 +1533,10 @@ impl DestroyZeroVerifierAI<'_> {
             UnannotatedExp_::ModuleCall(call) => {
                 let func_sym = call.name.value();
                 let func_name = func_sym.as_str();
-                if func_name == "value" {
-                    if let Some(arg) = call.arguments.first() {
-                        return self.extract_var(arg).map(|v| (v, false)); // Conservative
-                    }
+                if func_name == "value"
+                    && let Some(arg) = call.arguments.first()
+                {
+                    return self.extract_var(arg).map(|v| (v, false)); // Conservative
                 }
                 None
             }
@@ -1704,65 +1700,58 @@ impl SimpleAbsInt for FreshAddressReuseVerifierAI<'_> {
     ) -> Option<Vec<FreshAddressValue>> {
         use UnannotatedExp_ as E;
 
-        match &e.exp.value {
-            E::ModuleCall(call) => {
-                let module_sym = call.module.value.module.value();
-                let func_sym = call.name.value();
-                let module_name = module_sym.as_str();
-                let func_name = func_sym.as_str();
+        if let E::ModuleCall(call) = &e.exp.value {
+            let module_sym = call.module.value.module.value();
+            let func_sym = call.name.value();
+            let module_name = module_sym.as_str();
+            let func_name = func_sym.as_str();
 
-                // Track fresh_object_address calls
-                if module_name == "tx_context" && func_name == "fresh_object_address" {
-                    return Some(vec![FreshAddressValue::Fresh(e.exp.loc)]);
-                }
+            // Track fresh_object_address calls
+            if module_name == "tx_context" && func_name == "fresh_object_address" {
+                return Some(vec![FreshAddressValue::Fresh(e.exp.loc)]);
+            }
 
-                // Check for new_uid_from_address calls
-                if module_name == "object"
-                    && func_name == "new_uid_from_address"
-                    && let Some(arg) = call.arguments.first()
-                    && let Some(var) = self.extract_var(arg)
-                {
-                    // First extract what we need from the immutable borrow
-                    let action = if let Some(LocalState::Available(_, val)) = state.locals.get(&var)
-                    {
-                        match val {
-                            FreshAddressValue::UsedOnce(original_loc) => {
-                                // Already used - this is a reuse!
-                                Some(("reuse", *original_loc))
-                            }
-                            FreshAddressValue::Fresh(loc) => {
-                                // First use - need to mark as used
-                                Some(("first_use", *loc))
-                            }
-                            _ => None,
+            // Check for new_uid_from_address calls
+            if module_name == "object"
+                && func_name == "new_uid_from_address"
+                && let Some(arg) = call.arguments.first()
+                && let Some(var) = self.extract_var(arg)
+            {
+                // First extract what we need from the immutable borrow
+                let action = if let Some(LocalState::Available(_, val)) = state.locals.get(&var) {
+                    match val {
+                        FreshAddressValue::UsedOnce(original_loc) => {
+                            // Already used - this is a reuse!
+                            Some(("reuse", *original_loc))
                         }
-                    } else {
-                        None
-                    };
+                        FreshAddressValue::Fresh(loc) => {
+                            // First use - need to mark as used
+                            Some(("first_use", *loc))
+                        }
+                        _ => None,
+                    }
+                } else {
+                    None
+                };
 
-                    // Now handle the action without holding the borrow
-                    if let Some((action_type, loc)) = action {
-                        if action_type == "reuse" {
-                            if self.is_root_source_loc(&e.exp.loc) {
-                                let msg = "fresh_object_address result is being reused - each UID needs its own fresh address";
-                                let help = "Use `object::new(ctx)` instead, or call `fresh_object_address` again";
-                                let d = diag!(
-                                    FRESH_ADDRESS_REUSE_V2_DIAG,
-                                    (e.exp.loc, msg),
-                                    (loc, help),
-                                );
-                                context.add_diag(d);
-                            }
-                        } else if action_type == "first_use" {
-                            // Mark as used
-                            if let Some(LocalState::Available(_, v)) = state.locals.get_mut(&var) {
-                                *v = FreshAddressValue::UsedOnce(loc);
-                            }
+                // Now handle the action without holding the borrow
+                if let Some((action_type, loc)) = action {
+                    if action_type == "reuse" {
+                        if self.is_root_source_loc(&e.exp.loc) {
+                            let msg = "fresh_object_address result is being reused - each UID needs its own fresh address";
+                            let help = "Use `object::new(ctx)` instead, or call `fresh_object_address` again";
+                            let d =
+                                diag!(FRESH_ADDRESS_REUSE_V2_DIAG, (e.exp.loc, msg), (loc, help),);
+                            context.add_diag(d);
+                        }
+                    } else if action_type == "first_use" {
+                        // Mark as used
+                        if let Some(LocalState::Available(_, v)) = state.locals.get_mut(&var) {
+                            *v = FreshAddressValue::UsedOnce(loc);
                         }
                     }
                 }
             }
-            _ => {}
         }
 
         None

@@ -1112,28 +1112,28 @@ fn check_otw_pattern(
             let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
 
             // Check if this function calls create_currency
-            if func_text.contains("create_currency") {
-                if let Some(mod_name) = module_name {
-                    let expected_otw = mod_name.to_uppercase();
+            if func_text.contains("create_currency")
+                && let Some(mod_name) = module_name
+            {
+                let expected_otw = mod_name.to_uppercase();
 
-                    // Check if the expected OTW type is used
-                    if !func_text.contains(&expected_otw) {
-                        let func_name = node
-                            .child_by_field_name("name")
-                            .and_then(|n| n.utf8_text(source.as_bytes()).ok())
-                            .unwrap_or("unknown");
+                // Check if the expected OTW type is used
+                if !func_text.contains(&expected_otw) {
+                    let func_name = node
+                        .child_by_field_name("name")
+                        .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                        .unwrap_or("unknown");
 
-                        ctx.report_node(
-                            &OTW_PATTERN_VIOLATION,
-                            node,
-                            format!(
-                                "Function `{}` calls `create_currency` but the OTW type doesn't \
+                    ctx.report_node(
+                        &OTW_PATTERN_VIOLATION,
+                        node,
+                        format!(
+                            "Function `{}` calls `create_currency` but the OTW type doesn't \
                                  appear to match the module name. Expected OTW type: `{}`. \
                                  The OTW must be named after the module in SCREAMING_CASE.",
-                                func_name, expected_otw
-                            ),
-                        );
-                    }
+                            func_name, expected_otw
+                        ),
+                    );
                 }
             }
         }

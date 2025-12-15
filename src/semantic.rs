@@ -416,7 +416,7 @@ mod full {
     type Result<T> = ClippyResult<T>;
     use move_compiler::command_line::compiler::Visitor;
     use move_compiler::editions::Flavor;
-    use move_compiler::parser::ast::{Ability_, TargetKind};
+    use move_compiler::parser::ast::TargetKind;
     use move_compiler::shared::{Identifier, files::MappedFiles, program_info::TypingProgramInfo};
     use move_compiler::shared::{SaveFlag, SaveHook};
     use move_compiler::sui_mode::linters;
@@ -771,8 +771,6 @@ mod full {
         file_map: &MappedFiles,
         prog: &T::Program,
     ) -> Result<()> {
-        use crate::type_classifier::is_capability_type_from_ty;
-
         const TRANSFER_FUNCTIONS: &[(&str, &str)] =
             &[("transfer", "transfer"), ("transfer", "public_transfer")];
 
@@ -1942,6 +1940,7 @@ mod full {
         }
     }
 
+    #[allow(dead_code)]
     fn is_ref_to_module_type(
         ty: &N::Type,
         module: &move_compiler::expansion::ast::ModuleIdent,
@@ -1960,6 +1959,7 @@ mod full {
         }
     }
 
+    #[allow(dead_code)]
     fn is_simple_self_field_get(exp: &T::Exp, self_var: &N::Var) -> bool {
         match &exp.exp.value {
             T::UnannotatedExp_::Borrow(_mut_, base, _field) => is_self_local(base, self_var),
@@ -1971,6 +1971,7 @@ mod full {
         }
     }
 
+    #[allow(dead_code)]
     fn is_self_local(base: &T::Exp, self_var: &N::Var) -> bool {
         match &base.exp.value {
             T::UnannotatedExp_::BorrowLocal(_mut_, v) => v.value.id == self_var.value.id,
