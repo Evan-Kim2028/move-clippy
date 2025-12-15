@@ -284,8 +284,12 @@ mod tests {
         assert!(is_config_type(&config));
 
         // Not config: has key (would be a resource)
-        let with_key =
-            make_abilities(&[Ability_::Copy, Ability_::Drop, Ability_::Store, Ability_::Key]);
+        let with_key = make_abilities(&[
+            Ability_::Copy,
+            Ability_::Drop,
+            Ability_::Store,
+            Ability_::Key,
+        ]);
         assert!(!is_config_type(&with_key));
 
         // Not config: missing store

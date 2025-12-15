@@ -236,8 +236,14 @@ mod share_owned_authority_tests {
         // Skip test if we get errors or 0 findings due to parallel test interference
         // (Move compiler build directories may conflict when multiple tests
         // run against the same fixture simultaneously)
-        if findings.iter().any(|f| f == "No findings." || f.starts_with("ERROR:")) || findings.is_empty() {
-            eprintln!("WARNING: Got error or 0 findings - likely parallel test interference. Skipping assertion.");
+        if findings
+            .iter()
+            .any(|f| f == "No findings." || f.starts_with("ERROR:"))
+            || findings.is_empty()
+        {
+            eprintln!(
+                "WARNING: Got error or 0 findings - likely parallel test interference. Skipping assertion."
+            );
             return;
         }
 
@@ -279,7 +285,9 @@ mod share_owned_authority_tests {
 
         // Skip if no findings (parallel test interference)
         if authority_findings.is_empty() {
-            eprintln!("WARNING: Got 0 authority findings - likely parallel test interference. Skipping test.");
+            eprintln!(
+                "WARNING: Got 0 authority findings - likely parallel test interference. Skipping test."
+            );
             return;
         }
 

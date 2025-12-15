@@ -12,7 +12,7 @@
 
 use move_clippy::create_default_engine;
 use move_clippy::diagnostics::Diagnostic;
-use move_clippy::lint::{LintRegistry, LintSettings};
+use move_clippy::lint::LintRegistry;
 use std::path::Path;
 
 /// Filter diagnostics to only those for a specific lint
@@ -23,12 +23,12 @@ fn filter_lint<'a>(diags: &'a [Diagnostic], lint_name: &str) -> Vec<&'a Diagnost
 /// Create an engine with experimental lints enabled
 fn create_experimental_engine() -> move_clippy::LintEngine {
     let registry = LintRegistry::default_rules_filtered_with_experimental(
-        &[],       // only
-        &[],       // skip
-        &[],       // disabled
-        false,     // full_mode
-        false,     // preview
-        true,      // experimental
+        &[],   // only
+        &[],   // skip
+        &[],   // disabled
+        false, // full_mode
+        false, // preview
+        true,  // experimental
     )
     .expect("Failed to create experimental registry");
 
@@ -78,7 +78,7 @@ pub fn run_golden_test(lint_name: &str) -> GoldenTestResult {
 
     if positive_path.exists() {
         let src = std::fs::read_to_string(&positive_path)
-            .expect(&format!("Failed to read {}", positive_path.display()));
+            .unwrap_or_else(|_| panic!("Failed to read {}", positive_path.display()));
         let diags = engine.lint_source(&src).expect("linting should succeed");
         let filtered = filter_lint(&diags, lint_name);
         positive_count = filtered.len();
@@ -90,7 +90,7 @@ pub fn run_golden_test(lint_name: &str) -> GoldenTestResult {
 
     if negative_path.exists() {
         let src = std::fs::read_to_string(&negative_path)
-            .expect(&format!("Failed to read {}", negative_path.display()));
+            .unwrap_or_else(|_| panic!("Failed to read {}", negative_path.display()));
         let diags = engine.lint_source(&src).expect("linting should succeed");
         let filtered = filter_lint(&diags, lint_name);
         negative_count = filtered.len();
@@ -236,7 +236,6 @@ fn golden_unneeded_return_negative() {
 // Golden Tests for Security Lints (Preview/Experimental)
 // ============================================================================
 
-
 // ============================================================================
 // Golden Tests for Additional Stable Lints
 // ============================================================================
@@ -352,8 +351,6 @@ fn golden_constant_naming_negative() {
         format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
     );
 }
-
-
 
 #[test]
 fn golden_stale_oracle_price_positive() {

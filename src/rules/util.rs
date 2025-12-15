@@ -186,7 +186,7 @@ pub(crate) fn generate_method_call_fix(
     } else {
         remaining_args.join(", ")
     };
-    
+
     if args_str.is_empty() {
         format!("{}.{}()", receiver, method)
     } else {

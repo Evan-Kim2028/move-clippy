@@ -919,18 +919,60 @@ mod full {
                 }
             }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
-                check_capability_transfer_in_exp(cond, transfer_fns, out, settings, file_map, func_name);
-                check_capability_transfer_in_exp(if_body, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(
+                    cond,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                check_capability_transfer_in_exp(
+                    if_body,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
                 if let Some(else_e) = else_body {
-                    check_capability_transfer_in_exp(else_e, transfer_fns, out, settings, file_map, func_name);
+                    check_capability_transfer_in_exp(
+                        else_e,
+                        transfer_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
-                check_capability_transfer_in_exp(cond, transfer_fns, out, settings, file_map, func_name);
-                check_capability_transfer_in_exp(body, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(
+                    cond,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                check_capability_transfer_in_exp(
+                    body,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_capability_transfer_in_exp(body, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(
+                    body,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             _ => {}
         }

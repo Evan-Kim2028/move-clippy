@@ -17,6 +17,7 @@ static ADMIN_CAP_POSITION: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for AdminCapPositionLint {

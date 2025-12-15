@@ -100,14 +100,14 @@ impl LintEngine {
 pub fn create_default_engine() -> LintEngine {
     // Use filtered registry to respect tier system (Stable only by default)
     let registry = LintRegistry::default_rules_filtered_with_experimental(
-        &[],    // only
-        &[],    // skip
-        &[],    // disabled
-        false,  // full_mode
-        false,  // preview
-        false,  // experimental
+        &[],   // only
+        &[],   // skip
+        &[],   // disabled
+        false, // full_mode
+        false, // preview
+        false, // experimental
     )
     .expect("Failed to create default registry");
-    
+
     LintEngine::new(registry)
 }

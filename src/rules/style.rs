@@ -19,6 +19,7 @@ static ABILITIES_ORDER: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Reorder abilities to canonical order"),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 /// The canonical order of abilities per Sui Move conventions
@@ -132,6 +133,7 @@ static DOC_COMMENT_STYLE: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for DocCommentStyleLint {
@@ -225,6 +227,7 @@ static EXPLICIT_SELF_ASSIGNMENTS: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for ExplicitSelfAssignmentsLint {
@@ -287,6 +290,7 @@ static EVENT_SUFFIX: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for EventSuffixLint {
@@ -363,6 +367,7 @@ static EMPTY_VECTOR_LITERAL: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Replace with `vector[]`"),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for EmptyVectorLiteralLint {
@@ -436,6 +441,7 @@ static TYPED_ABORT_CODE: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for TypedAbortCodeLint {
@@ -595,6 +601,7 @@ static REDUNDANT_SELF_IMPORT: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Remove redundant `{Self}`"),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for RedundantSelfImportLint {
@@ -642,7 +649,8 @@ impl LintRule for RedundantSelfImportLint {
 
                 // Check for suppression
                 let node_start = node.start_byte();
-                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name)
+                {
                     return;
                 }
 
@@ -661,6 +669,7 @@ static PREFER_TO_STRING: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for PreferToStringLint {
@@ -697,6 +706,7 @@ static CONSTANT_NAMING: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Rename to correct case"),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for ConstantNamingLint {
@@ -723,12 +733,16 @@ impl LintRule for ConstantNamingLint {
                     let message = format!(
                         "Error constants should use EPascalCase (e.g. `ENotAuthorized`), found `{name}`"
                     );
-                    
+
                     // Check for suppression
-                    if crate::suppression::is_suppressed_at(source, name_node.start_byte(), self.descriptor().name) {
+                    if crate::suppression::is_suppressed_at(
+                        source,
+                        name_node.start_byte(),
+                        self.descriptor().name,
+                    ) {
                         return;
                     }
-                    
+
                     let diagnostic = crate::diagnostics::Diagnostic {
                         lint: self.descriptor(),
                         level: ctx.settings().level_for(self.descriptor().name),
@@ -749,12 +763,16 @@ impl LintRule for ConstantNamingLint {
                     let message = format!(
                         "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `{name}`"
                     );
-                    
+
                     // Check for suppression
-                    if crate::suppression::is_suppressed_at(source, name_node.start_byte(), self.descriptor().name) {
+                    if crate::suppression::is_suppressed_at(
+                        source,
+                        name_node.start_byte(),
+                        self.descriptor().name,
+                    ) {
                         return;
                     }
-                    
+
                     let diagnostic = crate::diagnostics::Diagnostic {
                         lint: self.descriptor(),
                         level: ctx.settings().level_for(self.descriptor().name),
@@ -785,6 +803,7 @@ static UNNEEDED_RETURN: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Remove `return` keyword"),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for UnneededReturnLint {
@@ -915,8 +934,8 @@ fn is_valid_regular_constant(name: &str) -> bool {
 /// Convert a name to EPascalCase (e.g., E_NOT_AUTHORIZED -> ENotAuthorized)
 fn to_e_pascal_case(name: &str) -> String {
     // If already starts with E, keep it; otherwise add it
-    let without_e = name.strip_prefix('E').or(Some(name)).unwrap();
-    
+    let without_e = name.strip_prefix('E').unwrap_or(name);
+
     // Split on underscores and capitalize each word
     let parts: Vec<String> = without_e
         .split('_')
@@ -926,13 +945,12 @@ fn to_e_pascal_case(name: &str) -> String {
             match chars.next() {
                 None => String::new(),
                 Some(first) => {
-                    first.to_uppercase().collect::<String>() + 
-                    &chars.as_str().to_lowercase()
+                    first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase()
                 }
             }
         })
         .collect();
-    
+
     format!("E{}", parts.join(""))
 }
 
@@ -940,7 +958,7 @@ fn to_e_pascal_case(name: &str) -> String {
 fn to_screaming_snake_case(name: &str) -> String {
     let mut result = String::new();
     let mut prev_was_lowercase = false;
-    
+
     for (i, ch) in name.chars().enumerate() {
         if ch == '_' {
             result.push('_');
@@ -960,7 +978,7 @@ fn to_screaming_snake_case(name: &str) -> String {
             prev_was_lowercase = false;
         }
     }
-    
+
     result
 }
 

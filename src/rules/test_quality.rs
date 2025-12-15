@@ -23,6 +23,7 @@ static TEST_ABORT_CODE: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for TestAbortCodeLint {
@@ -174,19 +175,21 @@ fn is_numeric_literal(s: &str) -> bool {
 /// Check if error code is low (< 1000) and likely to collide with app codes
 fn is_low_error_code(s: &str) -> bool {
     let trimmed = s.trim();
-    
+
     // Decimal number
     if let Ok(val) = trimmed.parse::<u64>() {
         return val < 1000;
     }
-    
+
     // Hex number
-    if let Some(hex) = trimmed.strip_prefix("0x").or_else(|| trimmed.strip_prefix("0X")) {
-        if let Ok(val) = u64::from_str_radix(hex, 16) {
-            return val < 1000;
-        }
+    if let Some(hex) = trimmed
+        .strip_prefix("0x")
+        .or_else(|| trimmed.strip_prefix("0X"))
+        && let Ok(val) = u64::from_str_radix(hex, 16)
+    {
+        return val < 1000;
     }
-    
+
     false
 }
 
@@ -203,6 +206,7 @@ static REDUNDANT_TEST_PREFIX: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for RedundantTestPrefixLint {
@@ -303,6 +307,7 @@ static MERGE_TEST_ATTRIBUTES: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Merge into single attribute"),
     analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for MergeTestAttributesLint {
@@ -361,7 +366,8 @@ impl LintRule for MergeTestAttributesLint {
                 level: ctx.settings().level_for(self.descriptor().name),
                 file: None,
                 span,
-                message: "Merge `#[test]` and `#[expected_failure]` into a single attribute list".to_string(),
+                message: "Merge `#[test]` and `#[expected_failure]` into a single attribute list"
+                    .to_string(),
                 help: Some("Combine into `#[test, expected_failure]`".to_string()),
                 suggestion: Some(crate::diagnostics::Suggestion {
                     message: "Merge attributes".to_string(),

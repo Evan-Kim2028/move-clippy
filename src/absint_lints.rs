@@ -1099,7 +1099,7 @@ impl UncheckedDivisionVerifierAI<'_> {
                 // Helper to check if an expression is a constant-like value.
                 // This includes:
                 // - Direct Value literals
-                // - Direct Constant references  
+                // - Direct Constant references
                 // - Copy/Move of a local that is known to hold a constant value
                 let is_const_like_with_state = |e: &Exp| -> bool {
                     match &e.exp.value {
@@ -1415,7 +1415,8 @@ impl SimpleAbsInt for DestroyZeroVerifierAI<'_> {
                         let is_checked = self.is_zero_checked(state, arg);
                         if !is_checked {
                             if self.is_root_source_loc(&e.exp.loc) {
-                                let msg = "destroy_zero called without verifying value is zero first";
+                                let msg =
+                                    "destroy_zero called without verifying value is zero first";
                                 let help = "Add validation: `assert!(balance::value(&b) == 0, E_NOT_ZERO)`";
                                 let d = diag!(
                                     DESTROY_ZERO_UNCHECKED_V2_DIAG,
@@ -1708,45 +1709,46 @@ impl SimpleAbsInt for FreshAddressReuseVerifierAI<'_> {
                 }
 
                 // Check for new_uid_from_address calls
-                if module_name == "object" && func_name == "new_uid_from_address" {
-                    if let Some(arg) = call.arguments.first() {
-                        if let Some(var) = self.extract_var(arg) {
-                            // First extract what we need from the immutable borrow
-                            let action = if let Some(LocalState::Available(_, val)) = state.locals.get(&var) {
-                                match val {
-                                    FreshAddressValue::UsedOnce(original_loc) => {
-                                        // Already used - this is a reuse!
-                                        Some(("reuse", *original_loc))
-                                    }
-                                    FreshAddressValue::Fresh(loc) => {
-                                        // First use - need to mark as used
-                                        Some(("first_use", *loc))
-                                    }
-                                    _ => None,
-                                }
-                            } else {
-                                None
-                            };
-                            
-                            // Now handle the action without holding the borrow
-                            if let Some((action_type, loc)) = action {
-                                if action_type == "reuse" {
-                                    if self.is_root_source_loc(&e.exp.loc) {
-                                        let msg = "fresh_object_address result is being reused - each UID needs its own fresh address";
-                                        let help = "Use `object::new(ctx)` instead, or call `fresh_object_address` again";
-                                        let d = diag!(
-                                            FRESH_ADDRESS_REUSE_V2_DIAG,
-                                            (e.exp.loc, msg),
-                                            (loc, help),
-                                        );
-                                        context.add_diag(d);
-                                    }
-                                } else if action_type == "first_use" {
-                                    // Mark as used
-                                    if let Some(LocalState::Available(_, v)) = state.locals.get_mut(&var) {
-                                        *v = FreshAddressValue::UsedOnce(loc);
-                                    }
-                                }
+                if module_name == "object"
+                    && func_name == "new_uid_from_address"
+                    && let Some(arg) = call.arguments.first()
+                    && let Some(var) = self.extract_var(arg)
+                {
+                    // First extract what we need from the immutable borrow
+                    let action = if let Some(LocalState::Available(_, val)) = state.locals.get(&var)
+                    {
+                        match val {
+                            FreshAddressValue::UsedOnce(original_loc) => {
+                                // Already used - this is a reuse!
+                                Some(("reuse", *original_loc))
+                            }
+                            FreshAddressValue::Fresh(loc) => {
+                                // First use - need to mark as used
+                                Some(("first_use", *loc))
+                            }
+                            _ => None,
+                        }
+                    } else {
+                        None
+                    };
+
+                    // Now handle the action without holding the borrow
+                    if let Some((action_type, loc)) = action {
+                        if action_type == "reuse" {
+                            if self.is_root_source_loc(&e.exp.loc) {
+                                let msg = "fresh_object_address result is being reused - each UID needs its own fresh address";
+                                let help = "Use `object::new(ctx)` instead, or call `fresh_object_address` again";
+                                let d = diag!(
+                                    FRESH_ADDRESS_REUSE_V2_DIAG,
+                                    (e.exp.loc, msg),
+                                    (loc, help),
+                                );
+                                context.add_diag(d);
+                            }
+                        } else if action_type == "first_use" {
+                            // Mark as used
+                            if let Some(LocalState::Available(_, v)) = state.locals.get_mut(&var) {
+                                *v = FreshAddressValue::UsedOnce(loc);
                             }
                         }
                     }

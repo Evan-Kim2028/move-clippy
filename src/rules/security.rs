@@ -995,7 +995,7 @@ impl LintRule for DestroyZeroUncheckedLint {
 fn check_destroy_zero_unchecked(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     if node.kind() == "function_definition" {
         let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check if function calls destroy_zero
         if func_text.contains("destroy_zero") {
             // Check if there's a zero-check pattern before it
@@ -1089,7 +1089,12 @@ impl LintRule for OtwPatternViolationLint {
     }
 }
 
-fn check_otw_pattern(node: Node, source: &str, ctx: &mut LintContext<'_>, module_name: Option<&str>) {
+fn check_otw_pattern(
+    node: Node,
+    source: &str,
+    ctx: &mut LintContext<'_>,
+    module_name: Option<&str>,
+) {
     match node.kind() {
         "module_definition" => {
             // Extract module name
@@ -1105,12 +1110,12 @@ fn check_otw_pattern(node: Node, source: &str, ctx: &mut LintContext<'_>, module
         }
         "function_definition" => {
             let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-            
+
             // Check if this function calls create_currency
             if func_text.contains("create_currency") {
                 if let Some(mod_name) = module_name {
                     let expected_otw = mod_name.to_uppercase();
-                    
+
                     // Check if the expected OTW type is used
                     if !func_text.contains(&expected_otw) {
                         let func_name = node
@@ -1204,7 +1209,7 @@ impl LintRule for DigestAsRandomnessLint {
 fn check_digest_as_randomness(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     if node.kind() == "function_definition" {
         let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check if function uses digest
         if func_text.contains("digest(") || func_text.contains("::digest") {
             // Check if it's used in arithmetic/modulo operations (randomness pattern)
@@ -1289,7 +1294,7 @@ impl LintRule for DivideByZeroLiteralLint {
 
 fn check_divide_by_zero(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-    
+
     // Check for division/modulo by literal 0
     if node.kind() == "binary_expression" {
         // Look for patterns like "/ 0" or "% 0"
@@ -1300,11 +1305,12 @@ fn check_divide_by_zero(node: Node, source: &str, ctx: &mut LintContext<'_>) {
             ctx.report_node(
                 &DIVIDE_BY_ZERO_LITERAL,
                 node,
-                "Division or modulo by literal zero - this will always abort at runtime.".to_string(),
+                "Division or modulo by literal zero - this will always abort at runtime."
+                    .to_string(),
             );
         }
     }
-    
+
     // Check for divide_into_n with literal 0
     if node.kind() == "call_expression" && node_text.contains("divide_into_n") {
         // Simple check: if the call contains ", 0," or ", 0)" as the n parameter
@@ -1379,13 +1385,13 @@ impl LintRule for FreshAddressReuseLint {
 fn check_fresh_address_reuse(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     if node.kind() == "function_definition" {
         let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check if function uses fresh_object_address
         if func_text.contains("fresh_object_address") {
             // Count occurrences of new_uid_from_address
             let uid_from_addr_count = func_text.matches("new_uid_from_address").count();
             let fresh_addr_count = func_text.matches("fresh_object_address").count();
-            
+
             // If there are more UID creations than fresh addresses, likely reuse
             if uid_from_addr_count > fresh_addr_count {
                 let func_name = node
