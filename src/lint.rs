@@ -958,20 +958,20 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "suspicious_overflow_check"     // Promoted to stable
         | "ignored_boolean_return" => RuleGroup::Stable,  // Typus hack pattern
 
-        // Deprecated lints (use type-based replacements)
+        // Deprecated lints (name-based, not recommended)
         | "droppable_hot_potato"      // Use droppable_hot_potato_v2 (type-based)
         | "shared_capability"         // Use share_owned_authority (type-based)
         | "shared_capability_object"  // Use share_owned_authority (type-based)
-        | "unchecked_coin_split"      // Sui runtime protects
-        | "capability_leak"           // Name-based, needs type-based rewrite
-        | "unchecked_withdrawal"      // Name-based, needs CFG-based rewrite
         | "capability_naming"         // Sui uses Cap suffix, not _cap
         | "event_naming"              // Sui events don't use _event suffix
         | "getter_naming" => RuleGroup::Deprecated,  // Sui uses get_ prefix
 
-        // Preview lints (higher FP risk, require --preview flag)
+        // Experimental lints (high FP risk, require --experimental flag)
+        | "unchecked_coin_split"      // Name-based, high FP
+        | "capability_leak"           // Name-based, needs type-based rewrite
+        | "unchecked_withdrawal"      // Name-based, needs CFG-based rewrite
         | "pure_function_transfer"
-        | "unsafe_arithmetic" => RuleGroup::Preview,
+        | "unsafe_arithmetic" => RuleGroup::Experimental,
 
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,

@@ -603,6 +603,9 @@ mod full {
             lint_event_emit_type_sanity(&mut out, settings, &file_map, &typing_ast)?;
             lint_share_owned_authority(&mut out, settings, &file_map, &typing_ast)?;
             lint_droppable_hot_potato_v2(&mut out, settings, &file_map, &typing_info)?;
+            // Phase 4 security lints (type-based, preview)
+            lint_capability_transfer_v2(&mut out, settings, &file_map, &typing_ast)?;
+            lint_phantom_capability(&mut out, settings, &file_map, &typing_info)?;
 
             // Phase III: Cross-module analysis lints (type-based)
             lint_cross_module_lints(&mut out, settings, &file_map, &typing_ast, &typing_info)?;
