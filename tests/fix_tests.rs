@@ -107,6 +107,69 @@ fn equality_in_assert_with_multiple_args() {
 }
 
 // ============================================================================
+// manual_option_check Tests
+// ============================================================================
+
+#[test]
+fn manual_option_check_simple() {
+    let source = r#"
+        module example::test {
+            use std::option::Option;
+            
+            public fun test(opt: Option<u64>) {
+                if (opt.is_some()) {
+                    let value = opt.destroy_some();
+                    process(value);
+                }
+            }
+            
+            fun process(x: u64) {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "manual_option_check should generate a fix");
+
+    let fixed = fix.unwrap();
+    assert!(fixed.contains("opt.do!(|value|"), "Fix should use do! macro");
+    assert!(fixed.contains("process(value)"), "Fix should preserve body");
+    assert!(!fixed.contains("destroy_some"), "Fix should remove destroy_some");
+}
+
+// ============================================================================
+// manual_loop_iteration Tests
+// ============================================================================
+
+#[test]
+fn manual_loop_iteration_simple() {
+    let source = r#"
+        module example::test {
+            use std::vector;
+            
+            public fun test(vec: &vector<u64>) {
+                let mut i = 0;
+                while (i < vec.length()) {
+                    let elem = vec.borrow(i);
+                    process(*elem);
+                    i = i + 1;
+                }
+            }
+            
+            fun process(x: u64) {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "manual_loop_iteration should generate a fix");
+
+    let fixed = fix.unwrap();
+    assert!(fixed.contains("vec.do_ref!(|elem|"), "Fix should use do_ref! macro");
+    assert!(fixed.contains("process(*elem)"), "Fix should preserve body");
+    assert!(!fixed.contains("borrow"), "Fix should remove borrow call");
+    assert!(!fixed.contains("i = i + 1"), "Fix should remove increment");
+}
+
+// ============================================================================
 // while_true_to_loop Tests
 // ============================================================================
 

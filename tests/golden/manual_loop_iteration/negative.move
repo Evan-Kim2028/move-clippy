@@ -1,28 +1,33 @@
-// Golden test: manual_loop_iteration - NEGATIVE (should NOT trigger lint)
-// Description: Using loop macros or different loop patterns
+module example::test {
+    use std::vector;
 
-module 0x1::test {
-    public fun good_use_do_ref() {
-        let v = vector[1, 2, 3];
-        // GOOD: Using do_ref! macro
-        v.do_ref!(|elem| {
-            let _ = elem;
+    // Already using do_ref! - should not trigger
+    public fun test_already_do_ref(vec: &vector<u64>) {
+        vec.do_ref!(|elem| {
+            process(*elem);
         });
     }
 
-    public fun good_use_fold() {
-        let v = vector[1, 2, 3];
-        // GOOD: Using fold! macro
-        let sum = v.fold!(0, |acc, elem| acc + elem);
-        let _ = sum;
-    }
-
-    public fun good_different_loop() {
+    // No increment - should not trigger
+    public fun test_no_increment(vec: &vector<u64>) {
         let mut i = 0;
-        // GOOD: Not iterating over vector
-        while (i < 10) {
-            let _ = i * 2;
-            i = i + 1;
+        while (i < vec.length()) {
+            let elem = vec.borrow(i);
+            process(*elem);
+            // Missing increment (not incrementing the loop variable)
         };
     }
+
+    // Different iteration variable - should not trigger
+    public fun test_different_iter_var(vec: &vector<u64>) {
+        let mut i = 0;
+        let mut j = 0;
+        while (i < vec.length()) {
+            let elem = vec.borrow(i);
+            process(*elem);
+            j = j + 1; // Wrong variable!
+        };
+    }
+
+    fun process(x: u64) {}
 }

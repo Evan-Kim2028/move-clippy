@@ -128,6 +128,73 @@ impl LintRule for EqualityInAssertLint {
 // ManualOptionCheckLint - P1 (Near-Zero FP)
 // ============================================================================
 
+/// Generate do! macro fix from manual is_some() + destroy_some() pattern
+fn generate_manual_option_fix(
+    _if_text: &str,
+    body_text: &str,
+    var_name: &str,
+) -> Option<Suggestion> {
+    // Find the destroy_some line to extract binding name and remove it
+    // Pattern: let binding_name = var_name.destroy_some();
+    
+    let destroy_pattern = format!("{}.destroy_some()", var_name);
+    
+    // Split body into lines
+    let body_lines: Vec<&str> = body_text.lines().collect();
+    
+    // Find the line with destroy_some and extract binding name
+    let mut binding_name = "value".to_string(); // default
+    let mut filtered_lines = Vec::new();
+    let mut found_destroy = false;
+    
+    for line in body_lines {
+        let trimmed = line.trim();
+        
+        if trimmed.contains(&destroy_pattern) {
+            found_destroy = true;
+            // Try to extract binding name from: let binding_name = opt.destroy_some();
+            if let Some(let_pos) = trimmed.find("let ") {
+                let after_let = &trimmed[let_pos + 4..];
+                if let Some(eq_pos) = after_let.find('=') {
+                    binding_name = after_let[..eq_pos].trim().to_string();
+                }
+            }
+            // Skip this line (don't add to filtered_lines)
+            continue;
+        }
+        
+        filtered_lines.push(line);
+    }
+    
+    if !found_destroy {
+        return None;
+    }
+    
+    // Reconstruct body without the destroy_some line
+    let new_body = filtered_lines.join("\n");
+    
+    // Extract just the statements part (remove opening/closing braces)
+    let body_inner = new_body
+        .trim()
+        .strip_prefix('{')
+        .and_then(|s| s.strip_suffix('}'))
+        .unwrap_or(&new_body)
+        .trim();
+    
+    // Build the do! macro call
+    let replacement = if body_inner.is_empty() {
+        format!("{}.do!(|{}| {{}})", var_name, binding_name)
+    } else {
+        format!("{}.do!(|{}| {{\n{}\n}})", var_name, binding_name, body_inner)
+    };
+    
+    Some(Suggestion {
+        message: format!("Replace with {}.do! macro", var_name),
+        replacement,
+        applicability: Applicability::MaybeIncorrect,
+    })
+}
+
 pub struct ManualOptionCheckLint;
 
 static MANUAL_OPTION_CHECK: LintDescriptor = LintDescriptor {
@@ -135,7 +202,7 @@ static MANUAL_OPTION_CHECK: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer option macros (`do!`, `destroy_or!`) over manual `is_some()` + `destroy_some()` patterns",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::unsafe_fix("Replace with do! macro"),
     analysis: AnalysisKind::Syntactic,
 };
 
@@ -184,14 +251,23 @@ impl LintRule for ManualOptionCheckLint {
             if let Some(var_name) = extract_is_some_receiver(condition) {
                 let destroy_pattern = format!("{}.destroy_some()", var_name);
                 if body.contains(&destroy_pattern) {
-                    ctx.report_node(
-                        self.descriptor(),
-                        node,
-                        format!(
+                    // Generate auto-fix
+                    let if_text = slice(source, node);
+                    let suggestion = generate_manual_option_fix(if_text, body, var_name);
+                    
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: format!(
                             "Consider `{}.do!(|v| ...)` instead of manual `is_some()` + `destroy_some()`",
                             var_name
                         ),
-                    );
+                        help: Some("Use do! macro for cleaner option handling".to_string()),
+                        suggestion,
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
             }
         });
@@ -202,6 +278,88 @@ impl LintRule for ManualOptionCheckLint {
 // ManualLoopIterationLint - P1 (Near-Zero FP)
 // ============================================================================
 
+/// Generate do_ref! macro fix from manual while loop with index
+fn generate_manual_loop_fix(
+    body_text: &str,
+    iter_var: &str,
+    vec_var: &str,
+) -> Option<Suggestion> {
+    // Find the borrow line to extract binding name
+    // Pattern: let binding_name = vec_var.borrow(iter_var);
+    
+    let borrow_pattern = format!("{}.borrow({})", vec_var, iter_var);
+    
+    // Split body into lines
+    let body_lines: Vec<&str> = body_text.lines().collect();
+    
+    // Find the line with borrow and extract binding name
+    let mut binding_name = "elem".to_string(); // default
+    let mut filtered_lines = Vec::new();
+    
+    for line in body_lines {
+        let trimmed = line.trim();
+        
+        // Skip increment lines
+        let increment_patterns = [
+            format!("{} = {} + 1", iter_var, iter_var),
+            format!("{} = 1 + {}", iter_var, iter_var),
+            format!("{}={} + 1", iter_var, iter_var),
+            format!("{}={}+1", iter_var, iter_var),
+        ];
+        
+        if increment_patterns.iter().any(|p| trimmed.contains(p)) {
+            continue; // Skip increment line
+        }
+        
+        // Extract binding from borrow line
+        if trimmed.contains(&borrow_pattern) {
+            if let Some(let_pos) = trimmed.find("let ") {
+                let after_let = &trimmed[let_pos + 4..];
+                if let Some(eq_pos) = after_let.find('=') {
+                    binding_name = after_let[..eq_pos].trim().to_string();
+                }
+            }
+            // Keep this line but will need to transform it
+            filtered_lines.push(line);
+            continue;
+        }
+        
+        filtered_lines.push(line);
+    }
+    
+    // Reconstruct body without increment
+    let new_body = filtered_lines.join("\n");
+    
+    // Extract just the statements (remove braces)
+    let body_inner = new_body
+        .trim()
+        .strip_prefix('{')
+        .and_then(|s| s.strip_suffix('}'))
+        .unwrap_or(&new_body)
+        .trim();
+    
+    // Remove the borrow line from body_inner since it becomes the parameter
+    let body_final: Vec<&str> = body_inner
+        .lines()
+        .filter(|line| !line.trim().contains(&borrow_pattern))
+        .collect();
+    
+    let body_final_str = body_final.join("\n").trim().to_string();
+    
+    // Build the do_ref! macro call
+    let replacement = if body_final_str.is_empty() {
+        format!("{}.do_ref!(|{}| {{}})", vec_var, binding_name)
+    } else {
+        format!("{}.do_ref!(|{}| {{\n{}\n}})", vec_var, binding_name, body_final_str)
+    };
+    
+    Some(Suggestion {
+        message: format!("Replace with {}.do_ref! macro (note: manually remove `let mut {} = 0;` above)", vec_var, iter_var),
+        replacement,
+        applicability: Applicability::MaybeIncorrect,
+    })
+}
+
 pub struct ManualLoopIterationLint;
 
 static MANUAL_LOOP_ITERATION: LintDescriptor = LintDescriptor {
@@ -209,7 +367,7 @@ static MANUAL_LOOP_ITERATION: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer loop macros (`do_ref!`, `fold!`) over manual while loops with index",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::unsafe_fix("Replace with do_ref! macro"),
     analysis: AnalysisKind::Syntactic,
 };
 
@@ -253,14 +411,25 @@ impl LintRule for ManualLoopIterationLint {
                 let has_increment = increment_patterns.iter().any(|p| body.contains(p));
 
                 if has_increment {
-                    ctx.report_node(
-                        self.descriptor(),
-                        node,
-                        format!(
+                    // Generate auto-fix
+                    let suggestion = generate_manual_loop_fix(body, iter_var, vec_var);
+                    
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: format!(
                             "Consider `{}.do_ref!(|e| ...)` instead of manual while loop with index",
                             vec_var
                         ),
-                    );
+                        help: Some(format!(
+                            "Use do_ref! macro for cleaner iteration. Note: You must manually remove `let mut {} = 0;` above this loop.",
+                            iter_var
+                        )),
+                        suggestion,
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
             }
         });
