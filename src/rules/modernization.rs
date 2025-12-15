@@ -36,7 +36,7 @@ impl LintRule for EqualityInAssertLint {
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
         walk(root, &mut |node| {
-            if node.kind() != "macro_invocation" {
+            if node.kind() != "macro_call_expression" {
                 return;
             }
 

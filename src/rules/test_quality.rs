@@ -36,7 +36,7 @@ impl LintRule for TestAbortCodeLint {
 
         walk(root, &mut |node| {
             // Only check macro calls
-            if node.kind() != "macro_invocation" {
+            if node.kind() != "macro_call_expression" {
                 return;
             }
 

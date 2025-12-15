@@ -1173,7 +1173,7 @@ fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<
                     // These parent types mean the result IS being used
                     if parent_kind == "let_statement"
                         || parent_kind == "assignment"
-                        || parent_kind == "macro_invocation"  // assert!()
+                        || parent_kind == "macro_call_expression"  // assert!()
                         || parent_kind == "if_expression"
                         || parent_kind == "while_expression"
                         || parent_kind == "return_expression"
@@ -1405,8 +1405,8 @@ fn check_shared_capability_object(node: Node, source: &str, ctx: &mut LintContex
 pub static UNCHECKED_WITHDRAWAL: LintDescriptor = LintDescriptor {
     name: "unchecked_withdrawal",
     category: LintCategory::Security,
-    description: "Withdrawal without balance validation may allow over-withdrawal (see: Thala hack)",
-    group: RuleGroup::Experimental, // Experimental - name-based detection, high FP rate
+    description: "[DEPRECATED] Name-based detection too noisy - CFG-based version planned for future",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
 };

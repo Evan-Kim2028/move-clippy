@@ -329,6 +329,112 @@ pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
     analysis: AnalysisKind::TypeBased,
 };
 
+/// Detects capability transfers to non-sender addresses.
+///
+/// # Type System Grounding
+///
+/// A capability is a struct with:
+/// - `key` (is an object)
+/// - `store` (can be transferred)
+/// - NO `copy` (cannot be duplicated)
+/// - NO `drop` (cannot be silently discarded)
+///
+/// This lint flags when such objects are transferred to addresses other than
+/// `tx_context::sender(ctx)`, which may indicate a capability leak.
+///
+/// # Security References
+///
+/// - **MoveScanner (2025)**: Capability leak detection patterns
+/// - **OtterSec Audits**: Multiple findings of capabilities transferred incorrectly
+///
+/// # Example (Suspicious)
+///
+/// ```move
+/// public fun transfer_admin(cap: AdminCap, recipient: address) {
+///     transfer::transfer(cap, recipient);  // Who is recipient?
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun claim_admin(cap: AdminCap, ctx: &TxContext) {
+///     transfer::transfer(cap, tx_context::sender(ctx));  // Explicit sender
+/// }
+/// ```
+pub static CAPABILITY_TRANSFER_V2: LintDescriptor = LintDescriptor {
+    name: "capability_transfer_v2",
+    category: LintCategory::Security,
+    description: "Capability transferred to non-sender address (type-based, requires --mode full)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+};
+
+/// Detects hot potato structs that are created but potentially not consumed.
+///
+/// # Type System Grounding
+///
+/// A hot potato is a struct with NO abilities at all. It MUST be consumed
+/// by a function that destroys it. If a hot potato is created and returned
+/// without being passed to a consumer, it may indicate a bug.
+///
+/// # Why This Matters
+///
+/// Hot potatoes enforce that certain operations must be completed atomically.
+/// If a hot potato can escape without being consumed, the enforcement is broken.
+///
+/// # Example (Suspicious)
+///
+/// ```move
+/// public fun borrow(pool: &mut Pool): (Coin<SUI>, FlashLoanReceipt) {
+///     let receipt = FlashLoanReceipt { pool_id: object::id(pool), amount: 100 };
+///     let coins = pool.take(100);
+///     (coins, receipt)  // Receipt returned - caller MUST call repay()
+/// }
+/// ```
+pub static UNUSED_HOT_POTATO: LintDescriptor = LintDescriptor {
+    name: "unused_hot_potato",
+    category: LintCategory::Security,
+    description: "Hot potato (no abilities) created - ensure it's consumed in same transaction (type-based)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+};
+
+/// Detects capability parameters that are passed but never used for authorization.
+///
+/// # Type System Grounding
+///
+/// Capabilities should be used to authorize operations. If a capability parameter
+/// is accepted but never accessed (field read, method call), it may be a
+/// "phantom capability" that provides no actual security.
+///
+/// # Example (Suspicious)
+///
+/// ```move
+/// public fun admin_action(_cap: &AdminCap, pool: &mut Pool) {
+///     pool.do_something();  // cap is never used!
+/// }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// public fun admin_action(cap: &AdminCap, pool: &mut Pool) {
+///     assert!(cap.pool_id == object::id(pool), E_WRONG_CAP);  // Actually validates
+///     pool.do_something();
+/// }
+/// ```
+pub static PHANTOM_CAPABILITY: LintDescriptor = LintDescriptor {
+    name: "phantom_capability",
+    category: LintCategory::Security,
+    description: "Capability parameter accepted but never accessed - may be phantom security (type-based)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+};
+
 static DESCRIPTORS: &[&LintDescriptor] = &[
     // Naming (type-based)
     &CAPABILITY_NAMING,
@@ -350,6 +456,9 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &UNCHECKED_DIVISION,
     &UNUSED_RETURN_VALUE,
     &DROPPABLE_HOT_POTATO_V2,
+    &CAPABILITY_TRANSFER_V2,
+    &UNUSED_HOT_POTATO,
+    &PHANTOM_CAPABILITY,
 ];
 
 /// Return descriptors for all semantic lints.

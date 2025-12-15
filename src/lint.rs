@@ -552,10 +552,10 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     "shared_capability_object",  // DEPRECATED: Use share_owned_authority (type-based)
     "unchecked_coin_split",      // DEPRECATED: Sui runtime protects
     "capability_leak",           // DEPRECATED: Name-based, needs type-based rewrite
+    "unchecked_withdrawal",      // DEPRECATED: Name-based, needs CFG-based rewrite
     // Preview lints (require --preview flag)
     "pure_function_transfer",
     "unsafe_arithmetic",
-    "unchecked_withdrawal", // Thala hack pattern - experimental
 ];
 
 const FULL_MODE_SUPERSEDED_LINTS: &[&str] = &["public_mut_tx_context", "unnecessary_public_entry"];
@@ -908,6 +908,9 @@ impl LintRegistry {
                 "capability_leak" => {
                     reg = reg.with_rule(crate::rules::CapabilityLeakLint);
                 }
+                "unchecked_coin_split" => {
+                    reg = reg.with_rule(crate::rules::UncheckedCoinSplitLint);
+                }
                 other => unreachable!("unexpected fast lint name: {other}"),
             }
         }
@@ -961,6 +964,7 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "shared_capability_object"  // Use share_owned_authority (type-based)
         | "unchecked_coin_split"      // Sui runtime protects
         | "capability_leak"           // Name-based, needs type-based rewrite
+        | "unchecked_withdrawal"      // Name-based, needs CFG-based rewrite
         | "capability_naming"         // Sui uses Cap suffix, not _cap
         | "event_naming"              // Sui events don't use _event suffix
         | "getter_naming" => RuleGroup::Deprecated,  // Sui uses get_ prefix
@@ -968,9 +972,6 @@ fn get_lint_group(name: &str) -> RuleGroup {
         // Preview lints (higher FP risk, require --preview flag)
         | "pure_function_transfer"
         | "unsafe_arithmetic" => RuleGroup::Preview,
-
-        // Experimental lints (high FP risk, require --experimental flag)
-        | "unchecked_withdrawal" => RuleGroup::Experimental,
 
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,

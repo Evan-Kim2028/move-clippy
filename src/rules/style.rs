@@ -473,7 +473,7 @@ impl LintRule for TypedAbortCodeLint {
             }
 
             // Check assert! with numeric abort codes
-            if node.kind() == "macro_invocation" {
+            if node.kind() == "macro_call_expression" {
                 let text = slice(source, node).trim();
                 if text.starts_with("assert!")
                     && !text.starts_with("assert_eq!")
