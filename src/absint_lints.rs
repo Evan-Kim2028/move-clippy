@@ -22,6 +22,7 @@ use crate::diagnostics::Diagnostic;
 use crate::error::ClippyResult;
 use crate::lint::{
     AnalysisKind, FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup,
+    TypeSystemGap,
 };
 use move_compiler::shared::NumericalAddress;
 use move_compiler::{
@@ -112,10 +113,11 @@ const UNCHECKED_DIV_V2_DIAG: DiagnosticInfo = custom(
 pub static PHANTOM_CAPABILITY: LintDescriptor = LintDescriptor {
     name: "phantom_capability",
     category: LintCategory::Security,
-    description: "Capability parameter unused or not validated - may be phantom security (type-based CFG-aware, requires --mode full --preview)",
-    group: RuleGroup::Preview,
+    description: "Capability parameter unused or not validated - may be phantom security (type-based CFG-aware, requires --mode full --experimental)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBasedCFG,
+    gap: Some(TypeSystemGap::CapabilityEscape),
 };
 
 pub static UNCHECKED_DIVISION_V2: LintDescriptor = LintDescriptor {
@@ -125,6 +127,7 @@ pub static UNCHECKED_DIVISION_V2: LintDescriptor = LintDescriptor {
     group: RuleGroup::Preview,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBasedCFG,
+    gap: Some(TypeSystemGap::ArithmeticSafety),
 };
 
 // ============================================================================
@@ -699,6 +702,10 @@ impl UnusedCapabilityVerifierAI<'_> {
         match &ty.value {
             NType_::Apply(_, type_name, _) => {
                 match &type_name.value {
+                    move_compiler::naming::ast::TypeName_::ModuleType(m, n) => {
+                        // Check for Balance<T> type
+                        m.value.is(&SUI_ADDR, "balance") && n.0.value.as_str() == "Balance"
+                    }
                     move_compiler::naming::ast::TypeName_::Builtin(builtin) => {
                         matches!(
                             builtin.value,
@@ -709,10 +716,6 @@ impl UnusedCapabilityVerifierAI<'_> {
                                 | BuiltinTypeName_::U128
                                 | BuiltinTypeName_::U256
                         )
-                    }
-                    move_compiler::naming::ast::TypeName_::ModuleType(m, n) => {
-                        // Check for Balance<T> type
-                        m.value.is(&SUI_ADDR, "balance") && n.0.value.as_str() == "Balance"
                     }
                     _ => false,
                 }
@@ -1057,53 +1060,64 @@ impl UncheckedDivisionVerifierAI<'_> {
     }
 
     fn is_assert_call(&self, call: &ModuleCall) -> bool {
-        let name_symbol = call.name.value();
-        let func_name = name_symbol.as_str();
+        let func_sym = call.name.value();
+        let func_name = func_sym.as_str();
         func_name == "assert" || func_name.contains("assert")
     }
 
     fn track_nonzero_guard(&self, state: &mut DivState, condition: &Exp, cond_value: bool) {
-        if let Some((var, nonzero_when_true)) = self.extract_nonzero_guard(condition) {
+        if let Some((var, nonzero_when_true)) = self.extract_nonzero_guard(state, condition) {
             let implies_nonzero = if cond_value {
                 nonzero_when_true
             } else {
                 !nonzero_when_true
             };
+
             if implies_nonzero {
                 self.mark_nonzero(state, var);
             }
         }
     }
 
-    fn extract_nonzero_guard(&self, condition: &Exp) -> Option<(Var, bool)> {
+    fn extract_nonzero_guard(&self, state: &DivState, condition: &Exp) -> Option<(Var, bool)> {
         match &condition.exp.value {
             UnannotatedExp_::UnaryExp(unop, inner)
                 if matches!(unop.value, move_compiler::parser::ast::UnaryOp_::Not) =>
             {
-                self.extract_nonzero_guard(inner)
+                self.extract_nonzero_guard(state, inner)
                     .map(|(v, nonzero_when_true)| (v, !nonzero_when_true))
             }
-            UnannotatedExp_::Cast(inner, _) => self.extract_nonzero_guard(inner),
+            UnannotatedExp_::Cast(inner, _) => self.extract_nonzero_guard(state, inner),
             UnannotatedExp_::BinopExp(lhs, op, rhs) => {
                 // Handle `a && b` by extracting from either side (best-effort).
                 if matches!(op.value, BinOp_::And) {
                     return self
-                        .extract_nonzero_guard(lhs)
-                        .or_else(|| self.extract_nonzero_guard(rhs));
+                        .extract_nonzero_guard(state, lhs)
+                        .or_else(|| self.extract_nonzero_guard(state, rhs));
                 }
 
-                // Prefer patterns where one side is a literal or constant, and the other is a local var.
-                // We check for both Value (inline literals) and Constant (named constants like MIN_TICK_SIZE).
-                let is_const_like = |e: &Exp| {
-                    matches!(
-                        &e.exp.value,
-                        UnannotatedExp_::Value(_) | UnannotatedExp_::Constant(_)
-                    )
+                // Helper to check if an expression is a constant-like value.
+                // This includes:
+                // - Direct Value literals
+                // - Direct Constant references  
+                // - Copy/Move of a local that is known to hold a constant value
+                let is_const_like_with_state = |e: &Exp| -> bool {
+                    match &e.exp.value {
+                        UnannotatedExp_::Value(_) | UnannotatedExp_::Constant(_) => true,
+                        UnannotatedExp_::Copy { var, .. } | UnannotatedExp_::Move { var, .. } => {
+                            // Check if this local is known to hold a constant (non-zero) value
+                            matches!(
+                                state.locals.get(var),
+                                Some(LocalState::Available(_, DivisorValue::Constant))
+                            )
+                        }
+                        _ => false,
+                    }
                 };
 
-                let (var_side, lit_side, var_on_lhs) = if is_const_like(rhs) {
+                let (var_side, lit_side, var_on_lhs) = if is_const_like_with_state(rhs) {
                     (lhs, rhs, true)
-                } else if is_const_like(lhs) {
+                } else if is_const_like_with_state(lhs) {
                     (rhs, lhs, false)
                 } else {
                     return None;
@@ -1116,8 +1130,18 @@ impl UncheckedDivisionVerifierAI<'_> {
                     UnannotatedExp_::Value(v) => v.value.is_zero(),
                     UnannotatedExp_::Constant(_) => {
                         // Named constants are assumed non-zero (conservative but practical)
-                        // Most constants like MIN_TICK_SIZE, MIN_PRICE, etc. are non-zero
                         false
+                    }
+                    UnannotatedExp_::Copy { var, .. } | UnannotatedExp_::Move { var, .. } => {
+                        // Local holds a constant value - we tracked it, so it's non-zero
+                        if matches!(
+                            state.locals.get(var),
+                            Some(LocalState::Available(_, DivisorValue::Constant))
+                        ) {
+                            false // It's a non-zero constant
+                        } else {
+                            return None; // Unknown value
+                        }
                     }
                     _ => return None,
                 };
@@ -1126,7 +1150,6 @@ impl UncheckedDivisionVerifierAI<'_> {
                 let nonzero_when_true = match (op.value, lit_is_zero, var_on_lhs) {
                     // var != 0  OR  0 != var
                     (BinOp_::Neq, true, _) => true,
-                    // var == 0  OR  0 == var
                     (BinOp_::Eq, true, _) => false,
 
                     // var > 0
@@ -1227,10 +1250,576 @@ impl SimpleExecutionContext for DivExecutionContext {
 }
 
 // ============================================================================
+// 3. Destroy Zero Unchecked V2 (CFG-aware)
+// ============================================================================
+
+const DESTROY_ZERO_UNCHECKED_V2_DIAG: DiagnosticInfo = custom(
+    LINT_WARNING_PREFIX,
+    Severity::Warning,
+    CLIPPY_CATEGORY,
+    4, // destroy_zero_unchecked_v2
+    "destroy_zero called without prior zero-check",
+);
+
+pub static DESTROY_ZERO_UNCHECKED_V2: LintDescriptor = LintDescriptor {
+    name: "destroy_zero_unchecked_v2",
+    category: LintCategory::Security,
+    description: "destroy_zero called without verifying value is zero (CFG-aware, requires --mode full --preview)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBasedCFG,
+    gap: Some(TypeSystemGap::ValueFlow),
+};
+
+pub struct DestroyZeroVerifier;
+
+pub struct DestroyZeroVerifierAI<'a> {
+    info: &'a TypingProgramInfo,
+    context: &'a CFGContext<'a>,
+    exit_blocks: BTreeSet<Label>,
+}
+
+/// Abstract value for tracking zero-check status
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
+pub enum ZeroCheckValue {
+    /// Unknown - no zero check seen
+    #[default]
+    Unknown,
+    /// Checked to be zero via assert/if
+    CheckedZero,
+    /// Known constant zero
+    ConstantZero,
+}
+
+pub struct DestroyZeroExecutionContext {
+    diags: CompilerDiagnostics,
+}
+
+#[derive(Clone, Debug)]
+pub struct DestroyZeroState {
+    locals: BTreeMap<Var, LocalState<ZeroCheckValue>>,
+}
+
+impl SimpleAbsIntConstructor for DestroyZeroVerifier {
+    type AI<'a> = DestroyZeroVerifierAI<'a>;
+
+    fn new<'a>(
+        context: &'a CFGContext<'a>,
+        cfg: &ImmForwardCFG,
+        _init_state: &mut DestroyZeroState,
+    ) -> Option<Self::AI<'a>> {
+        if context.attributes.is_test_or_test_only() {
+            return None;
+        }
+
+        let mut exit_blocks = BTreeSet::new();
+        for lbl in cfg.block_labels() {
+            if is_immediate_exit_block(cfg, lbl) {
+                exit_blocks.insert(lbl);
+            }
+        }
+
+        Some(DestroyZeroVerifierAI {
+            info: context.info,
+            context,
+            exit_blocks,
+        })
+    }
+}
+
+impl SimpleAbsInt for DestroyZeroVerifierAI<'_> {
+    type State = DestroyZeroState;
+    type ExecutionContext = DestroyZeroExecutionContext;
+
+    fn finish(
+        &mut self,
+        _final_states: BTreeMap<Label, Self::State>,
+        diags: CompilerDiagnostics,
+    ) -> CompilerDiagnostics {
+        diags
+    }
+
+    fn start_command(&self, _pre: &mut Self::State) -> Self::ExecutionContext {
+        DestroyZeroExecutionContext {
+            diags: CompilerDiagnostics::new(),
+        }
+    }
+
+    fn finish_command(
+        &self,
+        context: Self::ExecutionContext,
+        _state: &mut Self::State,
+    ) -> CompilerDiagnostics {
+        context.diags
+    }
+
+    fn command_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        cmd: &Command,
+    ) -> bool {
+        use Command_ as C;
+
+        match &cmd.value {
+            C::JumpIf {
+                cond,
+                if_true,
+                if_false,
+            } => {
+                self.exp(context, state, cond);
+
+                let true_is_abort = self.exit_blocks.contains(if_true);
+                let false_is_abort = self.exit_blocks.contains(if_false);
+
+                if true_is_abort ^ false_is_abort {
+                    let cond_true_on_continue = false_is_abort;
+                    self.track_zero_guard(state, cond, cond_true_on_continue);
+                }
+
+                true
+            }
+            _ => false,
+        }
+    }
+
+    fn exp_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        e: &Exp,
+    ) -> Option<Vec<ZeroCheckValue>> {
+        use UnannotatedExp_ as E;
+
+        match &e.exp.value {
+            E::Value(v) => {
+                let is_zero = v.value.is_zero();
+                return Some(vec![if is_zero {
+                    ZeroCheckValue::ConstantZero
+                } else {
+                    ZeroCheckValue::Unknown
+                }]);
+            }
+            E::Constant(_) => return Some(vec![ZeroCheckValue::Unknown]),
+            E::ModuleCall(call) => {
+                let module_sym = call.module.value.module.value();
+                let func_sym = call.name.value();
+                let module_name = module_sym.as_str();
+                let func_name = func_sym.as_str();
+
+                // Check for destroy_zero calls
+                if (module_name == "balance" || module_name == "coin")
+                    && func_name == "destroy_zero"
+                {
+                    if let Some(arg) = call.arguments.first() {
+                        let is_checked = self.is_zero_checked(state, arg);
+                        if !is_checked {
+                            if self.is_root_source_loc(&e.exp.loc) {
+                                let msg = "destroy_zero called without verifying value is zero first";
+                                let help = "Add validation: `assert!(balance::value(&b) == 0, E_NOT_ZERO)`";
+                                let d = diag!(
+                                    DESTROY_ZERO_UNCHECKED_V2_DIAG,
+                                    (e.exp.loc, msg),
+                                    (arg.exp.loc, help),
+                                );
+                                context.add_diag(d);
+                            }
+                        }
+                    }
+                }
+
+                // Check for assert! calls to track zero guards
+                if self.is_assert_call(call) {
+                    if let Some(cond) = call.arguments.first() {
+                        self.track_zero_guard(state, cond, true);
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        None
+    }
+}
+
+impl DestroyZeroVerifierAI<'_> {
+    fn is_root_source_loc(&self, loc: &Loc) -> bool {
+        !self.context.is_dependency && self.context.is_root_package
+    }
+
+    fn is_zero_checked(&self, state: &DestroyZeroState, expr: &Exp) -> bool {
+        match &expr.exp.value {
+            UnannotatedExp_::Move { var, .. }
+            | UnannotatedExp_::Copy { var, .. }
+            | UnannotatedExp_::BorrowLocal(_, var) => matches!(
+                state.locals.get(var),
+                Some(LocalState::Available(
+                    _,
+                    ZeroCheckValue::CheckedZero | ZeroCheckValue::ConstantZero
+                ))
+            ),
+            UnannotatedExp_::Value(v) => v.value.is_zero(),
+            _ => false,
+        }
+    }
+
+    fn is_assert_call(&self, call: &ModuleCall) -> bool {
+        let func_sym = call.name.value();
+        let func_name = func_sym.as_str();
+        func_name == "assert" || func_name.contains("assert")
+    }
+
+    fn track_zero_guard(&self, state: &mut DestroyZeroState, condition: &Exp, cond_value: bool) {
+        if let Some((var, zero_when_true)) = self.extract_zero_guard(condition) {
+            let implies_zero = if cond_value {
+                zero_when_true
+            } else {
+                !zero_when_true
+            };
+
+            if implies_zero {
+                self.mark_zero_checked(state, var);
+            }
+        }
+    }
+
+    fn extract_zero_guard(&self, condition: &Exp) -> Option<(Var, bool)> {
+        match &condition.exp.value {
+            UnannotatedExp_::UnaryExp(unop, inner)
+                if matches!(unop.value, move_compiler::parser::ast::UnaryOp_::Not) =>
+            {
+                self.extract_zero_guard(inner)
+                    .map(|(v, zero_when_true)| (v, !zero_when_true))
+            }
+            UnannotatedExp_::BinopExp(lhs, op, rhs) => {
+                // Handle `a && b`
+                if matches!(op.value, BinOp_::And) {
+                    return self
+                        .extract_zero_guard(lhs)
+                        .or_else(|| self.extract_zero_guard(rhs));
+                }
+
+                // Check for `value == 0` or `0 == value` patterns
+                let is_zero_literal = |e: &Exp| -> bool {
+                    matches!(&e.exp.value, UnannotatedExp_::Value(v) if v.value.is_zero())
+                };
+
+                let (var_side, is_zero_side, var_on_lhs) = if is_zero_literal(rhs) {
+                    (lhs, true, true)
+                } else if is_zero_literal(lhs) {
+                    (rhs, true, false)
+                } else {
+                    return None;
+                };
+
+                let var = self.extract_var(var_side)?;
+
+                // `var == 0` means var is zero when true
+                // `var != 0` means var is NOT zero when true
+                let zero_when_true = match op.value {
+                    BinOp_::Eq => true,
+                    BinOp_::Neq => false,
+                    _ => return None,
+                };
+
+                Some((var, zero_when_true))
+            }
+            // Handle value() calls - `value(&b) == 0`
+            UnannotatedExp_::ModuleCall(call) => {
+                let func_sym = call.name.value();
+                let func_name = func_sym.as_str();
+                if func_name == "value" {
+                    if let Some(arg) = call.arguments.first() {
+                        return self.extract_var(arg).map(|v| (v, false)); // Conservative
+                    }
+                }
+                None
+            }
+            _ => None,
+        }
+    }
+
+    fn extract_var(&self, e: &Exp) -> Option<Var> {
+        match &e.exp.value {
+            UnannotatedExp_::Move { var, .. }
+            | UnannotatedExp_::Copy { var, .. }
+            | UnannotatedExp_::BorrowLocal(_, var) => Some(*var),
+            _ => None,
+        }
+    }
+
+    fn mark_zero_checked(&self, state: &mut DestroyZeroState, var: Var) {
+        if let Some(LocalState::Available(loc, val)) = state.locals.get_mut(&var) {
+            *val = ZeroCheckValue::CheckedZero;
+        }
+    }
+}
+
+impl SimpleDomain for DestroyZeroState {
+    type Value = ZeroCheckValue;
+
+    fn new(context: &CFGContext, locals: BTreeMap<Var, LocalState<Self::Value>>) -> Self {
+        DestroyZeroState { locals }
+    }
+
+    fn locals_mut(&mut self) -> &mut BTreeMap<Var, LocalState<Self::Value>> {
+        &mut self.locals
+    }
+
+    fn locals(&self) -> &BTreeMap<Var, LocalState<Self::Value>> {
+        &self.locals
+    }
+
+    fn join_value(v1: &Self::Value, v2: &Self::Value) -> Self::Value {
+        use ZeroCheckValue::*;
+        // Pessimistic: if either path didn't check, result is unknown
+        match (v1, v2) {
+            (CheckedZero, CheckedZero) => CheckedZero,
+            (ConstantZero, ConstantZero) => ConstantZero,
+            (CheckedZero, ConstantZero) | (ConstantZero, CheckedZero) => CheckedZero,
+            _ => Unknown,
+        }
+    }
+
+    fn join_impl(&mut self, _other: &Self, _result: &mut JoinResult) {
+        // No additional state to join beyond locals
+    }
+}
+
+impl SimpleExecutionContext for DestroyZeroExecutionContext {
+    fn add_diag(&mut self, d: CompilerDiagnostic) {
+        self.diags.add(d);
+    }
+}
+
+// ============================================================================
+// 4. Fresh Address Reuse V2 (CFG-aware)
+// ============================================================================
+
+const FRESH_ADDRESS_REUSE_V2_DIAG: DiagnosticInfo = custom(
+    LINT_WARNING_PREFIX,
+    Severity::Warning,
+    CLIPPY_CATEGORY,
+    5, // fresh_address_reuse_v2
+    "fresh_object_address result reused",
+);
+
+pub static FRESH_ADDRESS_REUSE_V2: LintDescriptor = LintDescriptor {
+    name: "fresh_address_reuse_v2",
+    category: LintCategory::Security,
+    description: "fresh_object_address result used multiple times (CFG-aware, requires --mode full --preview)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBasedCFG,
+    gap: Some(TypeSystemGap::OwnershipViolation),
+};
+
+pub struct FreshAddressReuseVerifier;
+
+pub struct FreshAddressReuseVerifierAI<'a> {
+    info: &'a TypingProgramInfo,
+    context: &'a CFGContext<'a>,
+}
+
+/// Abstract value for tracking fresh address usage
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
+pub enum FreshAddressValue {
+    /// Not a fresh address
+    #[default]
+    NotFresh,
+    /// Fresh address, not yet used
+    Fresh(Loc),
+    /// Fresh address, already used once (unsafe to reuse)
+    UsedOnce(Loc),
+}
+
+pub struct FreshAddressExecutionContext {
+    diags: CompilerDiagnostics,
+}
+
+#[derive(Clone, Debug)]
+pub struct FreshAddressState {
+    locals: BTreeMap<Var, LocalState<FreshAddressValue>>,
+}
+
+impl SimpleAbsIntConstructor for FreshAddressReuseVerifier {
+    type AI<'a> = FreshAddressReuseVerifierAI<'a>;
+
+    fn new<'a>(
+        context: &'a CFGContext<'a>,
+        _cfg: &ImmForwardCFG,
+        _init_state: &mut FreshAddressState,
+    ) -> Option<Self::AI<'a>> {
+        if context.attributes.is_test_or_test_only() {
+            return None;
+        }
+
+        Some(FreshAddressReuseVerifierAI {
+            info: context.info,
+            context,
+        })
+    }
+}
+
+impl SimpleAbsInt for FreshAddressReuseVerifierAI<'_> {
+    type State = FreshAddressState;
+    type ExecutionContext = FreshAddressExecutionContext;
+
+    fn finish(
+        &mut self,
+        _final_states: BTreeMap<Label, Self::State>,
+        diags: CompilerDiagnostics,
+    ) -> CompilerDiagnostics {
+        diags
+    }
+
+    fn start_command(&self, _pre: &mut Self::State) -> Self::ExecutionContext {
+        FreshAddressExecutionContext {
+            diags: CompilerDiagnostics::new(),
+        }
+    }
+
+    fn finish_command(
+        &self,
+        context: Self::ExecutionContext,
+        _state: &mut Self::State,
+    ) -> CompilerDiagnostics {
+        context.diags
+    }
+
+    fn exp_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        e: &Exp,
+    ) -> Option<Vec<FreshAddressValue>> {
+        use UnannotatedExp_ as E;
+
+        match &e.exp.value {
+            E::ModuleCall(call) => {
+                let module_sym = call.module.value.module.value();
+                let func_sym = call.name.value();
+                let module_name = module_sym.as_str();
+                let func_name = func_sym.as_str();
+
+                // Track fresh_object_address calls
+                if module_name == "tx_context" && func_name == "fresh_object_address" {
+                    return Some(vec![FreshAddressValue::Fresh(e.exp.loc)]);
+                }
+
+                // Check for new_uid_from_address calls
+                if module_name == "object" && func_name == "new_uid_from_address" {
+                    if let Some(arg) = call.arguments.first() {
+                        if let Some(var) = self.extract_var(arg) {
+                            // First extract what we need from the immutable borrow
+                            let action = if let Some(LocalState::Available(_, val)) = state.locals.get(&var) {
+                                match val {
+                                    FreshAddressValue::UsedOnce(original_loc) => {
+                                        // Already used - this is a reuse!
+                                        Some(("reuse", *original_loc))
+                                    }
+                                    FreshAddressValue::Fresh(loc) => {
+                                        // First use - need to mark as used
+                                        Some(("first_use", *loc))
+                                    }
+                                    _ => None,
+                                }
+                            } else {
+                                None
+                            };
+                            
+                            // Now handle the action without holding the borrow
+                            if let Some((action_type, loc)) = action {
+                                if action_type == "reuse" {
+                                    if self.is_root_source_loc(&e.exp.loc) {
+                                        let msg = "fresh_object_address result is being reused - each UID needs its own fresh address";
+                                        let help = "Use `object::new(ctx)` instead, or call `fresh_object_address` again";
+                                        let d = diag!(
+                                            FRESH_ADDRESS_REUSE_V2_DIAG,
+                                            (e.exp.loc, msg),
+                                            (loc, help),
+                                        );
+                                        context.add_diag(d);
+                                    }
+                                } else if action_type == "first_use" {
+                                    // Mark as used
+                                    if let Some(LocalState::Available(_, v)) = state.locals.get_mut(&var) {
+                                        *v = FreshAddressValue::UsedOnce(loc);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        None
+    }
+}
+
+impl FreshAddressReuseVerifierAI<'_> {
+    fn is_root_source_loc(&self, loc: &Loc) -> bool {
+        !self.context.is_dependency && self.context.is_root_package
+    }
+
+    fn extract_var(&self, e: &Exp) -> Option<Var> {
+        match &e.exp.value {
+            UnannotatedExp_::Move { var, .. }
+            | UnannotatedExp_::Copy { var, .. }
+            | UnannotatedExp_::BorrowLocal(_, var) => Some(*var),
+            _ => None,
+        }
+    }
+}
+
+impl SimpleDomain for FreshAddressState {
+    type Value = FreshAddressValue;
+
+    fn new(context: &CFGContext, locals: BTreeMap<Var, LocalState<Self::Value>>) -> Self {
+        FreshAddressState { locals }
+    }
+
+    fn locals_mut(&mut self) -> &mut BTreeMap<Var, LocalState<Self::Value>> {
+        &mut self.locals
+    }
+
+    fn locals(&self) -> &BTreeMap<Var, LocalState<Self::Value>> {
+        &self.locals
+    }
+
+    fn join_value(v1: &Self::Value, v2: &Self::Value) -> Self::Value {
+        use FreshAddressValue::*;
+        // Pessimistic: if any path has used it, it's used
+        match (v1, v2) {
+            (UsedOnce(loc), _) | (_, UsedOnce(loc)) => UsedOnce(*loc),
+            (Fresh(loc), _) | (_, Fresh(loc)) => Fresh(*loc),
+            _ => NotFresh,
+        }
+    }
+
+    fn join_impl(&mut self, _other: &Self, _result: &mut JoinResult) {
+        // No additional state to join beyond locals
+    }
+}
+
+impl SimpleExecutionContext for FreshAddressExecutionContext {
+    fn add_diag(&mut self, d: CompilerDiagnostic) {
+        self.diags.add(d);
+    }
+}
+
+// ============================================================================
 // Public API
 // ============================================================================
 
-static DESCRIPTORS: &[&LintDescriptor] = &[&PHANTOM_CAPABILITY, &UNCHECKED_DIVISION_V2];
+static DESCRIPTORS: &[&LintDescriptor] = &[
+    &PHANTOM_CAPABILITY,
+    &UNCHECKED_DIVISION_V2,
+    &DESTROY_ZERO_UNCHECKED_V2,
+    &FRESH_ADDRESS_REUSE_V2,
+];
 
 /// Return all Phase II lint descriptors
 pub fn descriptors() -> &'static [&'static LintDescriptor] {

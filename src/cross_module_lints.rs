@@ -15,6 +15,7 @@ use crate::diagnostics::Diagnostic;
 use crate::error::ClippyResult;
 use crate::lint::{
     AnalysisKind, FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup,
+    TypeSystemGap,
 };
 use move_compiler::{
     diag,
@@ -67,19 +68,21 @@ const FLASHLOAN_REPAY_DIAG: DiagnosticInfo = custom(
 pub static TRANSITIVE_CAPABILITY_LEAK: LintDescriptor = LintDescriptor {
     name: "transitive_capability_leak",
     category: LintCategory::Security,
-    description: "Capability leaks across module boundary (type-based cross-module analysis)",
-    group: RuleGroup::Preview,
+    description: "Capability leaks across module boundary (type-based cross-module analysis, requires --mode full --experimental)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::CrossModule,
+    gap: Some(TypeSystemGap::CapabilityEscape),
 };
 
 pub static FLASHLOAN_WITHOUT_REPAY: LintDescriptor = LintDescriptor {
     name: "flashloan_without_repay",
     category: LintCategory::Security,
-    description: "Flashloan borrowed but not repaid on all paths (type-based cross-module)",
-    group: RuleGroup::Preview,
+    description: "Flashloan borrowed but not repaid on all paths (type-based cross-module, requires --mode full --experimental)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::CrossModule,
+    gap: Some(TypeSystemGap::TemporalOrdering),
 };
 
 // ============================================================================

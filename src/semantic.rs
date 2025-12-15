@@ -8,6 +8,7 @@ use crate::diagnostics::Diagnostic;
 use crate::error::{ClippyResult, MoveClippyError};
 use crate::lint::{
     AnalysisKind, FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup,
+    TypeSystemGap,
 };
 use std::path::Path;
 
@@ -15,8 +16,6 @@ use std::path::Path;
 ///
 /// These lints are only available when `move-clippy` is built with the
 /// `full` feature and run in `--mode full` against a Move package.
-
-
 // ============================================================================
 // Sui Monorepo Lints (delegated from sui_mode::linters)
 //
@@ -26,7 +25,6 @@ use std::path::Path;
 //
 // Source: https://github.com/MystenLabs/sui/tree/main/external-crates/move/crates/move-compiler/src/sui_mode/linters
 // ============================================================================
-
 pub static SHARE_OWNED: LintDescriptor = LintDescriptor {
     name: "share_owned",
     category: LintCategory::Suspicious,
@@ -34,6 +32,7 @@ pub static SHARE_OWNED: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::OwnershipViolation),
 };
 
 pub static SELF_TRANSFER: LintDescriptor = LintDescriptor {
@@ -43,6 +42,7 @@ pub static SELF_TRANSFER: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::OwnershipViolation),
 };
 
 pub static CUSTOM_STATE_CHANGE: LintDescriptor = LintDescriptor {
@@ -52,6 +52,7 @@ pub static CUSTOM_STATE_CHANGE: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ApiMisuse),
 };
 
 pub static COIN_FIELD: LintDescriptor = LintDescriptor {
@@ -61,6 +62,7 @@ pub static COIN_FIELD: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ApiMisuse),
 };
 
 pub static FREEZE_WRAPPED: LintDescriptor = LintDescriptor {
@@ -70,6 +72,7 @@ pub static FREEZE_WRAPPED: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::OwnershipViolation),
 };
 
 pub static COLLECTION_EQUALITY: LintDescriptor = LintDescriptor {
@@ -79,6 +82,7 @@ pub static COLLECTION_EQUALITY: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ApiMisuse),
 };
 
 pub static PUBLIC_RANDOM: LintDescriptor = LintDescriptor {
@@ -88,6 +92,7 @@ pub static PUBLIC_RANDOM: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ApiMisuse),
 };
 
 pub static MISSING_KEY: LintDescriptor = LintDescriptor {
@@ -97,6 +102,7 @@ pub static MISSING_KEY: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
 pub static FREEZING_CAPABILITY: LintDescriptor = LintDescriptor {
@@ -106,6 +112,7 @@ pub static FREEZING_CAPABILITY: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::OwnershipViolation),
 };
 
 // ============================================================================
@@ -178,6 +185,7 @@ pub static UNUSED_RETURN_VALUE: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ApiMisuse),
 };
 
 /// Detects emitting non-event-like types via `event::emit<T>(...)`.
@@ -190,6 +198,7 @@ pub static EVENT_EMIT_TYPE_SANITY: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ApiMisuse),
 };
 
 /// Detects sharing of objects with `key + store` abilities.
@@ -248,6 +257,7 @@ pub static SHARE_OWNED_AUTHORITY: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::OwnershipViolation),
 };
 
 /// Detects structs that should be hot potatoes but have the `drop` ability.
@@ -304,6 +314,7 @@ pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ApiMisuse),
 };
 
 /// Detects capability transfers to non-sender addresses.
@@ -342,10 +353,11 @@ pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
 pub static CAPABILITY_TRANSFER_V2: LintDescriptor = LintDescriptor {
     name: "capability_transfer_v2",
     category: LintCategory::Security,
-    description: "Capability transferred to non-sender address (type-based, requires --mode full)",
-    group: RuleGroup::Preview,
+    description: "Capability transferred to non-sender address (type-based, requires --mode full --experimental)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::OwnershipViolation),
 };
 
 // NOTE: The following lints are implemented elsewhere or require future work:
@@ -659,8 +671,6 @@ mod full {
         });
     }
 
-
-
     // =========================================================================
     // Droppable Hot Potato V2 Lint (type-based, zero FP)
     // =========================================================================
@@ -682,7 +692,9 @@ mod full {
         file_map: &MappedFiles,
         info: &TypingProgramInfo,
     ) -> Result<()> {
-        use crate::type_classifier::{has_copy_ability, has_drop_ability, has_key_ability, has_store_ability};
+        use crate::type_classifier::{
+            has_copy_ability, has_drop_ability, has_key_ability, has_store_ability,
+        };
 
         for (mident, minfo) in info.modules.key_cloned_iter() {
             match minfo.target_kind {
@@ -761,10 +773,8 @@ mod full {
     ) -> Result<()> {
         use crate::type_classifier::is_capability_type_from_ty;
 
-        const TRANSFER_FUNCTIONS: &[(&str, &str)] = &[
-            ("transfer", "transfer"),
-            ("transfer", "public_transfer"),
-        ];
+        const TRANSFER_FUNCTIONS: &[(&str, &str)] =
+            &[("transfer", "transfer"), ("transfer", "public_transfer")];
 
         for (mident, mdef) in prog.modules.key_cloned_iter() {
             match mdef.target_kind {
@@ -805,10 +815,24 @@ mod full {
     ) {
         match &item.value {
             T::SequenceItem_::Seq(exp) => {
-                check_capability_transfer_in_exp(exp, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(
+                    exp,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::SequenceItem_::Bind(_, _, exp) => {
-                check_capability_transfer_in_exp(exp, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(
+                    exp,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             _ => {}
         }
@@ -884,7 +908,14 @@ mod full {
             }
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
-                    check_capability_transfer_in_seq_item(item, transfer_fns, out, settings, file_map, func_name);
+                    check_capability_transfer_in_seq_item(
+                        item,
+                        transfer_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
                 }
             }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
@@ -1117,14 +1148,7 @@ mod full {
                 check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
                 check_division_in_exp(t, validated_vars, out, settings, file_map, func_name);
                 if let Some(e) = e_opt {
-                    check_division_in_exp(
-                        e,
-                        validated_vars,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
-                    );
+                    check_division_in_exp(e, validated_vars, out, settings, file_map, func_name);
                 }
             }
             _ => {}
@@ -1557,7 +1581,7 @@ mod full {
     }
 
     /// Check if a type is `sui::coin::Coin<T>`.
-    /// 
+    ///
     /// Coin types have the same ability pattern as capabilities (key+store, no copy/drop)
     /// but they are value tokens, not access control objects. We exclude them from
     /// capability transfer warnings to avoid false positives.
