@@ -7,6 +7,6 @@ sources/main.move:15:16: custom_state_change: potentially unenforceable custom t
 sources/main.move:15:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom transfer function.
 sources/main.move:20:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom share function.
 sources/main.move:20:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom share function.
+sources/main.move:21:9: share_owned_authority: Sharing `test::S1` (has key+store) in `custom_share_bad` makes it publicly accessible. This is dangerous for authority objects (capabilities). If this is intentional shared state, suppress with #[allow(lint(share_owned_authority))].
 sources/main.move:24:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom freeze function.
 sources/main.move:24:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom freeze function.
-sources/main.move:34:5: missing_access_control: Public function `new` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.

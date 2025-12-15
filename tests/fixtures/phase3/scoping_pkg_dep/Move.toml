@@ -1,0 +1,7 @@
+[package]
+name = "scoping_pkg_dep"
+edition = "2024"
+
+[addresses]
+dep_pkg = "0x0"
+sui = "0x2"

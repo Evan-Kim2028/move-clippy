@@ -89,6 +89,22 @@ fn unused_return_value_negative() {
 }
 
 // ============================================================================
+// Event Emit Type Sanity Tests
+// ============================================================================
+
+#[test]
+fn event_emit_type_sanity_positive() {
+    let output = lint_semantic_fixture("event_emit_type_sanity_positive.move");
+    assert_snapshot!(output);
+}
+
+#[test]
+fn event_emit_type_sanity_negative() {
+    let output = lint_semantic_fixture("event_emit_type_sanity_negative.move");
+    assert_snapshot!(output);
+}
+
+// ============================================================================
 // Missing Access Control Tests
 // ============================================================================
 

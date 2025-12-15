@@ -6,5 +6,3 @@ expression: output
 12:9 - modern_method_syntax: Prefer method syntax: `coin.split(...)`
 32:9 - modern_method_syntax: Prefer method syntax: `coin.split(...)`
 33:9 - modern_method_syntax: Prefer method syntax: `coin.split(...)`
-7:5 - unchecked_coin_split: Function `split_coin_ignored` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort.
-27:5 - unchecked_coin_split: Function `multiple_ignored` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort.

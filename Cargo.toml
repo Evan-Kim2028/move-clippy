@@ -65,10 +65,11 @@ chrono = { version = "0.4", features = ["serde"] }
 sha2 = "0.10"
 hex = "0.4"
 
-# Optional (future) semantic analysis via Mysten's Move fork snapshot
-move-compiler = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
-move-ir-types = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
-move-package = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", tag = "sui-mainnet-v1.61.2", optional = true }
+# Optional semantic analysis via local Mysten Move snapshot
+# NOTE: We use the local `packages/sui/external-crates/move` checkout so we can patch compiler APIs.
+move-compiler = { path = "../sui/external-crates/move/crates/move-compiler", optional = true }
+move-ir-types = { path = "../sui/external-crates/move/crates/move-ir-types", optional = true }
+move-package = { path = "../sui/external-crates/move/crates/move-package", optional = true }
 
 [features]
 default = ["telemetry"]
@@ -87,3 +88,7 @@ insta = { workspace = true }
 tempfile = { workspace = true }
 regex = { workspace = true }
 walkdir = { workspace = true }
+
+[[bin]]
+name = "dump_ast"
+path = "src/bin/dump_ast.rs"

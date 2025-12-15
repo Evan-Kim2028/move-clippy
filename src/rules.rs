@@ -21,11 +21,10 @@ pub use modernization::{
 
 // Security lints (audit-backed)
 pub use security::{
-    CapabilityLeakLint, DroppableHotPotatoLint, ExcessiveTokenAbilitiesLint, HardcodedAddressLint,
-    IgnoredBooleanReturnLint, MissingWitnessDropLint, PublicRandomAccessLint, SharedCapabilityLint,
-    SharedCapabilityObjectLint, SingleStepOwnershipTransferLint, StaleOraclePriceLint,
-    SuspiciousOverflowCheckLint, UnboundedVectorGrowthLint, UncheckedCoinSplitLint,
-    UncheckedWithdrawalLint,
+    CapabilityLeakLint, DroppableHotPotatoLint, IgnoredBooleanReturnLint, MissingWitnessDropLint,
+    PublicRandomAccessLint, SharedCapabilityLint, SharedCapabilityObjectLint,
+    SingleStepOwnershipTransferLint, StaleOraclePriceLint, SuspiciousOverflowCheckLint,
+    UncheckedCoinSplitLint, UncheckedWithdrawalLint,
 };
 
 // Style lints

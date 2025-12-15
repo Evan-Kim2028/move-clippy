@@ -12,6 +12,8 @@ use move_clippy::triage::{
     Finding, FindingFilter, ReportFormat, Severity, TriageDatabase, TriageStatus,
     generate_json_report, generate_markdown_report, generate_text_report,
 };
+#[cfg(feature = "full")]
+use move_clippy::{absint_lints, cross_module_lints};
 use serde::Serialize;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -50,6 +52,11 @@ fn list_rules() {
     let registry = LintRegistry::default_rules();
     let mut rules: Vec<_> = registry.descriptors().collect();
     rules.extend(semantic::descriptors());
+    #[cfg(feature = "full")]
+    {
+        rules.extend(absint_lints::descriptors());
+        rules.extend(cross_module_lints::descriptors());
+    }
     rules.sort_by_key(|d| d.name);
 
     for d in rules {
@@ -137,7 +144,7 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
                 anyhow::bail!("--mode full requires either --package or at least one PATH");
             };
 
-            let mut diags = semantic::lint_package(pkg_hint, &settings)?;
+            let mut diags = semantic::lint_package(pkg_hint, &settings, preview)?;
 
             if !args.only.is_empty() {
                 let only_set: std::collections::HashSet<&str> =
@@ -157,12 +164,13 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
         Vec::new()
     };
 
-    let registry = LintRegistry::default_rules_filtered(
+    let registry = LintRegistry::default_rules_filtered_with_experimental(
         &args.only,
         &args.skip,
         &disabled,
         matches!(args.mode, LintMode::Full),
         preview,
+        args.experimental,
     )?;
     let engine = LintEngine::new_with_settings(registry, settings.clone());
 
@@ -226,14 +234,19 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
         OutputFormat::Pretty | OutputFormat::Github => {
             if args.paths.is_empty() {
                 let (count, file_has_error) =
-                    lint_stdin_text(&engine, args.format, args.deny_warnings)?;
+                    lint_stdin_text(&engine, args.format, args.deny_warnings, args.show_tier)?;
                 total_diags += count;
                 has_error |= file_has_error;
             } else {
                 let files = collect_move_files(&args.paths)?;
                 for path in files {
-                    let (count, file_has_error) =
-                        lint_file_text(&engine, &path, args.format, args.deny_warnings)?;
+                    let (count, file_has_error) = lint_file_text(
+                        &engine,
+                        &path,
+                        args.format,
+                        args.deny_warnings,
+                        args.show_tier,
+                    )?;
                     total_diags += count;
                     has_error |= file_has_error;
                 }
@@ -244,12 +257,18 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
                     let file = diag.file.clone().unwrap_or_else(|| "<unknown>".to_string());
                     match args.format {
                         OutputFormat::Pretty => {
+                            let tier_prefix = if args.show_tier {
+                                format!("[{}] ", diag.lint.group.as_str())
+                            } else {
+                                String::new()
+                            };
                             println!(
-                                "{}:{}:{}: {}: {}: {}",
+                                "{}:{}:{}: {}: {}{}: {}",
                                 file,
                                 diag.span.start.row,
                                 diag.span.start.column,
                                 diag.level.as_str(),
+                                tier_prefix,
                                 diag.lint.name,
                                 diag.message
                             );
@@ -263,13 +282,18 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
                             } else {
                                 "warning"
                             };
+                            let lint_name = if args.show_tier {
+                                format!("[{}]{}", diag.lint.group.as_str(), diag.lint.name)
+                            } else {
+                                diag.lint.name.to_string()
+                            };
                             println!(
                                 "::{} file={},line={},col={},title={}::{}",
                                 kind,
                                 github_escape(&file),
                                 diag.span.start.row,
                                 diag.span.start.column,
-                                diag.lint.name,
+                                lint_name,
                                 msg
                             );
                         }
@@ -320,12 +344,13 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
         None => (Vec::new(), LintSettings::default(), args.preview),
     };
 
-    let registry = LintRegistry::default_rules_filtered(
+    let registry = LintRegistry::default_rules_filtered_with_experimental(
         &args.only,
         &args.skip,
         &disabled,
         matches!(args.mode, LintMode::Full),
         preview,
+        args.experimental,
     )?;
     let engine = LintEngine::new_with_settings(registry, settings);
 
@@ -1016,6 +1041,7 @@ fn lint_file_text(
     path: &Path,
     format: OutputFormat,
     deny_warnings: bool,
+    show_tier: bool,
 ) -> anyhow::Result<(usize, bool)> {
     let source = std::fs::read_to_string(path)?;
     let diagnostics = engine.lint_source(&source)?;
@@ -1029,12 +1055,18 @@ fn lint_file_text(
                     .file
                     .clone()
                     .unwrap_or_else(|| path.display().to_string());
+                let tier_prefix = if show_tier {
+                    format!("[{}] ", diag.lint.group.as_str())
+                } else {
+                    String::new()
+                };
                 println!(
-                    "{}:{}:{}: {}: {}: {}",
+                    "{}:{}:{}: {}: {}{}: {}",
                     file,
                     diag.span.start.row,
                     diag.span.start.column,
                     diag.level.as_str(),
+                    tier_prefix,
                     diag.lint.name,
                     diag.message
                 );
@@ -1058,13 +1090,19 @@ fn lint_file_text(
                     "warning"
                 };
 
+                let lint_name = if show_tier {
+                    format!("[{}]{}", diag.lint.group.as_str(), diag.lint.name)
+                } else {
+                    diag.lint.name.to_string()
+                };
+
                 println!(
                     "::{} file={},line={},col={},title={}::{}",
                     kind,
                     github_escape(&file),
                     diag.span.start.row,
                     diag.span.start.column,
-                    diag.lint.name,
+                    lint_name,
                     msg
                 );
                 has_error |= kind == "error";
@@ -1080,6 +1118,7 @@ fn lint_stdin_text(
     engine: &LintEngine,
     format: OutputFormat,
     deny_warnings: bool,
+    show_tier: bool,
 ) -> anyhow::Result<(usize, bool)> {
     let mut source = String::new();
     std::io::stdin().read_to_string(&mut source)?;
@@ -1091,12 +1130,18 @@ fn lint_stdin_text(
         OutputFormat::Pretty => {
             for diag in &diagnostics {
                 let file = diag.file.clone().unwrap_or_else(|| "stdin".to_string());
+                let tier_prefix = if show_tier {
+                    format!("[{}] ", diag.lint.group.as_str())
+                } else {
+                    String::new()
+                };
                 println!(
-                    "{}:{}:{}: {}: {}: {}",
+                    "{}:{}:{}: {}: {}{}: {}",
                     file,
                     diag.span.start.row,
                     diag.span.start.column,
                     diag.level.as_str(),
+                    tier_prefix,
                     diag.lint.name,
                     diag.message
                 );
@@ -1117,13 +1162,19 @@ fn lint_stdin_text(
                     "warning"
                 };
 
+                let lint_name = if show_tier {
+                    format!("[{}]{}", diag.lint.group.as_str(), diag.lint.name)
+                } else {
+                    diag.lint.name.to_string()
+                };
+
                 println!(
                     "::{} file={},line={},col={},title={}::{}",
                     kind,
                     github_escape(&file),
                     diag.span.start.row,
                     diag.span.start.column,
-                    diag.lint.name,
+                    lint_name,
                     msg
                 );
                 has_error |= kind == "error";

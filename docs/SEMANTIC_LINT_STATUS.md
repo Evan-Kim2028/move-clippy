@@ -1,232 +1,153 @@
 # Semantic Lint Status
 
-This document tracks the implementation status of semantic lints in move-clippy.
-Semantic lints require Move compiler typing information and are only available when:
-
-- Built with the `full` feature flag
-- Run with `--mode full`
-- Targeting a valid Move package
-
-**Last Updated**: 2025-12-14
-
-## Overview
-
-| Status | Count | Description |
-|--------|-------|-------------|
-| ✅ Active (Custom) | 9 | Fully implemented in move-clippy |
-| ⚡ Delegated (Sui) | 11 | Handled by Sui Move compiler visitors |
-| **Total** | **20** | Total semantic lint descriptors |
+**Last Updated**: 2025-12-14 (Post-Framework Validation Audit)
 
 ---
 
-## Architecture: Delegated vs Custom Lints
+## ⚠️ CRITICAL: Most Semantic Lints Are Broken
 
-move-clippy uses a **hybrid approach** for semantic linting:
+Running `move-clippy --mode full` on the **Sui framework** produces **792 false positives**.
 
-### Delegated Lints (Sui Compiler)
-- **Implementation**: Sui Move compiler's built-in lint visitors
-- **Location**: `move-compiler/src/sui_mode/linters/`
-- **Technology**: SimpleAbsInt (abstract interpretation), CFGIRVisitor
-- **Integration**: `lint_sui_visitors()` in `src/semantic.rs`
-- **Why**: Leverage production-quality lints from Sui team
-- **Count**: 11 lints
+**Root Cause**: Lints use **name-based heuristics** (`name.ends_with("_cap")`) instead of **type-based detection** (`abilities.has_ability_(Ability_::Key)`).
 
-### Custom Lints (move-clippy)
-- **Implementation**: Custom typing AST traversal in `src/semantic.rs`
-- **Technology**: TypingProgramInfo, Typing AST recursion, basic state tracking
-- **Why**: Security patterns from audits not in Sui compiler
-- **Count**: 9 lints (3 naming + 6 security)
+**See**: Issue #24 for complete audit, Issue #12 for roadmap.
 
 ---
 
-## Active Lints (Implemented in move-clippy)
+## Lint Status Summary
 
-These lints have full implementations in `src/semantic.rs`.
-
-### Naming Lints (Custom Implementation)
-
-| Lint | Function | Analysis Type | Description |
-|------|----------|---------------|-------------|
-| `capability_naming` | `lint_capability_naming` | TypingProgramInfo | Capability structs (key+store) should be suffixed with `_cap` |
-| `event_naming` | `lint_event_naming` | TypingProgramInfo | Event structs (copy+drop) should follow `<past_tense>_<noun>_event` pattern |
-| `getter_naming` | `lint_getter_naming` | Typing AST body inspection | Avoid `get_` prefix for simple field getters taking `&Self` |
-
-### Security Lints (Custom Implementation)
-
-| Lint | Function | Analysis Type | Reference |
-|------|----------|---------------|-----------|
-| `unfrozen_coin_metadata` | `lint_unfrozen_coin_metadata` | Typing AST recursion | MoveBit 2023-07-07 |
-| `unused_capability_param` | `lint_unused_capability_param` | Typing AST recursion + var tracking | SlowMist 2024 |
-| `unchecked_division` | `lint_unchecked_division` | Basic state tracking (validated vars) | Common vulnerability |
-| `oracle_zero_price` | `lint_oracle_zero_price` | Basic state tracking (validated prices) | Bluefin Audit 2024 |
-| `unused_return_value` | `lint_unused_return_value` | Typing AST recursion | DeFi audit patterns |
-| `missing_access_control` | `lint_missing_access_control` | Type + heuristics | SlowMist 2024 |
-
-**Implementation Note**: Current custom lints use simple AST traversal with basic state tracking. Phase II will upgrade priority lints to use SimpleAbsInt for better control-flow awareness (see `SEMANTIC_LINTER_EXPANSION_SPEC.md`).
+| Category | Count | Status |
+|----------|-------|--------|
+| **Sui Delegated (WORKING)** | 9 | ✅ Production-ready |
+| **Style/Modernization (WORKING)** | 17 | ✅ Production-ready |
+| **Security - Semantic (BROKEN)** | 9 | ❌ 792 FPs on framework |
+| **Security - Syntactic (MIXED)** | 15 | ⚠️ Some deprecated |
+| **Phase II/III (BROKEN)** | 7 | ❌ Use heuristics |
 
 ---
 
-## Delegated Lints (Sui Compiler Visitors)
+## Working Lints (30 total)
 
-These lints are **not implemented** in move-clippy code. Instead, they are handled by the 
-Sui Move compiler's built-in lint visitors. The descriptors exist for:
+### Sui Delegated Lints (9) - ✅ PRODUCTION READY
 
-1. **Documentation**: Listing available semantic checks in `list-rules`
-2. **Configuration**: Allowing `allow`/`deny` settings in `move-clippy.toml`
-3. **Output Aggregation**: Collecting Sui compiler warnings into move-clippy's output format
+These use the Sui compiler's proper type analysis:
 
-### Sui Visitor Lints
+| Lint | Description |
+|------|-------------|
+| `share_owned` | Possible owned object share |
+| `self_transfer` | Transfer back to sender |
+| `custom_state_change` | Custom transfer/share/freeze |
+| `coin_field` | Avoid Coin fields in structs |
+| `freeze_wrapped` | Don't wrap shared before freeze |
+| `collection_equality` | No equality on bags/tables |
+| `public_random` | Random must be private |
+| `missing_key` | Shared objects need key |
+| `freezing_capability` | Avoid freeze capabilities |
 
-| Lint | Description | Sui Code | Analysis Type |
-|------|-------------|----------|---------------|
-| `share_owned` | Possible owned object share may abort | `W04001` | Abstract Interpretation |
-| `self_transfer` | Non-composable transfer to sender | `W04002` | Abstract Interpretation |
-| `custom_state_change` | Custom transfer/share/freeze should call private variants | `W04003` | Call Graph |
-| `coin_field` | Avoid storing `sui::coin::Coin` fields in structs | `W04004` | Type Visitor |
-| `freeze_wrapped` | Do not wrap shared objects before freezing | `W04005` | Abstract Interpretation |
-| `collection_equality` | Avoid equality checks over bags/tables/collections | `W04006` | Type Visitor |
-| `public_random` | Random state should remain private and uncopyable | `W04007` | Type Visitor |
-| `missing_key` | Shared/transferred structs should have key ability | `W04008` | Type Visitor |
-| `freezing_capability` | Avoid storing freeze capabilities | `W04009` | Type Visitor |
-| `prefer_mut_tx_context` | Use `&mut TxContext` instead of `&TxContext` | `W04010` | Type Visitor |
-| `unnecessary_public_entry` | Remove unnecessary `public` on `entry` functions | `W04011` | Type Visitor |
+### Style/Modernization Lints (17) - ✅ PRODUCTION READY
 
-### How Delegation Works
+Pure syntax checks, no semantic analysis needed:
 
-The `lint_sui_visitors()` function in `src/semantic.rs`:
+| Lint | Description |
+|------|-------------|
+| `abilities_order` | Struct abilities ordering |
+| `empty_vector_literal` | Use `vector[]` |
+| `while_true_to_loop` | Use `loop` |
+| ... | (and 14 more) |
 
-1. Compiles the Move package using the Sui compiler
-2. Registers Sui's lint visitors via `add_visitors(linters::linter_visitors())`
-3. Collects all warnings from Sui's lint visitors
-4. Maps Sui warning codes (e.g., `W04001`) to move-clippy descriptors via `descriptor_for_sui_code()`
-5. Converts locations and formats to move-clippy's output format
+### Test Quality (3) + Conventions (1) - ✅ PRODUCTION READY
+
+Syntactic checks that work correctly.
+
+---
+
+## Broken Lints (28 total)
+
+### Naming Lints (3) - ❌ WRONG CONVENTIONS
+
+| Lint | FPs | Problem | Issue |
+|------|-----|---------|-------|
+| `capability_naming` | 22 | Enforces `_cap` but Sui uses `Cap` | #20 |
+| `event_naming` | 11 | Enforces `_event` suffix, Sui doesn't use | #21 |
+| `getter_naming` | 5 | Flags `get_` prefix, Sui uses it | #23 |
+
+### Security - Semantic (6) - ❌ USE HEURISTICS
+
+| Lint | FPs | Heuristic | Issue |
+|------|-----|-----------|-------|
+| `unused_capability_param` | 209 | `name.ends_with("_cap")` | #14 |
+| `missing_access_control` | 181 | `name.contains("cap")` | #19 |
+| `unchecked_division` | 9 | Format string parsing | #16 |
+| `unused_return_value` | 8 | Function name list | #22 |
+| `oracle_zero_price` | ? | `var_name.contains("price")` | - |
+| `unfrozen_coin_metadata` | ? | `contains("CoinMetadata")` | - |
+
+### Phase II/III (7) - ❌ USE HEURISTICS
+
+| Lint | FPs | Heuristic | Issue |
+|------|-----|-----------|-------|
+| `transitive_capability_leak` | 302 | `name.ends_with("Cap")` | #18 |
+| `unused_capability_param_v2` | 209 | `name.ends_with("Cap")` | #14 |
+| `flashloan_without_repay` | 40 | `name.contains("borrow")` | #15 |
+| `unchecked_division_v2` | 9 | Format string parsing | #16 |
+| `oracle_price_taint` | ? | `contains("get_price")` | - |
+| `price_manipulation_window` | ? | `contains("oracle")` | - |
+| `resource_leak` | N/A | Not implemented | - |
+
+### Syntactic Security (15) - ⚠️ MIXED
+
+| Lint | Status | Notes |
+|------|--------|-------|
+| `suspicious_overflow_check` | ✅ OK | Flags explicit patterns |
+| `stale_oracle_price` | ✅ OK | Flags `get_price_unsafe` API |
+| `ignored_boolean_return` | ✅ OK | Specific API patterns |
+| `droppable_hot_potato` | ⚠️ | Keyword-based |
+| `shared_capability` | ⚠️ | Name-based |
+| `excessive_token_abilities` | ❌ DEPRECATED | High FP |
+| `unbounded_vector_growth` | ❌ DEPRECATED | High FP |
+| `hardcoded_address` | ❌ DEPRECATED | High FP |
+
+---
+
+## The Fix: Type-Based Detection
+
+The Move compiler provides complete type information:
 
 ```rust
-fn lint_sui_visitors(
-    out: &mut Vec<Diagnostic>,
-    settings: &LintSettings,
-    build_plan: &BuildPlan,
-    package_root: &Path,
-) -> ClippyResult<()> {
-    // Build with Sui compiler, collect its warnings
-    build_plan.compile_with_driver_and_deps(deps, &mut writer, |compiler| {
-        let (attr, filters) = linters::known_filters();
-        let compiler = compiler
-            .add_custom_known_filters(attr, filters)
-            .add_visitors(linters::linter_visitors(CompilerLintLevel::All));
-        // ... collect diagnostics ...
-    })?;
-    // Map to move-clippy diagnostics
+// Capability: key + store, no copy/drop
+fn is_capability_type(abilities: &AbilitySet) -> bool {
+    abilities.has_ability_(Ability_::Key) 
+        && abilities.has_ability_(Ability_::Store)
+        && !abilities.has_ability_(Ability_::Copy)
+}
+
+// Hot Potato: NO abilities
+fn is_hot_potato_type(abilities: &AbilitySet) -> bool {
+    abilities.is_empty()
+}
+
+// Event: copy + drop only  
+fn is_event_type(abilities: &AbilitySet) -> bool {
+    abilities.has_ability_(Ability_::Copy) 
+        && abilities.has_ability_(Ability_::Drop)
+        && !abilities.has_ability_(Ability_::Key)
 }
 ```
 
 ---
 
-## Lint Categories
+## Success Metrics
 
-| Category | Active (Custom) | Delegated (Sui) | Total |
-|----------|-----------------|-----------------|-------|
-| Naming | 3 | 0 | 3 |
-| Security | 6 | 0 | 6 |
-| Suspicious | 0 | 9 | 9 |
-| Modernization | 0 | 2 | 2 |
-| **Total** | **9** | **11** | **20** |
-
----
-
-## Test Coverage
-
-### Active Lint Tests (Custom)
-
-| Lint | Test File | Test Type | Coverage |
-|------|-----------|-----------|----------|
-| `capability_naming` | `tests/sui_lints.rs` | Snapshot | ✅ Good |
-| `event_naming` | - | - | ❌ TODO |
-| `getter_naming` | - | - | ❌ TODO |
-| `unfrozen_coin_metadata` | `tests/semantic_snapshots.rs` | Snapshot | ✅ Good |
-| `unused_capability_param` | - | - | ❌ TODO |
-| `unchecked_division` | `tests/semantic_snapshots.rs` | Snapshot | ✅ Good |
-| `oracle_zero_price` | `tests/semantic_snapshots.rs` | Snapshot | ✅ Good |
-| `unused_return_value` | - | - | ❌ TODO |
-| `missing_access_control` | `tests/sui_lints.rs` | Snapshot (indirect) | ⚠️ Partial |
-
-### Delegated Lint Tests (Sui)
-
-| Lint | Test File | Test Type | Coverage |
-|------|-----------|-----------|----------|
-| `share_owned` | `tests/sui_lints.rs` | Snapshot | ✅ Good |
-| `self_transfer` | `tests/sui_lints.rs` | Snapshot | ✅ Good |
-| `custom_state_change` | `tests/sui_lints.rs` | Snapshot | ✅ Good |
-| `coin_field` | - | - | ❌ TODO |
-| `freeze_wrapped` | - | - | ❌ TODO |
-| `collection_equality` | - | - | ❌ TODO |
-| `public_random` | - | - | ❌ TODO |
-| `missing_key` | - | - | ❌ TODO |
-| `freezing_capability` | - | - | ❌ TODO |
-| `prefer_mut_tx_context` | - | - | ❌ TODO |
-| `unnecessary_public_entry` | - | - | ❌ TODO |
-
-**Test Coverage Summary**: 6/20 lints have snapshot tests (30%)
-
----
-
-## Configuration
-
-### Enabling/Disabling Semantic Lints
-
-In `move-clippy.toml`:
-
-```toml
-# Run in full mode to enable semantic lints
-mode = "full"
-
-[rules]
-# Disable specific lints
-share_owned = "allow"
-self_transfer = "allow"
-
-# Increase severity for security lints
-unchecked_division = "deny"
-oracle_zero_price = "deny"
-```
-
-### Command Line
-
-```bash
-# Enable full mode for semantic lints
-move-clippy --mode full ./sources
-
-# Skip specific lints
-move-clippy --mode full --skip share_owned,self_transfer ./sources
-
-# Only run specific lints
-move-clippy --mode full --only unchecked_division,oracle_zero_price ./sources
-```
-
----
-
-## Future Work
-
-### Planned Enhancements
-
-1. **Auto-fix for naming lints**: Generate suggestions for capability/event renaming
-2. **Cross-module analysis**: Track capability flow across module boundaries
-3. **Taint analysis**: Track untrusted data from oracles through calculations
-4. **Custom lint plugins**: Allow users to define project-specific semantic lints
-
-### Potential New Lints
-
-| Lint | Description | Priority |
-|------|-------------|----------|
-| `unchecked_borrow` | Borrow from table/bag without exists check | High |
-| `reentrancy_risk` | State changes after external calls | High |
-| `timestamp_dependence` | Logic depending on `clock::timestamp_ms()` | Medium |
-| `flashloan_vulnerability` | Unchecked loan repayment | Medium |
+| Metric | Target | Current |
+|--------|--------|---------|
+| FPs on `sui-framework` | **0** | 792 |
+| Lints using heuristics | **0** | 28 |
+| Functional lints | 100% | 46% |
 
 ---
 
 ## References
 
-- [Sui Move Security Principles](https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html) - MoveBit 2023
-- [Sui Linter Documentation](https://docs.sui.io/guides/developer/first-app/debug#linting) - Sui Docs
-- [Move Prover](https://github.com/move-language/move/tree/main/language/move-prover) - Formal verification
+- **#24**: [META] Eliminate All Heuristics
+- **#12**: Semantic Analysis Roadmap
+- **#14-23**: Individual lint fix issues

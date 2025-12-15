@@ -1,0 +1,5 @@
+---
+source: tests/semantic_snapshots.rs
+expression: output
+---
+No findings.

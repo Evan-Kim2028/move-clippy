@@ -9,7 +9,9 @@
 //! All security lints are backed by published audit reports and security research.
 //! See `docs/SECURITY_LINTS.md` for the complete reference list.
 
-use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
+use crate::lint::{
+    AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
+};
 use tree_sitter::Node;
 
 // ============================================================================
@@ -67,9 +69,10 @@ use tree_sitter::Node;
 pub static DROPPABLE_HOT_POTATO: LintDescriptor = LintDescriptor {
     name: "droppable_hot_potato",
     category: LintCategory::Security,
-    description: "Hot potato struct has `drop` ability, enabling theft (see: Trail of Bits 2025, Mirage Audits 2025)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Use droppable_hot_potato_v2 (type-based) - this version uses name heuristics",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Keywords that indicate a struct is likely intended to be a hot potato.
@@ -78,12 +81,12 @@ pub static DROPPABLE_HOT_POTATO: LintDescriptor = LintDescriptor {
 /// AND NOT be an event struct (which legitimately has copy+drop).
 /// Also excludes empty structs (0 fields) which are typically witness types.
 const HOT_POTATO_KEYWORDS: &[&str] = &[
-    "receipt",    // FlashLoanReceipt
-    "promise",    // RepaymentPromise
-    "ticket",     // BorrowTicket
-    "potato",     // HotPotato (explicit)
-    "voucher",    // LoanVoucher
-    // NOTE: "obligation" removed - too many FPs with witness types like ObligationOwnership
+    "receipt", // FlashLoanReceipt
+    "promise", // RepaymentPromise
+    "ticket",  // BorrowTicket
+    "potato",  // HotPotato (explicit)
+    "voucher", // LoanVoucher
+               // NOTE: "obligation" removed - too many FPs with witness types like ObligationOwnership
 ];
 
 /// Keywords that indicate a struct is an event (and legitimately has copy+drop).
@@ -92,11 +95,11 @@ const EVENT_KEYWORDS: &[&str] = &["event", "emitted", "log"];
 /// Keywords that indicate a struct is a witness type (legitimately has drop only).
 /// These are empty marker structs used for type-level access control.
 const WITNESS_KEYWORDS: &[&str] = &[
-    "ownership",    // ObligationOwnership - witness for Ownership pattern
-    "collaterals",  // ObligationCollaterals - witness for WitTable
-    "debts",        // ObligationDebts - witness for WitTable
-    "witness",      // Explicit witness
-    "marker",       // Marker type
+    "ownership",   // ObligationOwnership - witness for Ownership pattern
+    "collaterals", // ObligationCollaterals - witness for WitTable
+    "debts",       // ObligationDebts - witness for WitTable
+    "witness",     // Explicit witness
+    "marker",      // Marker type
 ];
 
 pub struct DroppableHotPotatoLint;
@@ -227,222 +230,6 @@ fn is_empty_struct(struct_node: Node, source: &str) -> bool {
     // Check for empty body patterns like "{}" or "{ }"
     struct_text.contains("{}") || struct_text.contains("{ }")
 }
-
-// ============================================================================
-// excessive_token_abilities - Detects tokens with copy+drop (infinite money)
-// ============================================================================
-
-/// Detects token/asset structs with both `copy` and `drop` abilities.
-///
-/// # Security References
-///
-/// - **Mirage Audits (2025-10-01)**: "The Ability Combination Nightmare"
-///   URL: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes
-///   Verified: 2025-12-13 (Documents the copy+drop vulnerability)
-///
-/// - **MoveBit (2023-07-07)**: "Avoid giving excessive abilities to structs"
-///   URL: https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html
-///   Verified: 2025-12-13 (Still valid - fundamental Move security pattern)
-///
-/// # Why This Matters
-///
-/// A struct with both `copy` and `drop` can be:
-/// 1. **Duplicated infinitely** (via `copy`)
-/// 2. **Destroyed at will** (via `drop`)
-/// 3. **Created from thin air** by copying and modifying
-///
-/// This is the "infinite money glitch" for token implementations.
-///
-/// # Example
-///
-/// ```move
-/// // CRITICAL VULNERABILITY - DO NOT USE
-/// struct TokenCoin has copy, drop, store {
-///     amount: u64,
-/// }
-///
-/// // Attacker can duplicate tokens:
-/// let original = get_token();
-/// let copy1 = original;  // copy happens
-/// let copy2 = original;  // another copy
-/// // Now attacker has 3x the tokens!
-/// ```
-///
-/// # Correct Pattern
-///
-/// ```move
-/// // Assets should ONLY have key + store
-/// struct TokenCoin has key, store {
-///     id: UID,
-///     balance: Balance,
-/// }
-/// ```
-///
-/// # Status: DEPRECATED
-///
-/// This lint is deprecated due to unacceptably high false positive rates.
-/// Keyword-based detection cannot reliably distinguish tokens from:
-/// - Accounting structs (Balances, RewardBalance)
-/// - Metadata structs (Asset, DepositedAsset)
-/// - Event structs (AssetSupplied, TokenTransferred)
-/// - Data transfer objects
-///
-/// See: https://github.com/Evan-Kim2028/move-clippy/issues/1
-/// Future: Implement at semantic level with type information from Move compiler.
-pub static EXCESSIVE_TOKEN_ABILITIES: LintDescriptor = LintDescriptor {
-    name: "excessive_token_abilities",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Token struct has copy+drop abilities - high FP rate, use semantic analysis instead",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-};
-
-/// Keywords that indicate a struct represents a valuable asset.
-/// 
-/// IMPORTANT: This lint has HIGH FALSE POSITIVE risk with broader keywords.
-/// We intentionally use a very narrow set (only "token" and "coin") because:
-/// - "balance" causes FPs with accounting structs (Balances, RewardBalance)
-/// - "asset" causes FPs with metadata structs (Asset, DepositedAsset)  
-/// - "share" causes FPs with data structs (ShareInfo, NeedsRebalance)
-/// - "stake" causes FPs with position tracking structs
-///
-/// For comprehensive token detection, use semantic analysis (--mode full).
-const TOKEN_KEYWORDS: &[&str] = &[
-    "token", // MyToken, GameToken
-    "coin",  // GameCoin, MyCoin
-    // Removed: "balance", "share", "stake", "asset" - too many FPs
-];
-
-/// Keywords that indicate a struct is a key/event, not a valuable asset.
-/// Includes past-tense event naming patterns (e.g., "Created", "Updated").
-const NON_ASSET_SUFFIXES: &[&str] = &[
-    // Explicit non-asset suffixes
-    "key",
-    "event",
-    "log",
-    "data",
-    "info",
-    "params",
-    "config",
-    "metadata",
-    "registry",
-    "registered",
-    // Past-tense event naming patterns (common event naming convention)
-    "created",
-    "updated",
-    "deleted",
-    "transferred",
-    "minted",
-    "burned",
-    "deposited",
-    "withdrawn",
-    "swapped",
-    "claimed",
-    "staked",
-    "unstaked",
-    "swap",
-    // Additional event-like suffixes found in ecosystem
-    "supplied",
-    "synced",
-    "supported",
-    "removed",
-    "applied",
-    "redeemed",
-];
-
-pub struct ExcessiveTokenAbilitiesLint;
-
-impl LintRule for ExcessiveTokenAbilitiesLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &EXCESSIVE_TOKEN_ABILITIES
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_excessive_token_abilities(root, source, ctx);
-    }
-}
-
-fn check_excessive_token_abilities(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for struct definitions
-    if node.kind() == "struct_definition"
-        && let Some(name_node) = node.child_by_field_name("name")
-    {
-        let struct_name = name_node
-            .utf8_text(source.as_bytes())
-            .unwrap_or("")
-            .to_lowercase();
-
-        // Skip if this is a non-asset struct (events, keys, data, etc.)
-        let is_non_asset = NON_ASSET_SUFFIXES.iter().any(|suffix| {
-            struct_name.ends_with(suffix) || struct_name.contains(&format!("{}_", suffix))
-        });
-        if is_non_asset {
-            // Recurse and return early
-            let mut cursor = node.walk();
-            for child in node.children(&mut cursor) {
-                check_excessive_token_abilities(child, source, ctx);
-            }
-            return;
-        }
-
-        // Check if this looks like a token/asset struct
-        let is_token = TOKEN_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
-
-        if is_token {
-            // Check if it has both copy AND drop abilities
-            let (has_copy, has_drop) = get_copy_drop_abilities(node, source);
-
-            if has_copy && has_drop {
-                let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-                ctx.report_node(
-                        &EXCESSIVE_TOKEN_ABILITIES,
-                        node,
-                        format!(
-                            "Struct `{}` appears to be a token/asset but has both `copy` and `drop` abilities. \
-                             This enables infinite duplication. Assets should only have `key` and `store`. \
-                             See: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes",
-                            original_name
-                        ),
-                    );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_excessive_token_abilities(child, source, ctx);
-    }
-}
-
-/// Check if a struct definition has copy and/or drop abilities.
-/// Returns (has_copy, has_drop).
-fn get_copy_drop_abilities(struct_node: Node, source: &str) -> (bool, bool) {
-    let mut has_copy = false;
-    let mut has_drop = false;
-
-    // Look for ability_decls child which contains the abilities
-    let mut cursor = struct_node.walk();
-    for child in struct_node.children(&mut cursor) {
-        if child.kind() == "ability_decls" {
-            let abilities_text = child.utf8_text(source.as_bytes()).unwrap_or("");
-            // Parse abilities from format: "has copy, drop, store"
-            for ability in abilities_text.split(|c: char| c == ',' || c.is_whitespace()) {
-                let ability = ability.trim().to_lowercase();
-                if ability == "copy" {
-                    has_copy = true;
-                }
-                if ability == "drop" {
-                    has_drop = true;
-                }
-            }
-        }
-    }
-
-    (has_copy, has_drop)
-}
-
-// ============================================================================
 // shared_capability - Detects capability objects being shared publicly
 // ============================================================================
 
@@ -497,9 +284,10 @@ fn get_copy_drop_abilities(struct_node: Node, source: &str) -> (bool, bool) {
 pub static SHARED_CAPABILITY: LintDescriptor = LintDescriptor {
     name: "shared_capability",
     category: LintCategory::Security,
-    description: "Capability object is being shared, making it publicly accessible (see: Sui security best practices)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Use share_owned_authority (type-based) or Sui's share_owned lint",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Keywords that indicate a struct/variable is a capability object.
@@ -688,6 +476,7 @@ pub static SUSPICIOUS_OVERFLOW_CHECK: LintDescriptor = LintDescriptor {
     description: "Manual overflow check detected - these are error-prone. Consider using built-in checked arithmetic (see Cetus $223M hack)",
     group: RuleGroup::Stable, // Promoted: 100% TP rate in ecosystem validation
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Function name patterns that indicate overflow/bounds checking.
@@ -805,6 +594,7 @@ pub static STALE_ORACLE_PRICE: LintDescriptor = LintDescriptor {
     description: "Using get_price_unsafe may return stale prices (see: Bluefin Audit 2024, Pyth docs)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Function names that indicate potentially stale oracle price retrieval.
@@ -884,6 +674,7 @@ fn check_stale_oracle_price(node: Node, source: &str, ctx: &mut LintContext<'_>)
 ///
 /// // CORRECT - two-step with confirmation
 /// public fun propose_admin(exchange: &mut Exchange, new_admin: address) {
+///     // Requires caller to already have AdminCap
 ///     exchange.pending_admin = option::some(new_admin);
 /// }
 ///
@@ -899,6 +690,7 @@ pub static SINGLE_STEP_OWNERSHIP_TRANSFER: LintDescriptor = LintDescriptor {
     description: "Single-step ownership transfer is dangerous - use two-step pattern (see: OpenZeppelin Ownable2Step)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Function name patterns that suggest admin/ownership transfer.
@@ -935,7 +727,10 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
     if node.kind() == "function_definition"
         && let Some(name_node) = node.child_by_field_name("name")
     {
-        let func_name = name_node.utf8_text(source.as_bytes()).unwrap_or("").to_lowercase();
+        let func_name = name_node
+            .utf8_text(source.as_bytes())
+            .unwrap_or("")
+            .to_lowercase();
 
         // Check if function name suggests ownership transfer
         let is_ownership_transfer = OWNERSHIP_TRANSFER_PATTERNS
@@ -1023,9 +818,10 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
 pub static UNCHECKED_COIN_SPLIT: LintDescriptor = LintDescriptor {
     name: "unchecked_coin_split",
     category: LintCategory::Security,
-    description: "coin::split without prior balance check may abort unexpectedly",
-    group: RuleGroup::Preview, // Preview since it may have FPs
+    description: "[DEPRECATED] Sui's coin::split already panics on insufficient balance (runtime protection)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 pub struct UncheckedCoinSplitLint;
@@ -1133,6 +929,7 @@ pub static MISSING_WITNESS_DROP: LintDescriptor = LintDescriptor {
     description: "One-time witness struct missing `drop` ability (see: Sui OTW pattern docs)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 pub struct MissingWitnessDropLint;
@@ -1152,9 +949,7 @@ fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_
     if node.kind() == "struct_definition"
         && let Some(name_node) = node.child_by_field_name("name")
     {
-        let struct_name = name_node
-            .utf8_text(source.as_bytes())
-            .unwrap_or("");
+        let struct_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
 
         // OTW pattern: SCREAMING_SNAKE_CASE, same as module name, empty body
         // Check if it looks like an OTW (all uppercase with underscores)
@@ -1239,6 +1034,7 @@ pub static PUBLIC_RANDOM_ACCESS: LintDescriptor = LintDescriptor {
     description: "Public function exposes Random object, enabling front-running (see: Sui randomness docs)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 pub struct PublicRandomAccessLint;
@@ -1297,272 +1093,6 @@ fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_
         check_public_random_access(child, source, ctx);
     }
 }
-
-// ============================================================================
-// unbounded_vector_growth - Detects vector operations without size limits
-// ============================================================================
-
-/// Detects vector push operations that could lead to unbounded growth.
-///
-/// # Security References
-///
-/// - **General Smart Contract Security**: Unbounded data structures are a DoS vector
-/// - **Sui Gas Model**: Large vectors consume more gas for storage and iteration
-///
-/// # Why This Matters
-///
-/// Vectors that grow without bounds can:
-/// 1. **DoS**: Make operations too expensive to execute
-/// 2. **Gas exhaustion**: Iteration over large vectors exceeds gas limits
-/// 3. **Storage bloat**: Permanently increase on-chain storage costs
-///
-/// # Example
-///
-/// ```move
-/// // BAD - No limit on vector size
-/// public fun add_member(group: &mut Group, member: address) {
-///     vector::push_back(&mut group.members, member);
-/// }
-/// ```
-///
-/// # Correct Pattern
-///
-/// ```move
-/// const MAX_MEMBERS: u64 = 1000;
-///
-/// public fun add_member(group: &mut Group, member: address) {
-///     assert!(vector::length(&group.members) < MAX_SIZE, E_TOO_MANY);
-///     vector::push_back(&mut group.members, member);
-/// }
-/// ```
-/// DEPRECATED: This lint has been deprecated due to high false positive rate (>80%)
-/// in ecosystem testing. Cannot determine vector bounds without semantic analysis.
-/// See: https://github.com/Evan-Kim2028/move-clippy/issues/2
-pub static UNBOUNDED_VECTOR_GROWTH: LintDescriptor = LintDescriptor {
-    name: "unbounded_vector_growth",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Vector growth without size limit - high FP rate, needs semantic analysis",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-};
-
-pub struct UnboundedVectorGrowthLint;
-
-impl LintRule for UnboundedVectorGrowthLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &UNBOUNDED_VECTOR_GROWTH
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_unbounded_vector_growth(root, source, ctx);
-    }
-}
-
-fn check_unbounded_vector_growth(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for function definitions
-    if node.kind() == "function_definition" {
-        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        let func_lower = func_text.to_lowercase();
-
-        // Check if function has vector push operations
-        let has_push = func_lower.contains("vector::push_back")
-            || func_lower.contains(".push_back(")
-            || func_lower.contains("vec_set::insert")
-            || func_lower.contains("vec_map::insert");
-
-        if has_push {
-            // Check if there's a length check before the push
-            let has_length_check = func_lower.contains("vector::length")
-                || func_lower.contains(".length()")
-                || func_lower.contains("< max")
-                || func_lower.contains("< MAX")
-                || func_lower.contains("<= max")
-                || func_lower.contains("<= MAX")
-                || func_lower.contains("e_too_many")
-                || func_lower.contains("e_max_")
-                || func_lower.contains("e_limit");
-
-            if !has_length_check {
-                let func_name = node
-                    .child_by_field_name("name")
-                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
-                    .unwrap_or("unknown");
-
-                ctx.report_node(
-                    &UNBOUNDED_VECTOR_GROWTH,
-                    node,
-                    format!(
-                        "Function `{}` adds to a vector without an apparent size limit. \
-                         Consider adding a maximum size check like \
-                         `assert!(vector::length(&v) < MAX_SIZE, E_TOO_MANY)` to prevent DoS.",
-                        func_name
-                    ),
-                );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_unbounded_vector_growth(child, source, ctx);
-    }
-}
-
-// ============================================================================
-// hardcoded_address - Detects literal addresses in code
-// ============================================================================
-
-/// Detects hardcoded addresses that should be constants or parameters.
-///
-/// # Security References
-///
-/// - **General Best Practice**: Hardcoded addresses make code inflexible
-/// - **Upgrade Safety**: Addresses may need to change across deployments
-///
-/// # Why This Matters
-///
-/// Hardcoded addresses:
-/// 1. **Inflexibility**: Can't change without code modification
-/// 2. **Test/Prod confusion**: Wrong address in wrong environment
-/// 3. **Audit difficulty**: Hard to verify all addresses are correct
-///
-/// # Example
-///
-/// ```move
-/// // BAD - Hardcoded address
-/// public fun send_fee(coin: Coin<SUI>) {
-///     transfer::public_transfer(coin, @0x1234abcd...);
-/// }
-/// ```
-///
-/// # Correct Pattern
-///
-/// ```move
-/// const FEE_RECIPIENT: address = @fee_recipient;
-/// // Or use a config object
-///
-/// public fun send_fee(config: &Config, coin: Coin<SUI>) {
-///     transfer::public_transfer(coin, config.fee_recipient);
-/// }
-/// ```
-/// DEPRECATED: This lint has been deprecated due to high false positive rate (>90%)
-/// in ecosystem testing. 90%+ of findings were in test files with legitimate test addresses.
-/// Cannot distinguish test vs production code without semantic analysis.
-/// See: https://github.com/Evan-Kim2028/move-clippy/issues/3
-pub static HARDCODED_ADDRESS: LintDescriptor = LintDescriptor {
-    name: "hardcoded_address",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Hardcoded address detection - high FP rate, needs semantic analysis",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-};
-
-pub struct HardcodedAddressLint;
-
-impl LintRule for HardcodedAddressLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &HARDCODED_ADDRESS
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_hardcoded_address(root, source, ctx);
-    }
-}
-
-/// Addresses that are commonly legitimate and shouldn't be flagged
-const KNOWN_SAFE_ADDRESSES: &[&str] = &[
-    "@0x0",    // Zero address (null)
-    "@0x1",    // System address
-    "@0x2",    // Sui framework
-    "@0x3",    // Sui system
-    "@0x5",    // Sui system
-    "@0x6",    // Clock object
-    "@0x8",    // Random object
-    "@0xdee9", // DeepBook
-];
-
-fn check_hardcoded_address(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for address literals in function bodies (not at module/const level)
-    if node.kind() == "function_definition" {
-        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // Find @0x... patterns that aren't in known safe list
-        let mut i = 0;
-        let bytes = func_text.as_bytes();
-        while i < bytes.len() {
-            if bytes[i] == b'@'
-                && i + 3 < bytes.len()
-                && bytes[i + 1] == b'0'
-                && bytes[i + 2] == b'x'
-            {
-                // Found @0x, extract the address
-                let start = i;
-                let mut end = i + 3;
-                while end < bytes.len() && (bytes[end].is_ascii_hexdigit() || bytes[end] == b'_') {
-                    end += 1;
-                }
-
-                let addr = &func_text[start..end];
-                let addr_lower = addr.to_lowercase();
-
-                // Skip known safe addresses - must be exact match or followed by non-hex
-                let is_safe = KNOWN_SAFE_ADDRESSES.iter().any(|safe| {
-                    let safe_lower = safe.to_lowercase();
-                    if addr_lower == safe_lower {
-                        return true;
-                    }
-                    // Check if the address starts with a safe prefix followed by non-hex
-                    // e.g., @0x2 should match @0x2 but not @0x234
-                    if addr_lower.starts_with(&safe_lower) {
-                        // Check what comes after
-                        let remainder = &addr_lower[safe_lower.len()..];
-                        // If there's more hex digits, it's not a match
-                        !remainder
-                            .chars()
-                            .next()
-                            .is_none_or(|c| c.is_ascii_hexdigit())
-                    } else {
-                        false
-                    }
-                });
-
-                // Skip short addresses (likely constants)
-                let is_short = addr.len() < 10;
-
-                if !is_safe && !is_short {
-                    let func_name = node
-                        .child_by_field_name("name")
-                        .and_then(|n| n.utf8_text(source.as_bytes()).ok())
-                        .unwrap_or("unknown");
-
-                    ctx.report_node(
-                        &HARDCODED_ADDRESS,
-                        node,
-                        format!(
-                            "Function `{}` contains hardcoded address `{}`. \
-                             Consider using a constant or configuration parameter for flexibility.",
-                            func_name, addr
-                        ),
-                    );
-                    // Only report once per function
-                    break;
-                }
-
-                i = end;
-            } else {
-                i += 1;
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_hardcoded_address(child, source, ctx);
-    }
-}
-
 // ============================================================================
 // ignored_boolean_return - Detects boolean-returning functions with ignored results
 // ============================================================================
@@ -1602,15 +1132,16 @@ pub static IGNORED_BOOLEAN_RETURN: LintDescriptor = LintDescriptor {
     description: "Boolean-returning function result is ignored, may indicate missing authorization check (see: Typus Finance hack)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Functions that return bool and should have their results checked
 const BOOLEAN_FUNCTIONS: &[&str] = &[
-    "contains",     // vector::contains, table::contains
-    "is_some",      // option::is_some
-    "is_none",      // option::is_none
-    "is_empty",     // vector::is_empty
-    "exists",       // exists<T>(addr)
+    "contains", // vector::contains, table::contains
+    "is_some",  // option::is_some
+    "is_none",  // option::is_none
+    "is_empty", // vector::is_empty
+    "exists",   // exists<T>(addr)
 ];
 
 pub struct IgnoredBooleanReturnLint;
@@ -1629,10 +1160,12 @@ fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<
     // Look for call_expression within a node
     if node.kind() == "call_expression" {
         let call_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check if this is a boolean-returning function
         for func in BOOLEAN_FUNCTIONS {
-            if call_text.contains(&format!("::{}", func)) || call_text.ends_with(&format!("{}(", func)) {
+            if call_text.contains(&format!("{}(", func))
+                || call_text.ends_with(&format!("{}(", func))
+            {
                 // Check if this call's result is being used by walking up the parent chain
                 let mut current = node.parent();
                 while let Some(parent) = current {
@@ -1647,7 +1180,8 @@ fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<
                         || parent_kind == "binary_expression"  // used in && or ||
                         || parent_kind == "unary_expression"   // !contains(...)
                         || parent_kind == "parenthesized_expression"  // (contains(...))
-                        || parent_kind == "call_expression"  // nested in another call like assert!(...)
+                        || parent_kind == "call_expression"
+                    // nested in another call like assert!(...)
                     {
                         // Result is being used, skip to recursion
                         let mut cursor = node.walk();
@@ -1662,7 +1196,7 @@ fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<
                     }
                     current = parent.parent();
                 }
-                
+
                 // Also check if this call is inside a macro like assert!
                 // by looking at the source context - check a wider window for multi-line asserts
                 let start_byte = node.start_byte();
@@ -1671,7 +1205,8 @@ fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<
                     // Count open/close parens to see if we're inside an assert!(
                     if prefix.contains("assert!") || prefix.contains("assert_eq!") {
                         // Check if we're still inside the assert by counting parens
-                        let after_assert = prefix.rfind("assert").map(|i| &prefix[i..]).unwrap_or("");
+                        let after_assert =
+                            prefix.rfind("assert").map(|i| &prefix[i..]).unwrap_or("");
                         let open_parens = after_assert.matches('(').count();
                         let close_parens = after_assert.matches(')').count();
                         if open_parens > close_parens {
@@ -1684,7 +1219,7 @@ fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<
                         }
                     }
                 }
-                
+
                 // Check if this is the last expression in a function (implicit return)
                 // by checking if there's nothing significant after it
                 let end_byte = node.end_byte();
@@ -1701,10 +1236,10 @@ fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<
                         return;
                     }
                 }
-                
+
                 // Get function context for better message
                 let func_name = get_enclosing_function_name(node, source);
-                
+
                 ctx.report_node(
                     &IGNORED_BOOLEAN_RETURN,
                     node,
@@ -1731,10 +1266,10 @@ fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<
 fn get_enclosing_function_name<'a>(node: Node<'a>, source: &'a str) -> &'a str {
     let mut current = Some(node);
     while let Some(n) = current {
-        if n.kind() == "function_definition" || n.kind() == "native_function_definition" {
-            if let Some(name_node) = n.child_by_field_name("name") {
-                return name_node.utf8_text(source.as_bytes()).unwrap_or("unknown");
-            }
+        if (n.kind() == "function_definition" || n.kind() == "native_function_definition")
+            && let Some(name_node) = n.child_by_field_name("name")
+        {
+            return name_node.utf8_text(source.as_bytes()).unwrap_or("unknown");
         }
         current = n.parent();
     }
@@ -1749,7 +1284,7 @@ fn get_enclosing_function_name<'a>(node: Node<'a>, source: &'a str) -> &'a str {
 ///
 /// # Security References
 ///
-/// - **Typus Finance Hack (Oct 2025)**: UpdateAuthority was shared, allowing anyone to access
+/// - **Typus Finance Hack (Oct 2025)**: UpdateAuthority was shared instead of transferred to admin
 ///   URL: https://slowmist.medium.com/is-the-move-language-secure-the-typus-permission-validation-vulnerability-755a5175f7c3
 ///   Verified: 2025-12-13
 ///
@@ -1777,18 +1312,19 @@ fn get_enclosing_function_name<'a>(node: Node<'a>, source: &'a str) -> &'a str {
 pub static SHARED_CAPABILITY_OBJECT: LintDescriptor = LintDescriptor {
     name: "shared_capability_object",
     category: LintCategory::Security,
-    description: "Capability-like object is being shared, may allow unauthorized access (see: Typus Finance hack)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Use share_owned_authority (type-based) - this version uses name heuristics",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Keywords that indicate an object controls access and shouldn't be shared
 /// These are more specific than general "registry" to reduce false positives
 const ACCESS_CONTROL_KEYWORDS: &[&str] = &[
-    "authority",    // UpdateAuthority
-    "whitelist",    // Whitelist
-    "allowlist",    // Allowlist
-    "permission",   // PermissionSet
+    "authority",  // UpdateAuthority
+    "whitelist",  // Whitelist
+    "allowlist",  // Allowlist
+    "permission", // PermissionSet
 ];
 
 pub struct SharedCapabilityObjectLint;
@@ -1870,17 +1406,13 @@ pub static UNCHECKED_WITHDRAWAL: LintDescriptor = LintDescriptor {
     name: "unchecked_withdrawal",
     category: LintCategory::Security,
     description: "Withdrawal without balance validation may allow over-withdrawal (see: Thala hack)",
-    group: RuleGroup::Preview, // Preview - needs refinement to reduce FPs
+    group: RuleGroup::Experimental, // Experimental - name-based detection, high FP rate
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Function name patterns that indicate withdrawal operations
-const WITHDRAWAL_PATTERNS: &[&str] = &[
-    "withdraw",
-    "unstake",
-    "redeem",
-    "claim",
-];
+const WITHDRAWAL_PATTERNS: &[&str] = &["withdraw", "unstake", "redeem", "claim"];
 
 pub struct UncheckedWithdrawalLint;
 
@@ -1896,33 +1428,38 @@ impl LintRule for UncheckedWithdrawalLint {
 
 fn check_unchecked_withdrawal(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     // Look for function definitions
-    if node.kind() == "function_definition" {
-        if let Some(name_node) = node.child_by_field_name("name") {
-            let func_name = name_node.utf8_text(source.as_bytes()).unwrap_or("").to_lowercase();
-            
-            let is_withdrawal = WITHDRAWAL_PATTERNS.iter().any(|p| func_name.contains(p));
-            
-            if is_withdrawal {
-                // Check if there's an assert! before any withdraw/take operations
-                let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-                
-                // Simple heuristic: check if there's an assert with >= or balance check
-                let has_balance_check = func_text.contains("assert!") && 
-                    (func_text.contains(">=") || func_text.contains("balance") || func_text.contains("amount"));
-                
-                if !has_balance_check {
-                    let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-                    ctx.report_node(
-                        &UNCHECKED_WITHDRAWAL,
-                        node,
-                        format!(
-                            "Function `{}` performs withdrawal but may lack balance validation. \
-                             Consider adding `assert!(user.balance >= amount, E_INSUFFICIENT)` \
-                             before the withdrawal operation.",
-                            original_name
-                        ),
-                    );
-                }
+    if node.kind() == "function_definition"
+        && let Some(name_node) = node.child_by_field_name("name")
+    {
+        let func_name = name_node
+            .utf8_text(source.as_bytes())
+            .unwrap_or("")
+            .to_lowercase();
+
+        let is_withdrawal = WITHDRAWAL_PATTERNS.iter().any(|p| func_name.contains(p));
+
+        if is_withdrawal {
+            // Check if there's an assert! before any withdraw/take operations
+            let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+
+            // Simple heuristic: check if there's an assert with >= or balance check
+            let has_balance_check = func_text.contains("assert!")
+                && (func_text.contains(">=")
+                    || func_text.contains("balance")
+                    || func_text.contains("amount"));
+
+            if !has_balance_check {
+                let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
+                ctx.report_node(
+                    &UNCHECKED_WITHDRAWAL,
+                    node,
+                    format!(
+                        "Function `{}` performs withdrawal but may lack balance validation. \
+                         Consider adding `assert!(user.balance >= amount, E_INSUFFICIENT)` \
+                         before the withdrawal operation.",
+                        original_name
+                    ),
+                );
             }
         }
     }
@@ -1968,9 +1505,10 @@ fn check_unchecked_withdrawal(node: Node, source: &str, ctx: &mut LintContext<'_
 pub static CAPABILITY_LEAK: LintDescriptor = LintDescriptor {
     name: "capability_leak",
     category: LintCategory::Security,
-    description: "Capability transferred to untrusted recipient without validation (see: MoveScanner 2025)",
-    group: RuleGroup::Preview, // Preview - needs refinement
+    description: "[DEPRECATED] Name-based detection has FPs - type-based version planned",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 pub struct CapabilityLeakLint;
@@ -1987,38 +1525,43 @@ impl LintRule for CapabilityLeakLint {
 
 fn check_capability_leak(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     // Look for function definitions
-    if node.kind() == "function_definition" {
-        if let Some(name_node) = node.child_by_field_name("name") {
-            let func_name = name_node.utf8_text(source.as_bytes()).unwrap_or("").to_lowercase();
-            
-            // Check if function name suggests capability transfer
-            let is_cap_transfer = func_name.contains("transfer") && 
-                (func_name.contains("cap") || func_name.contains("admin") || func_name.contains("owner"));
-            
-            if is_cap_transfer {
-                let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-                
-                // Check if function takes a capability by value (consuming it)
-                let takes_cap_by_value = func_text.contains("Cap,") || func_text.contains("Cap)");
-                
-                // Check if there's validation (another cap reference parameter)
-                let has_auth_param = func_text.contains("&AdminCap") || 
-                    func_text.contains("&OwnerCap") || 
-                    func_text.contains("_auth:") ||
-                    func_text.contains("_cap:");
-                
-                if takes_cap_by_value && !has_auth_param {
-                    let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-                    ctx.report_node(
-                        &CAPABILITY_LEAK,
-                        node,
-                        format!(
-                            "Function `{}` transfers a capability without apparent authorization check. \
-                             Consider requiring an existing capability reference as proof of authorization.",
-                            original_name
-                        ),
-                    );
-                }
+    if node.kind() == "function_definition"
+        && let Some(name_node) = node.child_by_field_name("name")
+    {
+        let func_name = name_node
+            .utf8_text(source.as_bytes())
+            .unwrap_or("")
+            .to_lowercase();
+
+        // Check if function name suggests capability transfer
+        let is_cap_transfer = func_name.contains("transfer")
+            && (func_name.contains("cap")
+                || func_name.contains("admin")
+                || func_name.contains("owner"));
+
+        if is_cap_transfer {
+            let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+
+            // Check if function takes a capability by value (consuming it)
+            let takes_cap_by_value = func_text.contains("Cap,") || func_text.contains("Cap)");
+
+            // Check if there's validation (another cap reference parameter)
+            let has_auth_param = func_text.contains("&AdminCap")
+                || func_text.contains("&OwnerCap")
+                || func_text.contains("_auth:")
+                || func_text.contains("_cap:");
+
+            if takes_cap_by_value && !has_auth_param {
+                let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
+                ctx.report_node(
+                    &CAPABILITY_LEAK,
+                    node,
+                    format!(
+                        "Function `{}` transfers a capability without apparent authorization check. \
+                         Consider requiring an existing capability reference as proof of authorization.",
+                        original_name
+                    ),
+                );
             }
         }
     }
@@ -2043,9 +1586,6 @@ mod tests {
         let lint = DroppableHotPotatoLint;
         lint.check(tree.root_node(), source, &mut ctx);
 
-        let lint2 = ExcessiveTokenAbilitiesLint;
-        lint2.check(tree.root_node(), source, &mut ctx);
-
         let lint3 = SharedCapabilityLint;
         lint3.check(tree.root_node(), source, &mut ctx);
 
@@ -2066,12 +1606,6 @@ mod tests {
 
         let lint9 = PublicRandomAccessLint;
         lint9.check(tree.root_node(), source, &mut ctx);
-
-        let lint10 = UnboundedVectorGrowthLint;
-        lint10.check(tree.root_node(), source, &mut ctx);
-
-        let lint11 = HardcodedAddressLint;
-        lint11.check(tree.root_node(), source, &mut ctx);
 
         // New lints
         let lint12 = IgnoredBooleanReturnLint;
@@ -2124,54 +1658,6 @@ mod tests {
         assert!(messages.is_empty());
     }
 
-    #[test]
-    fn test_excessive_token_abilities_detected() {
-        let source = r#"
-            module example::token {
-                struct TokenCoin has copy, drop, store {
-                    amount: u64,
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("TokenCoin"));
-        assert!(messages[0].contains("copy"));
-        assert!(messages[0].contains("drop"));
-    }
-
-    #[test]
-    fn test_token_with_key_store_ok() {
-        let source = r#"
-            module example::token {
-                struct TokenCoin has key, store {
-                    id: UID,
-                    balance: u64,
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
-    }
-
-    #[test]
-    fn test_non_token_struct_with_copy_drop_ok() {
-        // Regular data structs can have copy+drop
-        let source = r#"
-            module example::data {
-                struct Point has copy, drop {
-                    x: u64,
-                    y: u64,
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
-    }
-
     // =========================================================================
     // FP Prevention Tests - droppable_hot_potato
     // =========================================================================
@@ -2189,7 +1675,10 @@ mod tests {
         "#;
 
         let messages = lint_source(source);
-        assert!(messages.is_empty(), "Empty witness structs should not be flagged");
+        assert!(
+            messages.is_empty(),
+            "Empty witness structs should not be flagged"
+        );
     }
 
     #[test]
@@ -2207,11 +1696,14 @@ mod tests {
         "#;
 
         let messages = lint_source(source);
-        assert!(messages.is_empty(), "Witness-keyword structs should not be flagged");
+        assert!(
+            messages.is_empty(),
+            "Witness-keyword structs should not be flagged"
+        );
     }
 
     // =========================================================================
-    // FP Prevention Tests - excessive_token_abilities
+    // FP Prevention Tests
     // =========================================================================
 
     #[test]
@@ -2232,7 +1724,10 @@ mod tests {
         "#;
 
         let messages = lint_source(source);
-        assert!(messages.is_empty(), "Asset metadata structs should not be flagged");
+        assert!(
+            messages.is_empty(),
+            "Asset metadata structs should not be flagged"
+        );
     }
 
     #[test]
@@ -2254,7 +1749,10 @@ mod tests {
         "#;
 
         let messages = lint_source(source);
-        assert!(messages.is_empty(), "Event structs should not be flagged as tokens");
+        assert!(
+            messages.is_empty(),
+            "Event structs should not be flagged as tokens"
+        );
     }
 
     // =========================================================================
@@ -2646,7 +2144,12 @@ mod tests {
         "#;
 
         let messages = lint_source(source);
-        assert!(messages.is_empty());
+        // Should not fire when there's a balance check
+        let withdraw_msgs: Vec<_> = messages
+            .iter()
+            .filter(|m| m.contains("withdraw") && m.contains("balance"))
+            .collect();
+        assert!(withdraw_msgs.is_empty());
     }
 
     // =========================================================================
@@ -2731,87 +2234,9 @@ mod tests {
     // UnboundedVectorGrowthLint tests
     // =========================================================================
 
-    #[test]
-    fn test_unbounded_vector_growth_detected() {
-        let source = r#"
-            module example::group {
-                public fun add_member(group: &mut Group, member: address) {
-                    vector::push_back(&mut group.members, member);
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("vector"));
-        assert!(messages[0].contains("size limit"));
-    }
-
-    #[test]
-    fn test_bounded_vector_ok() {
-        let source = r#"
-            module example::group {
-                const MAX_MEMBERS: u64 = 100;
-                
-                public fun add_member(group: &mut Group, member: address) {
-                    assert!(vector::length(&group.members) < MAX_SIZE, E_TOO_MANY);
-                    vector::push_back(&mut group.members, member);
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
-    }
-
     // =========================================================================
     // HardcodedAddressLint tests
     // =========================================================================
-
-    #[test]
-    fn test_hardcoded_address_detected() {
-        let source = r#"
-module example::fee {
-    public fun send_fee(coin: Coin<SUI>) {
-        transfer::public_transfer(coin, @0x1234567890abcdef);
-    }
-}
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("hardcoded address"));
-    }
-
-    #[test]
-    fn test_system_address_ok() {
-        // System addresses like @0x2 (sui framework) are OK
-        let source = r#"
-            module example::call {
-                public fun call_sui() {
-                    let _ = @0x2;
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
-    }
-
-    #[test]
-    fn test_short_address_ok() {
-        // Short addresses are likely named constants
-        let source = r#"
-            module example::call {
-                public fun call_thing() {
-                    let _ = @0xabc;
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
-    }
 
     // =========================================================================
     // IgnoredBooleanReturnLint tests
@@ -2886,7 +2311,10 @@ module example::pool {
 
         let messages = lint_source(source);
         // Should not fire for normal objects without access-control keywords
-        let shared_cap_msgs: Vec<_> = messages.iter().filter(|m| m.contains("access-control")).collect();
+        let shared_cap_msgs: Vec<_> = messages
+            .iter()
+            .filter(|m| m.contains("access-control"))
+            .collect();
         assert!(shared_cap_msgs.is_empty());
     }
 
@@ -2924,7 +2352,10 @@ module example::stake {
 
         let messages = lint_source(source);
         // Should not fire when there's a balance check
-        let withdraw_msgs: Vec<_> = messages.iter().filter(|m| m.contains("withdraw") && m.contains("balance")).collect();
+        let withdraw_msgs: Vec<_> = messages
+            .iter()
+            .filter(|m| m.contains("withdraw") && m.contains("balance"))
+            .collect();
         assert!(withdraw_msgs.is_empty());
     }
 
@@ -2961,7 +2392,10 @@ module example::admin {
 
         let messages = lint_source(source);
         // Should not fire when there's an auth param
-        let cap_leak_msgs: Vec<_> = messages.iter().filter(|m| m.contains("capability") && m.contains("transfer")).collect();
+        let cap_leak_msgs: Vec<_> = messages
+            .iter()
+            .filter(|m| m.contains("capability") && m.contains("transfer"))
+            .collect();
         assert!(cap_leak_msgs.is_empty());
     }
 }

@@ -323,6 +323,7 @@ mod tests {
         description: "test",
         group: crate::lint::RuleGroup::Stable,
         fix: crate::lint::FixDescriptor::none(),
+        analysis: crate::lint::AnalysisKind::Syntactic,
     };
 
     #[test]

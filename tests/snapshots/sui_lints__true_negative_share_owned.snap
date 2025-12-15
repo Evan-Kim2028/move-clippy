@@ -2,11 +2,5 @@
 source: tests/sui_lints.rs
 expression: output
 ---
-sources/main.move:11:5: missing_access_control: Public function `make_obj` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:15:5: missing_access_control: Public function `crate` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
 sources/main.move:29:19: capability_naming: Capability struct should be suffixed with `_cap`: `Obj_cap`
-sources/main.move:37:5: missing_access_control: Public function `transfer` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:42:5: missing_access_control: Public function `share` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:64:5: missing_access_control: Public function `transfer` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:69:5: missing_access_control: Public function `share` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:92:5: missing_access_control: Public function `new` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
+sources/main.move:44:9: share_owned_authority: Sharing `can_determine_to_be_new::Obj` (has key+store) in `share` makes it publicly accessible. This is dangerous for authority objects (capabilities). If this is intentional shared state, suppress with #[allow(lint(share_owned_authority))].

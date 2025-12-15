@@ -74,7 +74,8 @@ fn run_fixture(name: &str) -> ClippyResult<String> {
         modernize_fixture(package_dir.path())?;
         write_manifest(package_dir.path(), "2024")?;
 
-        let diagnostics = semantic::lint_package(package_dir.path(), &LintSettings::default())?;
+        let diagnostics =
+            semantic::lint_package(package_dir.path(), &LintSettings::default(), false)?;
         Ok(format_diagnostics(package_dir.path(), diagnostics))
     })
 }

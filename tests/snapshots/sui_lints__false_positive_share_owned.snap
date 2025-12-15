@@ -5,8 +5,6 @@ expression: output
 sources/main.move:6:19: capability_naming: Capability struct should be suffixed with `_cap`: `Obj_cap`
 sources/main.move:12:9: share_owned: possible owned object share: Potential abort from a (potentially) owned object created by a different transaction.
 sources/main.move:12:9: share_owned: possible owned object share: Potential abort from a (potentially) owned object created by a different transaction.
-sources/main.move:35:5: missing_access_control: Public function `transfer` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:40:5: missing_access_control: Public function `share` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
+sources/main.move:12:9: share_owned_authority: Sharing `has_store::Obj` (has key+store) in `arg_object` makes it publicly accessible. This is dangerous for authority objects (capabilities). If this is intentional shared state, suppress with #[allow(lint(share_owned_authority))].
 sources/main.move:42:9: share_owned: possible owned object share: Potential abort from a (potentially) owned object created by a different transaction.
 sources/main.move:42:9: share_owned: possible owned object share: Potential abort from a (potentially) owned object created by a different transaction.
-sources/main.move:61:5: missing_access_control: Public function `new` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.

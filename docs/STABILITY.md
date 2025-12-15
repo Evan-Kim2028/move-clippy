@@ -40,6 +40,36 @@ move-clippy lint --preview src/
 preview = true
 ```
 
+### Experimental
+
+**Definition:** Rules with high false-positive risk, useful for research and security audits.
+
+**Characteristics:**
+- High false-positive rate (>5-10%)
+- Detection strategies are heuristic or name-based
+- Not recommended for CI pipelines
+- Require `--experimental` flag (implies `--preview`)
+- Useful for security audits and codebase exploration
+
+**Example usage:**
+```bash
+# Enable experimental rules via CLI
+move-clippy lint --experimental src/
+
+# Experimental implies preview, so both are enabled
+move-clippy lint --experimental --show-tier src/
+
+# Or via config file (move-clippy.toml)
+[lints]
+experimental = true  # Implies preview = true
+```
+
+**When to use Experimental:**
+- Security audits where false positives are acceptable
+- Exploring potential issues in a codebase
+- Research on new lint patterns
+- **DO NOT** use in CI/CD pipelines
+
 ### Deprecated
 
 **Definition:** Rules scheduled for removal in the next major version.
@@ -98,6 +128,16 @@ A rule can be promoted from Preview to Stable when it meets ALL of the following
 | `unchecked_coin_split` | **Medium** | May flag checked splits | Needs balance tracking |
 | `unbounded_vector_growth` | **Medium** | May flag bounded loops | Needs loop analysis |
 | `hardcoded_address` | **Medium** | Test addresses are benign | Needs test context detection |
+
+### Security Lints (Experimental)
+
+| Lint | FP Risk | Why Experimental | Detection Strategy |
+|------|---------|------------------|-------------------|
+| `unchecked_coin_split` | **High** | Name-based detection without dataflow | Looks for `coin::split` without preceding balance checks |
+| `unchecked_withdrawal` | **High** | Name-based detection, many FPs | Searches for `withdraw` functions without `assert!` |
+| `capability_leak` | **High** | Doesn't validate recipient | Flags all capability transfers without recipient validation |
+
+**Note:** These lints moved to Experimental tier due to high false-positive rates. They are useful for security audits but generate too many false alarms for daily development. Require `--experimental` flag to enable.
 
 ### Style/Modernization Lints (All Stable - Zero FP Risk)
 

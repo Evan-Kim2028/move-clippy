@@ -13,6 +13,7 @@
 #![allow(clippy::manual_contains)] // Used in hot paths where iter().any() is clearer
 #![allow(clippy::vec_init_then_push)] // Used for clarity in some contexts
 
+pub mod annotations;
 pub mod cli;
 pub mod config;
 pub mod diagnostics;
@@ -27,7 +28,17 @@ pub mod semantic;
 pub mod suppression;
 pub mod telemetry;
 pub mod triage;
+pub mod unified;
 pub mod visitor;
+
+#[cfg(feature = "full")]
+pub mod type_classifier;
+
+#[cfg(feature = "full")]
+pub mod framework_catalog;
+
+#[cfg(feature = "full")]
+pub mod guard_utils;
 
 #[cfg(feature = "full")]
 pub mod absint_lints;
@@ -87,5 +98,16 @@ impl LintEngine {
 
 /// Construct a `LintEngine` with all built-in fast lints enabled.
 pub fn create_default_engine() -> LintEngine {
-    LintEngine::new(LintRegistry::default_rules())
+    // Use filtered registry to respect tier system (Stable only by default)
+    let registry = LintRegistry::default_rules_filtered_with_experimental(
+        &[],    // only
+        &[],    // skip
+        &[],    // disabled
+        false,  // full_mode
+        false,  // preview
+        false,  // experimental
+    )
+    .expect("Failed to create default registry");
+    
+    LintEngine::new(registry)
 }

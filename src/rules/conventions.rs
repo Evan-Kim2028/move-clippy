@@ -1,3 +1,4 @@
+use crate::lint::AnalysisKind;
 use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
 use tree_sitter::Node;
 
@@ -15,6 +16,7 @@ static ADMIN_CAP_POSITION: LintDescriptor = LintDescriptor {
     description: "Capability parameters should be first (or second after TxContext)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for AdminCapPositionLint {

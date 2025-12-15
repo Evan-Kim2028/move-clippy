@@ -1,0 +1,6 @@
+[package]
+name = "preview_gating_pkg"
+edition = "2024"
+
+[addresses]
+preview_gating_pkg = "0x0"

@@ -20,7 +20,7 @@ fn semantic_lints_fire_on_fixture_package() {
     )
     .expect("source copy should succeed");
 
-    let diags = move_clippy::semantic::lint_package(tmp.path(), &LintSettings::default())
+    let diags = move_clippy::semantic::lint_package(tmp.path(), &LintSettings::default(), false)
         .expect("semantic linting should succeed");
 
     let mut names: Vec<&str> = diags.iter().map(|d| d.lint.name).collect();

@@ -1,5 +1,7 @@
 use crate::diagnostics::Span;
-use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
+use crate::lint::{
+    AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
+};
 use tree_sitter::Node;
 
 use super::patterns::{
@@ -24,6 +26,7 @@ static EQUALITY_IN_ASSERT: LintDescriptor = LintDescriptor {
     description: "Prefer `assert_eq!(a, b)` over `assert!(a == b)` for clearer failure messages",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for EqualityInAssertLint {
@@ -74,6 +77,7 @@ static MANUAL_OPTION_CHECK: LintDescriptor = LintDescriptor {
     description: "Prefer option macros (`do!`, `destroy_or!`) over manual `is_some()` + `destroy_some()` patterns",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for ManualOptionCheckLint {
@@ -133,6 +137,7 @@ static MANUAL_LOOP_ITERATION: LintDescriptor = LintDescriptor {
     description: "Prefer loop macros (`do_ref!`, `fold!`) over manual while loops with index",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for ManualLoopIterationLint {
@@ -200,7 +205,8 @@ static MODERN_MODULE_SYNTAX: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer Move 2024 module label syntax (module x::y;) over block form (module x::y { ... })",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Convert to Move 2024 module label syntax"),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for ModernModuleSyntaxLint {
@@ -231,11 +237,47 @@ impl LintRule for ModernModuleSyntaxLint {
             };
 
             if is_legacy_block {
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    "Use Move 2024 module label syntax: `module pkg::mod;`",
-                );
+                // Extract module identity for the fix
+                // Find the module identity node to get the module path
+                let module_identity = node
+                    .children(&mut node.walk())
+                    .find(|child| child.kind() == "module_identity")
+                    .map(|id_node| slice(source, id_node).trim());
+
+                if let Some(module_path) = module_identity {
+                    // Create the replacement: "module path;"
+                    let replacement = format!("module {};", module_path);
+
+                    // Create diagnostic with auto-fix suggestion
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: "Use Move 2024 module label syntax: `module pkg::mod;`".to_string(),
+                        help: Some("Convert to label syntax".to_string()),
+                        suggestion: Some(Suggestion {
+                            message: format!("Convert `module {} {{ ... }}` to `{}`", module_path, replacement),
+                            replacement,
+                            applicability: Applicability::MachineApplicable,
+                        }),
+                    };
+
+                    // Check for suppression
+                    let node_start = node.start_byte();
+                    if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                        return;
+                    }
+
+                    ctx.report_diagnostic(diagnostic);
+                } else {
+                    // Fallback if we can't extract module identity
+                    ctx.report_node(
+                        self.descriptor(),
+                        node,
+                        "Use Move 2024 module label syntax: `module pkg::mod;`",
+                    );
+                }
             }
         });
     }
@@ -249,6 +291,7 @@ static PREFER_VECTOR_METHODS: LintDescriptor = LintDescriptor {
     description: "Prefer method syntax on vectors (e.g., v.push_back(x), v.length())",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for PreferVectorMethodsLint {
@@ -313,6 +356,7 @@ static MODERN_METHOD_SYNTAX: LintDescriptor = LintDescriptor {
     description: "Prefer Move 2024 method call syntax for common allowlisted functions",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Extended allowlist of known-safe method syntax transformations
@@ -463,6 +507,7 @@ pub(crate) static UNNECESSARY_PUBLIC_ENTRY: LintDescriptor = LintDescriptor {
     description: "Use either `public` or `entry`, but not both on the same function",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for UnnecessaryPublicEntryLint {
@@ -496,6 +541,7 @@ pub(crate) static PUBLIC_MUT_TX_CONTEXT: LintDescriptor = LintDescriptor {
     description: "TxContext parameters should be `&mut TxContext`, not `&TxContext`",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for PublicMutTxContextLint {
@@ -537,6 +583,7 @@ static WHILE_TRUE_TO_LOOP: LintDescriptor = LintDescriptor {
     description: "Prefer `loop { ... }` over `while (true) { ... }`",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Replace `while (true)` with `loop`"),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for WhileTrueToLoopLint {
@@ -667,6 +714,7 @@ static PURE_FUNCTION_TRANSFER: LintDescriptor = LintDescriptor {
     description: "Non-entry functions should not call transfer internally; return the object instead",
     group: RuleGroup::Preview,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for PureFunctionTransferLint {
@@ -747,9 +795,10 @@ pub struct UnsafeArithmeticLint;
 static UNSAFE_ARITHMETIC: LintDescriptor = LintDescriptor {
     name: "unsafe_arithmetic",
     category: LintCategory::Suspicious,
-    description: "Potential integer overflow/underflow without bounds check",
-    group: RuleGroup::Preview,
+    description: "[DEPRECATED] Arithmetic overflow detection - too noisy without dataflow/range analysis",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// Variable name patterns that suggest financial/balance operations

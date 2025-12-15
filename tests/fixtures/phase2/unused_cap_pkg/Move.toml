@@ -1,0 +1,7 @@
+[package]
+name = "unused_cap_pkg"
+edition = "2024"
+
+[addresses]
+unused_cap_pkg = "0x0"
+sui = "0x2"

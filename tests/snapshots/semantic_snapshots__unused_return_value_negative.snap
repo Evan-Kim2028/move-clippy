@@ -10,5 +10,3 @@ expression: output
 33:13 - modern_method_syntax: Prefer method syntax: `ctx.sender(...)`
 14:9 - pure_function_transfer: Non-entry public functions should return objects instead of transferring internally. This makes the function more composable.
 31:9 - pure_function_transfer: Non-entry public functions should return objects instead of transferring internally. This makes the function more composable.
-8:5 - unchecked_coin_split: Function `split_coin_used` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort.
-27:5 - unchecked_coin_split: Function `split_inline_transfer` uses coin::split without an apparent balance check. Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` to provide a clearer error message than the default abort.

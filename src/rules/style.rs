@@ -1,5 +1,7 @@
 use crate::diagnostics::{Applicability, Span, Suggestion};
-use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
+use crate::lint::{
+    AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
+};
 use tree_sitter::Node;
 
 use super::util::{compact_ws, extract_braced_items, slice, walk};
@@ -16,6 +18,7 @@ static ABILITIES_ORDER: LintDescriptor = LintDescriptor {
     description: "Struct abilities should be ordered: key, copy, drop, store",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Reorder abilities to canonical order"),
+    analysis: AnalysisKind::Syntactic,
 };
 
 /// The canonical order of abilities per Sui Move conventions
@@ -128,6 +131,7 @@ static DOC_COMMENT_STYLE: LintDescriptor = LintDescriptor {
     description: "Use `///` for doc comments, not `/** */` or `/* */`",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for DocCommentStyleLint {
@@ -220,6 +224,7 @@ static EXPLICIT_SELF_ASSIGNMENTS: LintDescriptor = LintDescriptor {
     description: "Use `..` to ignore multiple struct fields instead of explicit `: _` bindings",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for ExplicitSelfAssignmentsLint {
@@ -281,6 +286,7 @@ static EVENT_SUFFIX: LintDescriptor = LintDescriptor {
     description: "Event structs should end with `Event` suffix",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for EventSuffixLint {
@@ -356,6 +362,7 @@ static EMPTY_VECTOR_LITERAL: LintDescriptor = LintDescriptor {
     description: "Prefer `vector[]` over `vector::empty()`",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Replace with `vector[]`"),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for EmptyVectorLiteralLint {
@@ -428,6 +435,7 @@ static TYPED_ABORT_CODE: LintDescriptor = LintDescriptor {
     description: "Prefer named error constants over numeric abort codes",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for TypedAbortCodeLint {
@@ -585,7 +593,8 @@ static REDUNDANT_SELF_IMPORT: LintDescriptor = LintDescriptor {
     category: LintCategory::Style,
     description: "Avoid `use pkg::mod::{Self};`; prefer `use pkg::mod;`",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Remove redundant `{Self}`"),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for RedundantSelfImportLint {
@@ -613,11 +622,31 @@ impl LintRule for RedundantSelfImportLint {
                 .collect();
 
             if items.len() == 1 && items[0] == "Self" {
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    "Redundant `{Self}` import; prefer `use pkg::mod;`",
-                );
+                // Generate the fixed version by removing "::{Self}"
+                let replacement = text.replace("::{Self}", "").replace("::{ Self }", "");
+
+                // Create diagnostic with auto-fix
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: "Redundant `{Self}` import; prefer `use pkg::mod;`".to_string(),
+                    help: Some("Remove `{Self}`".to_string()),
+                    suggestion: Some(Suggestion {
+                        message: "Remove redundant `{Self}`".to_string(),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    }),
+                };
+
+                // Check for suppression
+                let node_start = node.start_byte();
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name) {
+                    return;
+                }
+
+                ctx.report_diagnostic(diagnostic);
             }
         });
     }
@@ -631,6 +660,7 @@ static PREFER_TO_STRING: LintDescriptor = LintDescriptor {
     description: "Prefer b\"...\".to_string() over std::string::utf8(b\"...\") (import-only check)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for PreferToStringLint {
@@ -666,6 +696,7 @@ static CONSTANT_NAMING: LintDescriptor = LintDescriptor {
     description: "Error constants should use EPascalCase; other constants should be SCREAMING_SNAKE_CASE",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for ConstantNamingLint {
@@ -719,6 +750,7 @@ static UNNEEDED_RETURN: LintDescriptor = LintDescriptor {
     description: "Avoid trailing `return` statements; let the final expression return implicitly",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Remove `return` keyword"),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for UnneededReturnLint {

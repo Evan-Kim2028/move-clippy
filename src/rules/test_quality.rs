@@ -1,5 +1,7 @@
 use crate::diagnostics::Span;
-use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
+use crate::lint::{
+    AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
+};
 use crate::suppression;
 use tree_sitter::Node;
 
@@ -20,6 +22,7 @@ static TEST_ABORT_CODE: LintDescriptor = LintDescriptor {
     description: "Avoid numeric abort codes in test assertions; they may collide with application error codes",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for TestAbortCodeLint {
@@ -174,6 +177,7 @@ static REDUNDANT_TEST_PREFIX: LintDescriptor = LintDescriptor {
     description: "In `*_tests` modules, omit redundant `test_` prefix from test functions",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for RedundantTestPrefixLint {
@@ -262,6 +266,7 @@ static MERGE_TEST_ATTRIBUTES: LintDescriptor = LintDescriptor {
     description: "Merge stacked #[test] and #[expected_failure] into a single attribute list",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
 };
 
 impl LintRule for MergeTestAttributesLint {

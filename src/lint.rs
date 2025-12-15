@@ -13,7 +13,13 @@ use tree_sitter::Node;
 ///
 /// New rules start in `Preview` and graduate to `Stable` after meeting
 /// promotion criteria (see docs/STABILITY.md).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+///
+/// Tier hierarchy (most to least stable):
+/// 1. Stable - Production-ready, zero/near-zero false positives
+/// 2. Preview - Good detection but may have edge case FPs
+/// 3. Experimental - High FP risk, requires explicit opt-in
+/// 4. Deprecated - Scheduled for removal
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub enum RuleGroup {
     /// Battle-tested rules with minimal false positives.
     /// Enabled by default based on category.
@@ -23,6 +29,11 @@ pub enum RuleGroup {
     /// New rules that need community validation.
     /// Require `--preview` flag or `preview = true` in config.
     Preview,
+
+    /// Experimental rules with high false positive risk.
+    /// Require `--experimental` flag or `experimental = true` in config.
+    /// These rules are useful for research but not recommended for CI.
+    Experimental,
 
     /// Rules scheduled for removal in the next major version.
     /// Emit a warning when explicitly enabled.
@@ -34,8 +45,71 @@ impl RuleGroup {
         match self {
             RuleGroup::Stable => "stable",
             RuleGroup::Preview => "preview",
+            RuleGroup::Experimental => "experimental",
             RuleGroup::Deprecated => "deprecated",
         }
+    }
+
+    /// Returns true if this tier requires explicit opt-in via CLI flag.
+    pub fn requires_opt_in(&self) -> bool {
+        matches!(self, RuleGroup::Preview | RuleGroup::Experimental)
+    }
+
+    /// Returns the CLI flag needed to enable this tier.
+    pub fn required_flag(&self) -> Option<&'static str> {
+        match self {
+            RuleGroup::Stable => None,
+            RuleGroup::Preview => Some("--preview"),
+            RuleGroup::Experimental => Some("--experimental"),
+            RuleGroup::Deprecated => None, // Always available but warns
+        }
+    }
+}
+
+// ============================================================================
+// Analysis Kind Classification
+// ============================================================================
+
+/// Analysis kinds determine how a lint examines Move code:
+/// - `Syntactic` lints use tree-sitter pattern matching
+/// - `TypeBased` lints use the Move compiler's type checker
+/// - `TypeBasedCFG` lints use abstract interpretation (control flow)
+/// - `CrossModule` lints analyze call graphs across module boundaries
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
+pub enum AnalysisKind {
+    /// Tree-sitter pattern matching (fast, no type info).
+    /// Runs in `--mode fast` (default).
+    #[default]
+    Syntactic,
+    /// Move compiler type/ability checking (TypingProgramInfo).
+    /// Requires `--mode full`.
+    TypeBased,
+    /// CFG-aware abstract interpretation (SimpleAbsInt).
+    /// Requires `--mode full --preview`.
+    TypeBasedCFG,
+    /// Cross-module call graph analysis.
+    /// Requires `--mode full --preview`.
+    CrossModule,
+}
+
+impl AnalysisKind {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            AnalysisKind::Syntactic => "syntactic",
+            AnalysisKind::TypeBased => "type-based",
+            AnalysisKind::TypeBasedCFG => "type-based-cfg",
+            AnalysisKind::CrossModule => "cross-module",
+        }
+    }
+
+    /// Returns true if this analysis kind requires `--mode full`.
+    pub fn requires_full_mode(&self) -> bool {
+        !matches!(self, AnalysisKind::Syntactic)
+    }
+
+    /// Returns true if this analysis kind requires `--preview`.
+    pub fn requires_preview(&self) -> bool {
+        matches!(self, AnalysisKind::TypeBasedCFG | AnalysisKind::CrossModule)
     }
 }
 
@@ -113,7 +187,7 @@ impl FixDescriptor {
 // ============================================================================
 
 /// High-level categories used to group lints.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LintCategory {
     Style,
     Modernization,
@@ -148,10 +222,12 @@ pub struct LintDescriptor {
     pub group: RuleGroup,
     /// Auto-fix availability and safety classification.
     pub fix: FixDescriptor,
+    /// Detection method used by this lint.
+    pub analysis: AnalysisKind,
 }
 
 impl LintDescriptor {
-    /// Helper to create a stable lint descriptor with no fix.
+    /// Helper to create a stable syntactic lint descriptor with no fix.
     pub const fn stable(
         name: &'static str,
         category: LintCategory,
@@ -163,10 +239,11 @@ impl LintDescriptor {
             description,
             group: RuleGroup::Stable,
             fix: FixDescriptor::none(),
+            analysis: AnalysisKind::Syntactic,
         }
     }
 
-    /// Helper to create a stable lint descriptor with a safe fix.
+    /// Helper to create a stable syntactic lint descriptor with a safe fix.
     pub const fn stable_with_fix(
         name: &'static str,
         category: LintCategory,
@@ -179,10 +256,11 @@ impl LintDescriptor {
             description,
             group: RuleGroup::Stable,
             fix: FixDescriptor::safe(fix_description),
+            analysis: AnalysisKind::Syntactic,
         }
     }
 
-    /// Helper to create a preview lint descriptor with no fix.
+    /// Helper to create a preview syntactic lint descriptor with no fix.
     pub const fn preview(
         name: &'static str,
         category: LintCategory,
@@ -194,10 +272,11 @@ impl LintDescriptor {
             description,
             group: RuleGroup::Preview,
             fix: FixDescriptor::none(),
+            analysis: AnalysisKind::Syntactic,
         }
     }
 
-    /// Helper to create a preview lint descriptor with a safe fix.
+    /// Helper to create a preview syntactic lint descriptor with a safe fix.
     pub const fn preview_with_fix(
         name: &'static str,
         category: LintCategory,
@@ -210,6 +289,71 @@ impl LintDescriptor {
             description,
             group: RuleGroup::Preview,
             fix: FixDescriptor::safe(fix_description),
+            analysis: AnalysisKind::Syntactic,
+        }
+    }
+
+    /// Helper to create a stable type-based lint descriptor (requires --mode full).
+    pub const fn stable_type_based(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Stable,
+            fix: FixDescriptor::none(),
+            analysis: AnalysisKind::TypeBased,
+        }
+    }
+
+    /// Helper to create a preview type-based lint descriptor (requires --mode full).
+    pub const fn preview_type_based(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Preview,
+            fix: FixDescriptor::none(),
+            analysis: AnalysisKind::TypeBased,
+        }
+    }
+
+    /// Helper to create a preview CFG-aware lint descriptor (requires --mode full --preview).
+    pub const fn preview_cfg(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Preview,
+            fix: FixDescriptor::none(),
+            analysis: AnalysisKind::TypeBasedCFG,
+        }
+    }
+
+    /// Helper to create a preview cross-module lint descriptor (requires --mode full --preview).
+    pub const fn preview_cross_module(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Preview,
+            fix: FixDescriptor::none(),
+            analysis: AnalysisKind::CrossModule,
         }
     }
 }
@@ -396,24 +540,22 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     "empty_vector_literal",
     "typed_abort_code",
     // Security lints (audit-backed, see docs/SECURITY_LINTS.md)
-    "droppable_hot_potato",
-    "excessive_token_abilities",
-    "shared_capability",
     "stale_oracle_price",
     "single_step_ownership_transfer",
     "missing_witness_drop",
     "public_random_access",
-    "suspicious_overflow_check",      // Promoted to stable
-    "ignored_boolean_return",         // NEW: Typus hack pattern
-    "shared_capability_object",       // NEW: Typus hack pattern
+    "suspicious_overflow_check", // Promoted to stable
+    "ignored_boolean_return",    // Typus hack pattern
+    // Deprecated lints (kept for backward compatibility)
+    "droppable_hot_potato",      // DEPRECATED: Use droppable_hot_potato_v2
+    "shared_capability",         // DEPRECATED: Use share_owned_authority
+    "shared_capability_object",  // DEPRECATED: Use share_owned_authority (type-based)
+    "unchecked_coin_split",      // DEPRECATED: Sui runtime protects
+    "capability_leak",           // DEPRECATED: Name-based, needs type-based rewrite
     // Preview lints (require --preview flag)
     "pure_function_transfer",
     "unsafe_arithmetic",
-    "unchecked_coin_split",
-    "unbounded_vector_growth",        // DEPRECATED
-    "hardcoded_address",              // DEPRECATED
-    "unchecked_withdrawal",           // NEW: Thala hack pattern
-    "capability_leak",                // NEW: MoveScanner pattern
+    "unchecked_withdrawal", // Thala hack pattern - experimental
 ];
 
 const FULL_MODE_SUPERSEDED_LINTS: &[&str] = &["public_mut_tx_context", "unnecessary_public_entry"];
@@ -439,6 +581,12 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
     "oracle_zero_price",
     "unused_return_value",
     "missing_access_control",
+    // Phase II (AbsInt) lints (require --mode full --preview)
+    "unused_capability_param_v2",
+    "unchecked_division_v2",
+    // Phase III (cross-module) lints (require --mode full --preview)
+    "transitive_capability_leak",
+    "flashloan_without_repay",
 ];
 
 pub fn is_semantic_lint(name: &str) -> bool {
@@ -561,23 +709,20 @@ impl LintRegistry {
             .with_rule(crate::rules::TypedAbortCodeLint)
             // Security lints (audit-backed)
             .with_rule(crate::rules::DroppableHotPotatoLint)
-            .with_rule(crate::rules::ExcessiveTokenAbilitiesLint)
             .with_rule(crate::rules::SharedCapabilityLint)
             .with_rule(crate::rules::StaleOraclePriceLint)
             .with_rule(crate::rules::SingleStepOwnershipTransferLint)
             .with_rule(crate::rules::MissingWitnessDropLint)
             .with_rule(crate::rules::PublicRandomAccessLint)
-            .with_rule(crate::rules::SuspiciousOverflowCheckLint)  // Promoted to stable
-            .with_rule(crate::rules::IgnoredBooleanReturnLint)     // NEW: Typus hack pattern
-            .with_rule(crate::rules::SharedCapabilityObjectLint)   // NEW: Typus hack pattern
+            .with_rule(crate::rules::SuspiciousOverflowCheckLint) // Promoted to stable
+            .with_rule(crate::rules::IgnoredBooleanReturnLint) // NEW: Typus hack pattern
+            .with_rule(crate::rules::SharedCapabilityObjectLint) // NEW: Typus hack pattern
             // Preview lints (only included when preview mode enabled)
             .with_rule(crate::rules::PureFunctionTransferLint)
             .with_rule(crate::rules::UnsafeArithmeticLint)
             .with_rule(crate::rules::UncheckedCoinSplitLint)
-            .with_rule(crate::rules::UnboundedVectorGrowthLint)    // DEPRECATED
-            .with_rule(crate::rules::HardcodedAddressLint)         // DEPRECATED
-            .with_rule(crate::rules::UncheckedWithdrawalLint)      // NEW: Thala hack pattern
-            .with_rule(crate::rules::CapabilityLeakLint)           // NEW: MoveScanner pattern
+            .with_rule(crate::rules::UncheckedWithdrawalLint) // NEW: Thala hack pattern
+            .with_rule(crate::rules::CapabilityLeakLint) // NEW: MoveScanner pattern
     }
 
     pub fn default_rules_filtered(
@@ -587,6 +732,23 @@ impl LintRegistry {
         full_mode: bool,
         preview: bool,
     ) -> Result<Self> {
+        // Note: experimental flag implies preview
+        Self::default_rules_filtered_with_experimental(
+            only, skip, disabled, full_mode, preview, false,
+        )
+    }
+
+    /// Filter rules with full tier support including experimental.
+    pub fn default_rules_filtered_with_experimental(
+        only: &[String],
+        skip: &[String],
+        disabled: &[String],
+        full_mode: bool,
+        preview: bool,
+        experimental: bool,
+    ) -> Result<Self> {
+        // Experimental implies preview
+        let effective_preview = preview || experimental;
         // Use the extended set that includes aliases for validation
         let known = all_known_lints_with_aliases();
 
@@ -624,10 +786,12 @@ impl LintRegistry {
                 continue;
             }
 
-            // Get the rule's group and filter if preview mode is disabled
+            // Get the rule's group and filter based on tier flags
             let group = get_lint_group(name);
-            if group == RuleGroup::Preview && !preview {
-                continue;
+            match group {
+                RuleGroup::Preview if !effective_preview => continue,
+                RuleGroup::Experimental if !experimental => continue,
+                _ => {}
             }
 
             match *name {
@@ -707,9 +871,6 @@ impl LintRegistry {
                 "droppable_hot_potato" => {
                     reg = reg.with_rule(crate::rules::DroppableHotPotatoLint);
                 }
-                "excessive_token_abilities" => {
-                    reg = reg.with_rule(crate::rules::ExcessiveTokenAbilitiesLint);
-                }
                 "shared_capability" => {
                     reg = reg.with_rule(crate::rules::SharedCapabilityLint);
                 }
@@ -740,15 +901,6 @@ impl LintRegistry {
                 }
                 "unsafe_arithmetic" => {
                     reg = reg.with_rule(crate::rules::UnsafeArithmeticLint);
-                }
-                "unchecked_coin_split" => {
-                    reg = reg.with_rule(crate::rules::UncheckedCoinSplitLint);
-                }
-                "unbounded_vector_growth" => {
-                    reg = reg.with_rule(crate::rules::UnboundedVectorGrowthLint);
-                }
-                "hardcoded_address" => {
-                    reg = reg.with_rule(crate::rules::HardcodedAddressLint);
                 }
                 "unchecked_withdrawal" => {
                     reg = reg.with_rule(crate::rules::UncheckedWithdrawalLint);
@@ -796,27 +948,29 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "empty_vector_literal"
         | "typed_abort_code"
         // Security lints (audit-backed, stable)
-        | "droppable_hot_potato"
-        | "excessive_token_abilities"
-        | "shared_capability"
         | "stale_oracle_price"
         | "single_step_ownership_transfer"
         | "missing_witness_drop"
         | "public_random_access"
         | "suspicious_overflow_check"     // Promoted to stable
-        | "ignored_boolean_return"        // NEW: Typus hack pattern
-        | "shared_capability_object" => RuleGroup::Stable,  // NEW: Typus hack pattern
+        | "ignored_boolean_return" => RuleGroup::Stable,  // Typus hack pattern
+
+        // Deprecated lints (use type-based replacements)
+        | "droppable_hot_potato"      // Use droppable_hot_potato_v2 (type-based)
+        | "shared_capability"         // Use share_owned_authority (type-based)
+        | "shared_capability_object"  // Use share_owned_authority (type-based)
+        | "unchecked_coin_split"      // Sui runtime protects
+        | "capability_leak"           // Name-based, needs type-based rewrite
+        | "capability_naming"         // Sui uses Cap suffix, not _cap
+        | "event_naming"              // Sui events don't use _event suffix
+        | "getter_naming" => RuleGroup::Deprecated,  // Sui uses get_ prefix
 
         // Preview lints (higher FP risk, require --preview flag)
         | "pure_function_transfer"
-        | "unsafe_arithmetic"
-        | "unchecked_coin_split"
-        | "unchecked_withdrawal"          // NEW: Thala hack pattern
-        | "capability_leak" => RuleGroup::Preview,  // NEW: MoveScanner pattern
+        | "unsafe_arithmetic" => RuleGroup::Preview,
 
-        // Deprecated lints (still work but emit deprecation warning)
-        | "unbounded_vector_growth"
-        | "hardcoded_address" => RuleGroup::Deprecated,
+        // Experimental lints (high FP risk, require --experimental flag)
+        | "unchecked_withdrawal" => RuleGroup::Experimental,
 
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,
