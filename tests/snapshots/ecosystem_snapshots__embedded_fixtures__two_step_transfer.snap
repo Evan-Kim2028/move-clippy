@@ -9,4 +9,6 @@ expression: messages
     "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
     "public_mut_tx_context: TxContext parameters should use `&mut TxContext`",
     "public_mut_tx_context: TxContext parameters should use `&mut TxContext`",
+    "typed_abort_code: Prefer named error constant over numeric abort code `1`",
+    "typed_abort_code: Prefer named error constant over numeric abort code `2`",
 ]

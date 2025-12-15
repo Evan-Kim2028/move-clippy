@@ -25,7 +25,7 @@ fn merge_test_attributes_positive() {
     let src = include_str!("fixtures/merge_test_attributes/positive.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###"merge_test_attributes:3:1: warning: Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"###);
+    assert_snapshot!(format_diags(&diags), @"merge_test_attributes:3:1: warning: Merge `#[test]` and `#[expected_failure]` into a single attribute list");
 }
 
 #[test]
@@ -110,7 +110,11 @@ fn prefer_vector_methods_suppressed_allow_attribute() {
     let src = include_str!("fixtures/prefer_vector_methods/positive_suppressed.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @"empty_vector_literal:7:17: warning: Prefer `vector<u8>` over `vector::empty<u8>()`");
+    assert_snapshot!(format_diags(&diags), @r"
+    empty_vector_literal:7:17: warning: Prefer `vector<u8>` over `vector::empty<u8>()`
+    prefer_vector_methods:8:5: warning: Prefer method syntax: `v.push_back(...)`
+    prefer_vector_methods:9:5: warning: Prefer method syntax: `v.length()`
+    ");
 }
 
 #[test]

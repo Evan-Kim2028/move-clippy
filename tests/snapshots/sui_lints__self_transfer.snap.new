@@ -1,0 +1,21 @@
+---
+source: tests/sui_lints.rs
+assertion_line: 29
+expression: output
+---
+sources/main.move:18:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `init`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:19:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `init`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:23:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `public_transfer_bad`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:23:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:23:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:27:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `private_transfer_bad`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:27:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:27:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:39:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `transfer_through_assigns_bad`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:39:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:39:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
+sources/main.move:43:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `transfer_to_param_ok`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:44:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `transfer_to_param_ok`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:49:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `conditional_transfer_ok`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:50:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `conditional_transfer_ok`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:55:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `public_transfer_bad_suppressed`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).

@@ -4,4 +4,5 @@ expression: messages
 ---
 [
     "modern_module_syntax: Use Move 2024 module label syntax: `module pkg::mod;`",
+    "ignored_boolean_return: Function `process_all` calls `is_empty` but ignores the boolean result. This may indicate a missing authorization check. Consider wrapping in `assert!()` or using the result in a condition.",
 ]

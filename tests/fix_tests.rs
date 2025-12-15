@@ -7,15 +7,19 @@ use move_clippy::LintEngine;
 use move_clippy::fix::{TextEdit, apply_fix};
 use move_clippy::lint::{LintRegistry, LintSettings};
 
-/// Helper to lint source and extract the first fix suggestion.
+/// Helper to lint source and extract the first fix suggestion from a specific lint.
+/// Returns the first fix suggestion found, preferring non-module-syntax lints.
 fn get_first_fix(source: &str) -> Option<String> {
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
 
     let diagnostics = engine.lint_source(source).unwrap();
 
+    // Skip modern_module_syntax fixes as they interfere with other lint tests
+    // We want the fix from the lint being tested, not the module syntax rewrite
     diagnostics
         .into_iter()
+        .filter(|d| d.lint.name != "modern_module_syntax")
         .find_map(|d| d.suggestion.map(|s| s.replacement))
 }
 
@@ -41,6 +45,402 @@ fn apply_first_fix(source: &str) -> Option<String> {
     }
 
     None
+}
+
+// ============================================================================
+// equality_in_assert Tests
+// ============================================================================
+
+#[test]
+fn equality_in_assert_simple() {
+    let source = r#"
+        module example::test {
+            public fun test() {
+                assert!(x == y);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "equality_in_assert should generate a fix");
+
+    let fixed = fix.unwrap();
+    assert_eq!(
+        fixed, "assert_eq!(x, y)",
+        "Fix should convert to assert_eq!"
+    );
+}
+
+#[test]
+fn equality_in_assert_with_error_code() {
+    let source = r#"
+        module example::test {
+            const E_FAIL: u64 = 1;
+            public fun test() {
+                assert!(balance == 100, E_FAIL);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "Should generate a fix with error code");
+
+    let fixed = fix.unwrap();
+    assert_eq!(fixed, "assert_eq!(balance, 100, E_FAIL)");
+}
+
+#[test]
+fn equality_in_assert_with_multiple_args() {
+    // NOTE: String literals with commas/quotes currently cause parsing issues
+    // in extract_assert_condition(). Using numeric error code only for now.
+    let source = r#"
+        module example::test {
+            const E_MISMATCH: u64 = 2;
+            public fun test() {
+                assert!(value == 42, E_MISMATCH, 999);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "Should generate a fix with multiple args");
+
+    let fixed = fix.unwrap();
+    assert_eq!(fixed, "assert_eq!(value, 42, E_MISMATCH, 999)");
+}
+
+// ============================================================================
+// manual_option_check Tests
+// ============================================================================
+
+#[test]
+fn manual_option_check_simple() {
+    let source = r#"
+        module example::test {
+            use std::option::Option;
+            
+            public fun test(opt: Option<u64>) {
+                if (opt.is_some()) {
+                    let value = opt.destroy_some();
+                    process(value);
+                }
+            }
+            
+            fun process(x: u64) {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "manual_option_check should generate a fix");
+
+    let fixed = fix.unwrap();
+    assert!(
+        fixed.contains("opt.do!(|value|"),
+        "Fix should use do! macro"
+    );
+    assert!(fixed.contains("process(value)"), "Fix should preserve body");
+    assert!(
+        !fixed.contains("destroy_some"),
+        "Fix should remove destroy_some"
+    );
+}
+
+// ============================================================================
+// manual_loop_iteration Tests
+// ============================================================================
+
+#[test]
+fn manual_loop_iteration_simple() {
+    let source = r#"
+        module example::test {
+            use std::vector;
+            
+            public fun test(vec: &vector<u64>) {
+                let mut i = 0;
+                while (i < vec.length()) {
+                    let elem = vec.borrow(i);
+                    process(*elem);
+                    i = i + 1;
+                }
+            }
+            
+            fun process(x: u64) {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "manual_loop_iteration should generate a fix");
+
+    let fixed = fix.unwrap();
+    assert!(
+        fixed.contains("vec.do_ref!(|elem|"),
+        "Fix should use do_ref! macro"
+    );
+    assert!(fixed.contains("process(*elem)"), "Fix should preserve body");
+    assert!(!fixed.contains("borrow"), "Fix should remove borrow call");
+    assert!(!fixed.contains("i = i + 1"), "Fix should remove increment");
+}
+
+// ============================================================================
+// unnecessary_public_entry Tests
+// ============================================================================
+
+#[test]
+fn unnecessary_public_entry_simple() {
+    let source = r#"
+        module test::m {
+            public entry fun foo() {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(
+        fix.is_some(),
+        "unnecessary_public_entry should generate a fix"
+    );
+    let fixed = fix.unwrap();
+    assert!(
+        !fixed.contains("public entry"),
+        "Fix should remove 'public'"
+    );
+    assert!(fixed.contains("entry fun"), "Fix should preserve 'entry'");
+}
+
+#[test]
+fn unnecessary_public_entry_with_params() {
+    let source = r#"
+        module test::m {
+            public entry fun bar(x: u64, ctx: &mut TxContext) {
+                process(x);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    let fixed = fix.unwrap();
+    assert!(
+        !fixed.contains("public entry"),
+        "Fix should remove 'public'"
+    );
+    assert!(
+        fixed.contains("entry fun bar"),
+        "Fix should preserve function signature"
+    );
+    assert!(fixed.contains("process(x)"), "Fix should preserve body");
+}
+
+#[test]
+fn unnecessary_public_entry_with_spacing() {
+    let source = r#"
+        module test::m {
+            public  entry fun baz() {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    let fixed = fix.unwrap();
+    assert!(
+        !fixed.contains("public"),
+        "Fix should remove 'public' even with extra spacing"
+    );
+    assert!(
+        fixed.contains("entry fun"),
+        "Fix should normalize to single space"
+    );
+}
+
+// ============================================================================
+// modern_method_syntax Tests
+// ============================================================================
+
+#[test]
+fn modern_method_syntax_option() {
+    let source = r#"
+        module test::m {
+            use std::option::Option;
+            fun test(opt: &Option<u64>): bool {
+                option::is_some(opt)
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "modern_method_syntax should generate a fix");
+    assert!(
+        fix.unwrap().contains("opt.is_some()"),
+        "Fix should use method syntax"
+    );
+}
+
+#[test]
+fn modern_method_syntax_transfer() {
+    let source = r#"
+        module test::m {
+            struct Obj has key { id: UID }
+            fun test(obj: Obj, addr: address) {
+                transfer::transfer(obj, addr);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(
+        fix.unwrap().contains("obj.transfer(addr)"),
+        "Fix should preserve remaining args"
+    );
+}
+
+#[test]
+fn modern_method_syntax_coin_value() {
+    let source = r#"
+        module test::m {
+            use sui::coin::Coin;
+            fun test(c: &Coin<SUI>): u64 {
+                coin::value(c)
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(
+        fix.unwrap().contains("c.value()"),
+        "Fix should work with single arg"
+    );
+}
+
+#[test]
+fn modern_method_syntax_multi_arg() {
+    let source = r#"
+        module test::m {
+            use std::option::Option;
+            fun test(opt: &Option<u64>, default: u64): u64 {
+                option::get_with_default(opt, default)
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(
+        fix.unwrap().contains("opt.get_with_default(default)"),
+        "Fix should handle multi-arg methods"
+    );
+}
+
+#[test]
+fn modern_method_syntax_table() {
+    let source = r#"
+        module test::m {
+            use sui::table::Table;
+            fun test<K: copy + drop, V>(t: &Table<K, V>, k: K): bool {
+                table::contains(t, k)
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(
+        fix.unwrap().contains("t.contains(k)"),
+        "Fix should work with table operations"
+    );
+}
+
+// ============================================================================
+// prefer_vector_methods Tests
+// ============================================================================
+
+#[test]
+fn prefer_vector_methods_push_back() {
+    let source = r#"
+        module test::m {
+            use std::vector;
+            fun test(v: &mut vector<u64>, x: u64) {
+                vector::push_back(&mut v, x);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "prefer_vector_methods should generate a fix");
+    assert!(
+        fix.unwrap().contains("v.push_back(x)"),
+        "Fix should use method syntax"
+    );
+}
+
+#[test]
+fn prefer_vector_methods_length() {
+    let source = r#"
+        module test::m {
+            use std::vector;
+            fun test(v: &vector<u64>): u64 {
+                vector::length(&v)
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(
+        fix.unwrap().contains("v.length()"),
+        "Fix should use method syntax with no args"
+    );
+}
+
+// ============================================================================
+// public_mut_tx_context Tests
+// ============================================================================
+
+#[test]
+fn public_mut_tx_context_simple() {
+    let source = r#"
+        module test::m {
+            entry fun foo(ctx: &TxContext) {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "public_mut_tx_context should generate a fix");
+    assert!(
+        fix.unwrap().contains("&mut TxContext"),
+        "Fix should add mut"
+    );
+}
+
+#[test]
+fn public_mut_tx_context_with_spacing() {
+    let source = r#"
+        module test::m {
+            entry fun bar(ctx: & TxContext) {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    let fixed = fix.unwrap();
+    assert!(fixed.contains("&mut"), "Fix should add mut");
+    assert!(fixed.contains("TxContext"), "Fix should preserve TxContext");
+}
+
+#[test]
+fn public_mut_tx_context_qualified() {
+    let source = r#"
+        module test::m {
+            public fun baz(ctx: &tx_context::TxContext) {}
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(
+        fix.unwrap().contains("&mut tx_context::TxContext"),
+        "Fix should work with module-qualified type"
+    );
 }
 
 // ============================================================================

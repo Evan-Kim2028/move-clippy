@@ -1,0 +1,13 @@
+---
+source: tests/sui_lints.rs
+assertion_line: 29
+expression: output
+---
+sources/main.move:15:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom transfer function.
+sources/main.move:15:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom transfer function.
+sources/main.move:16:9: capability_transfer_v2: Non-coin capability `test::S1` transferred in `custom_transfer_bad`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
+sources/main.move:20:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom share function.
+sources/main.move:20:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom share function.
+sources/main.move:21:9: share_owned_authority: Sharing `test::S1` (has key+store) in `custom_share_bad` makes it publicly accessible. This is dangerous for authority objects (capabilities). If this is intentional shared state, suppress with #[allow(lint(share_owned_authority))].
+sources/main.move:24:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom freeze function.
+sources/main.move:24:16: custom_state_change: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom freeze function.

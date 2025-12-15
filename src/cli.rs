@@ -233,6 +233,20 @@ pub struct LintArgs {
     #[arg(long)]
     pub preview: bool,
 
+    /// Enable experimental rules (high false-positive risk).
+    ///
+    /// Experimental rules are useful for research and security audits but
+    /// are not recommended for CI pipelines. Implies --preview.
+    #[arg(long)]
+    pub experimental: bool,
+
+    /// Show lint tier in diagnostic output.
+    ///
+    /// Displays [stable], [preview], [experimental], or [deprecated] prefix
+    /// for each diagnostic to help identify rule maturity.
+    #[arg(long)]
+    pub show_tier: bool,
+
     /// Apply safe auto-fixes to files.
     ///
     /// Only machine-applicable fixes are applied by default.

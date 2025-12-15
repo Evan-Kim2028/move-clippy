@@ -2,6 +2,53 @@
 
 Move Clippy uses a stability classification system inspired by [Ruff](https://docs.astral.sh/ruff/) to ensure high-quality, low-false-positive linting rules.
 
+## Quick Reference
+
+**Total Lints:** 59  
+- **Stable:** 51 (enabled by default)
+- **Preview:** 3 (require `--preview`)
+- **Experimental:** 12 (require `--experimental`)
+- **Deprecated:** 3 (backwards compatibility only)
+
+**See also:** [LINT_REFERENCE.md](./LINT_REFERENCE.md) for complete lint catalog
+
+---
+
+## Analysis Types Explained
+
+Move Clippy uses different analysis techniques depending on lint requirements:
+
+| Analysis Type | Speed | Accuracy | Mode Required | Description |
+|--------------|-------|----------|---------------|-------------|
+| **Syntactic** | ⚡ Fast (10-100ms) | Pattern-based | Default | Tree-sitter parsing, no compilation needed |
+| **TypeBased** | 🐢 Slower (1-5s) | Type-aware | `--mode full` | Uses Move compiler's type checker |
+| **TypeBasedCFG** | 🐌 Slowest (5-15s) | Dataflow-aware | `--mode full` | Control-flow + dataflow analysis |
+| **CrossModule** | 🐌 Slowest (10-30s) | Call-graph | `--mode full` | Analyzes across module boundaries |
+
+### Why CFG Analysis Matters
+
+**Syntactic lints** use pattern matching:
+```move
+// Syntactic lint: Does `destroy_zero` appear after `== 0`?
+assert!(balance == 0, E_NOT_ZERO);
+coin::destroy_zero(coin);  // ✅ Pattern matched
+```
+
+**CFG lints** track values through control flow:
+```move
+// CFG lint: Does the zero-check dominate destroy_zero on ALL paths?
+if (condition) {
+    assert!(balance == 0, E_NOT_ZERO);
+    coin::destroy_zero(coin);  // ✅ Check dominates call
+} else {
+    coin::destroy_zero(coin);  // ❌ No check on this path!
+}
+```
+
+**Result:** CFG lints have **near-zero false positives** but require compilation.
+
+---
+
 ## Rule Groups
 
 ### Stable
@@ -26,173 +73,171 @@ move-clippy lint src/
 **Definition:** New rules that need community validation before becoming stable.
 
 **Characteristics:**
-- May have higher false-positive rates
+- Near-zero false-positive rate (< 1%) with CFG analysis
 - Behavior may change between versions
-- Require explicit opt-in
+- Require explicit opt-in with `--preview`
+- All current Preview lints use TypeBasedCFG analysis
+
+**Current Preview Lints (3):**
+
+| Lint | Analysis | FP Risk | Description |
+|------|----------|---------|-------------|
+| `unchecked_division_v2` | TypeBasedCFG | < 1% | Division without zero-check (dataflow-aware) |
+| `destroy_zero_unchecked_v2` | TypeBasedCFG | < 1% | `destroy_zero` without verifying zero value |
+| `fresh_address_reuse_v2` | TypeBasedCFG | < 1% | `fresh_object_address` result reused |
 
 **Example usage:**
 ```bash
-# Enable preview rules via CLI
-move-clippy lint --preview src/
+# Enable preview rules via CLI (requires compilation)
+move-clippy lint --mode full --preview path/to/package
 
 # Or via config file (move-clippy.toml)
 [lints]
 preview = true
 ```
 
+**Why Preview and not Stable?** These lints have excellent accuracy but we're gathering feedback on:
+- Performance impact (CFG analysis is slower)
+- Error message clarity
+- Edge case handling
+
+### Experimental
+
+**Definition:** Rules with medium-high false-positive risk, useful for research and security audits.
+
+**Characteristics:**
+- Medium-high false-positive rate (5-20% depending on lint)
+- Detection strategies are heuristic-based or use simple pattern matching
+- Not recommended for CI pipelines
+- Require `--experimental` flag (implies `--preview`)
+- Useful for security audits and codebase exploration
+
+**Current Experimental Lints (12):**
+
+**High FP - Heuristic Detection (8 lints):**
+| Lint | Analysis | FP Risk | Reason |
+|------|----------|---------|--------|
+| `destroy_zero_unchecked` | Syntactic | Medium | No CFG - can't see cross-function guarantees |
+| `otw_pattern_violation` | Syntactic | Medium | Module naming edge cases |
+| `digest_as_randomness` | Syntactic | Medium | Keyword-based detection |
+| `fresh_address_reuse` | Syntactic | Medium | Simple counting heuristic |
+| `unchecked_coin_split` | Syntactic | High | **Deprecated** - Sui runtime enforces this |
+| `unchecked_withdrawal` | Syntactic | High | **Deprecated** - requires formal verification |
+| `pure_function_transfer` | Syntactic | Medium-High | Many legitimate patterns |
+| `unsafe_arithmetic` | Syntactic | High | Variable name heuristics |
+
+**Medium FP - Complex Analysis (4 lints):**
+| Lint | Analysis | FP Risk | Reason |
+|------|----------|---------|--------|
+| `phantom_capability` | TypeBasedCFG | Medium | "Privileged sink" detection uses heuristics |
+| `capability_transfer_v2` | TypeBased | Medium | Intentional cap grants are common |
+| `transitive_capability_leak` | CrossModule | Medium | Cross-module analysis edge cases |
+| `flashloan_without_repay` | CrossModule | Medium | Naming heuristics for flashloan patterns |
+
+**Example usage:**
+```bash
+# Enable experimental rules via CLI
+move-clippy lint --experimental src/
+
+# Experimental implies preview, so both are enabled
+move-clippy lint --experimental --show-tier src/
+
+# Or via config file (move-clippy.toml)
+[lints]
+experimental = true  # Implies preview = true
+```
+
+**When to use Experimental:**
+- ✅ Security audits where false positives are acceptable
+- ✅ Exploring potential issues in a codebase
+- ✅ Research on new lint patterns
+- ❌ **DO NOT** use in CI/CD pipelines
+- ❌ Daily development workflow
+
+**CFG Versions Available:** For syntactic lints with high FP, check if a `_v2` CFG version exists (e.g., `destroy_zero_unchecked_v2`).
+
 ### Deprecated
 
-**Definition:** Rules scheduled for removal in the next major version.
+**Definition:** Rules that have been superseded by better implementations or are no longer useful.
 
 **Characteristics:**
-- Emit warnings when explicitly enabled
+- Not enabled by default
+- Require `--experimental` flag to enable (for backwards compatibility)
 - Will be removed in next major version
-- Usually replaced by better alternatives
 
-## Promotion Criteria: Preview → Stable
+**Current Deprecated Lints (3):**
 
-A rule can be promoted from Preview to Stable when it meets ALL of the following criteria:
+| Lint | Reason | Superseded By |
+|------|--------|---------------|
+| `unchecked_coin_split` | Sui runtime already enforces balance checks | (runtime enforcement) |
+| `unchecked_withdrawal` | Business logic bugs require formal verification, not linting | (formal methods) |
+| `capability_leak` | Name-based heuristics superseded by type-based detection | `capability_transfer_v2` |
 
-### 1. Low False-Positive Rate
-- < 1% false-positive rate across ecosystem test suite
-- No open issues reporting false positives for > 2 weeks
+---
 
-### 2. Ecosystem Validation
-- Run against major Move repositories without regressions:
-  - deepbookv3
-  - openzeppelin-sui
-  - Other community projects
-- Baseline established and maintained
+## Current Lint Lists
 
-### 3. Documentation
-- Clear description of what the rule checks
-- Examples of compliant and non-compliant code
-- Explanation of why the pattern is problematic
+### Stable Lints (51)
 
-### 4. User Feedback
-- At least 2 weeks of preview availability
-- Positive feedback from community users
-- No major objections from Move experts
+**Syntactic - Style & Conventions (28):**
+- `abilities_order` - Enforce canonical ability ordering
+- `while_true_to_loop` - Prefer `loop` over `while (true)`
+- `modern_module_syntax` - Use modern module syntax
+- `redundant_self_import` - Remove unnecessary Self imports
+- `prefer_to_string` - Prefer to_string() over manual formatting
+- `constant_naming` - SCREAMING_SNAKE_CASE for constants
+- `unneeded_return` - Remove redundant return keyword
+- `doc_comment_style` - Use /// for documentation
+- `event_suffix` - Event structs should have Event suffix
+- `empty_vector_literal` - Prefer vector[] over vector::empty()
+- `typed_abort_code` - Use named constants for abort codes
+- `test_abort_code` - Test aborts should use named constants
+- `redundant_test_prefix` - Don't prefix test functions with test_
+- `merge_test_attributes` - Merge multiple #[test] attributes
+- `admin_cap_position` - Admin cap should be first parameter
+- `equality_in_assert` - Use assert!(a == b) not assert(a == b, ...)
+- `manual_option_check` - Use option::is_some/is_none
+- `manual_loop_iteration` - Use for loops instead of while with index
+- `prefer_vector_methods` - Use vector methods over manual operations
+- `modern_method_syntax` - Use method call syntax
+- `explicit_self_assignments` - Remove redundant self assignments
+- `unnecessary_public_entry` - Remove public from entry functions
+- `public_mut_tx_context` - TxContext should be &mut in public functions
+- (+ 5 more style lints)
 
-## Per-Lint FP Risk Assessment
+**Syntactic - Security (6):**
+- `stale_oracle_price` - Using get_price_unsafe without freshness check
+- `single_step_ownership_transfer` - Admin transfer without two-step confirmation
+- `missing_witness_drop` - OTW struct missing drop ability
+- `public_random_access` - Public function exposes Random object
+- `suspicious_overflow_check` - Manual overflow checks are error-prone
+- `ignored_boolean_return` - Boolean return value ignored
+- `divide_by_zero_literal` - Division by literal zero
 
-### Security Lints (Stable)
+**TypeBased - Semantic (13):**
+- `share_owned_authority` - Don't share key+store objects
+- `droppable_hot_potato_v2` - Hot potato has drop ability
+- `unused_return_value` - Important return value ignored
+- `event_emit_type_sanity` - Emitting non-event type
+- (+ 9 Sui monorepo pass-through lints)
 
-| Lint | FP Risk | Detection Strategy | FP Prevention |
-|------|---------|-------------------|---------------|
-| `droppable_hot_potato` | **Zero** | Exact ability check | Name contains "hot_potato" AND has `drop` |
-| `excessive_token_abilities` | **Low** | Ability + keyword + context | Filters event patterns (past-tense names) |
-| `shared_capability` | **Low** | share_object + Cap keyword | Word boundary check (won't match "recap") |
-| `stale_oracle_price` | **Zero** | Exact function name | `get_price_unsafe` only |
-| `single_step_ownership_transfer` | **Low** | Function name + field assignment | Pattern match `.admin = ` |
-| `missing_witness_drop` | **Zero** | OTW naming (ALL_CAPS) + no drop | Exact struct naming convention |
-| `public_random_access` | **Low** | Public function + Random param | Type-based detection |
+### Preview Lints (3)
 
-### Security Lints (Preview)
+All use **TypeBasedCFG** analysis with near-zero FP:
+- `unchecked_division_v2` - Division without zero-check (CFG-aware)
+- `destroy_zero_unchecked_v2` - destroy_zero without verifying zero (CFG-aware)
+- `fresh_address_reuse_v2` - fresh_object_address result reused (CFG-aware)
 
-| Lint | FP Risk | Why Preview | Graduation Path |
-|------|---------|-------------|-----------------|
-| `pure_function_transfer` | **Medium** | May flag intentional internal transfers | Needs allowlist for common patterns |
-| `unsafe_arithmetic` | **High** | Many arithmetic ops are safe | Needs data-flow analysis |
-| `suspicious_overflow_check` | **Medium** | Heuristic-based detection | Needs more ecosystem validation |
-| `unchecked_coin_split` | **Medium** | May flag checked splits | Needs balance tracking |
-| `unbounded_vector_growth` | **Medium** | May flag bounded loops | Needs loop analysis |
-| `hardcoded_address` | **Medium** | Test addresses are benign | Needs test context detection |
+### Experimental Lints (12)
 
-### Style/Modernization Lints (All Stable - Zero FP Risk)
+See detailed list in "Experimental" section above.
 
-| Lint | FP Risk | Reason |
-|------|---------|--------|
-| `modern_module_syntax` | **Zero** | Exact syntax pattern match |
-| `modern_method_syntax` | **Zero** | Allowlisted function names only |
-| `prefer_vector_methods` | **Zero** | Exact function signature match |
-| `while_true_to_loop` | **Zero** | Exact `while (true)` pattern |
-| `abilities_order` | **Zero** | Exact ability ordering check |
-| `constant_naming` | **Zero** | Regex pattern for SCREAMING_SNAKE_CASE |
+### Deprecated Lints (3)
 
-## Fix Safety
+See "Deprecated" section above.
 
-Auto-fixes are classified by their safety level:
+---
 
-### Safe Fixes
+## FP Risk Assessment Methodology
 
-**Definition:** Fixes that preserve runtime behavior exactly.
-
-**Characteristics:**
-- Applied automatically with `--fix` (when implemented)
-- No semantic changes
-- Examples: formatting, import organization
-
-### Unsafe Fixes
-
-**Definition:** Fixes that may change runtime behavior.
-
-**Characteristics:**
-- Require `--unsafe-fixes` flag to apply
-- May change error messages, side effects, or execution order
-- Should be reviewed before committing
-
-**Example:**
-```bash
-# Only apply safe fixes
-move-clippy lint --fix src/
-
-# Also apply unsafe fixes (review changes carefully!)
-move-clippy lint --fix --unsafe-fixes src/
-```
-
-## Adding New Rules
-
-When adding a new lint rule:
-
-1. **Start in Preview:** All new rules begin in the `Preview` group
-2. **Document thoroughly:** Include examples and rationale
-3. **Test against ecosystem:** Establish baselines
-4. **Monitor feedback:** Track issues and user reports
-5. **Graduate when ready:** Promote to Stable after meeting criteria
-
-### Code Example
-
-```rust
-// New rule starts as Preview
-pub static MY_NEW_LINT: LintDescriptor = LintDescriptor {
-    name: "my_new_lint",
-    category: LintCategory::Style,
-    description: "Description of what this rule checks",
-    group: RuleGroup::Preview,  // Start in preview
-    fix: FixDescriptor::none(), // Or FixDescriptor::safe("...") if auto-fixable
-};
-```
-
-## Deprecation Policy
-
-1. **Announce deprecation:** Mark rule as `Deprecated` with warning message
-2. **Provide migration path:** Document alternative rules or patterns
-3. **Grace period:** Keep deprecated rules for at least one minor version
-4. **Remove:** Delete rule in next major version
-
-## Version Guarantees
-
-- **Patch versions (0.1.x):** Bug fixes only, no rule changes
-- **Minor versions (0.x.0):** New preview rules, promotions, deprecations
-- **Major versions (x.0.0):** Removal of deprecated rules, breaking changes
-
-## Configuration Reference
-
-```toml
-# move-clippy.toml
-
-[lints]
-# Enable preview rules
-preview = true
-
-# Apply unsafe fixes (when --fix is used)
-unsafe_fixes = true
-
-# Disable specific lints
-disabled = ["some_lint"]
-
-# Override lint levels
-modern_module_syntax = "error"
-prefer_to_string = "warn"
-```
+// ... existing code ...

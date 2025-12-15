@@ -1,0 +1,11 @@
+[package]
+name = "scoping_pkg"
+edition = "2024"
+
+[dependencies]
+ scoping_pkg_dep = { local = "../scoping_pkg_dep" }
+
+[addresses]
+scoping_pkg = "0x0"
+dep_pkg = "0x0"
+sui = "0x2"

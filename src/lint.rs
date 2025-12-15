@@ -13,7 +13,12 @@ use tree_sitter::Node;
 ///
 /// New rules start in `Preview` and graduate to `Stable` after meeting
 /// promotion criteria (see docs/STABILITY.md).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+///
+/// Tier hierarchy (most to least stable):
+/// 1. Stable - Production-ready, zero/near-zero false positives
+/// 2. Preview - Good detection but may have edge case FPs
+/// 3. Experimental - High FP risk, requires explicit opt-in
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub enum RuleGroup {
     /// Battle-tested rules with minimal false positives.
     /// Enabled by default based on category.
@@ -24,8 +29,14 @@ pub enum RuleGroup {
     /// Require `--preview` flag or `preview = true` in config.
     Preview,
 
-    /// Rules scheduled for removal in the next major version.
-    /// Emit a warning when explicitly enabled.
+    /// Experimental rules with high false positive risk.
+    /// Require `--experimental` flag or `experimental = true` in config.
+    /// These rules are useful for research but not recommended for CI.
+    Experimental,
+
+    /// Deprecated rules that are no longer active.
+    /// These are kept for backwards compatibility but produce no diagnostics.
+    /// Require `--experimental` flag to be included (for config compatibility).
     Deprecated,
 }
 
@@ -34,8 +45,71 @@ impl RuleGroup {
         match self {
             RuleGroup::Stable => "stable",
             RuleGroup::Preview => "preview",
+            RuleGroup::Experimental => "experimental",
             RuleGroup::Deprecated => "deprecated",
         }
+    }
+
+    /// Returns true if this tier requires explicit opt-in via CLI flag.
+    pub fn requires_opt_in(&self) -> bool {
+        matches!(self, RuleGroup::Preview | RuleGroup::Experimental)
+    }
+
+    /// Returns the CLI flag needed to enable this tier.
+    pub fn required_flag(&self) -> Option<&'static str> {
+        match self {
+            RuleGroup::Stable => None,
+            RuleGroup::Preview => Some("--preview"),
+            RuleGroup::Experimental => Some("--experimental"),
+            RuleGroup::Deprecated => Some("--experimental"), // Deprecated lints require experimental flag
+        }
+    }
+}
+
+// ============================================================================
+// Analysis Kind Classification
+// ============================================================================
+
+/// Analysis kinds determine how a lint examines Move code:
+/// - `Syntactic` lints use tree-sitter pattern matching
+/// - `TypeBased` lints use the Move compiler's type checker
+/// - `TypeBasedCFG` lints use abstract interpretation (control flow)
+/// - `CrossModule` lints analyze call graphs across module boundaries
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
+pub enum AnalysisKind {
+    /// Tree-sitter pattern matching (fast, no type info).
+    /// Runs in `--mode fast` (default).
+    #[default]
+    Syntactic,
+    /// Move compiler type/ability checking (TypingProgramInfo).
+    /// Requires `--mode full`.
+    TypeBased,
+    /// CFG-aware abstract interpretation (SimpleAbsInt).
+    /// Requires `--mode full --preview`.
+    TypeBasedCFG,
+    /// Cross-module call graph analysis.
+    /// Requires `--mode full --preview`.
+    CrossModule,
+}
+
+impl AnalysisKind {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            AnalysisKind::Syntactic => "syntactic",
+            AnalysisKind::TypeBased => "type-based",
+            AnalysisKind::TypeBasedCFG => "type-based-cfg",
+            AnalysisKind::CrossModule => "cross-module",
+        }
+    }
+
+    /// Returns true if this analysis kind requires `--mode full`.
+    pub fn requires_full_mode(&self) -> bool {
+        !matches!(self, AnalysisKind::Syntactic)
+    }
+
+    /// Returns true if this analysis kind requires `--preview`.
+    pub fn requires_preview(&self) -> bool {
+        matches!(self, AnalysisKind::TypeBasedCFG | AnalysisKind::CrossModule)
     }
 }
 
@@ -113,7 +187,7 @@ impl FixDescriptor {
 // ============================================================================
 
 /// High-level categories used to group lints.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LintCategory {
     Style,
     Modernization,
@@ -138,20 +212,96 @@ impl LintCategory {
     }
 }
 
+// ============================================================================
+// Type System Gap Classification
+// ============================================================================
+
+/// Classification of the type system gap that a lint addresses.
+///
+/// This helps understand WHY a lint exists and guides systematic discovery
+/// of new lints.
+///
+/// **For users:** See [docs/TYPE_SYSTEM_GAPS.md](../docs/TYPE_SYSTEM_GAPS.md) for detailed gap taxonomy and examples.
+///
+/// **For developers:** Use this enum to classify new lints systematically. Ask "what invariant does the type system NOT enforce?"
+///
+/// # Gap Categories
+///
+/// - **AbilityMismatch**: Wrong ability combinations (e.g., hot potato with drop)
+/// - **OwnershipViolation**: Incorrect object ownership transitions
+/// - **CapabilityEscape**: Admin/sensitive capabilities leaking scope
+/// - **ValueFlow**: Values going to wrong destinations (e.g., ignored returns)
+/// - **ApiMisuse**: Using stdlib functions incorrectly
+/// - **TemporalOrdering**: Operations in wrong sequence (e.g., use before check)
+/// - **ArithmeticSafety**: Numeric operations without validation
+/// - **StyleConvention**: Style/convention issues (no security impact)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TypeSystemGap {
+    /// Wrong ability combinations (e.g., hot potato with drop, missing key)
+    AbilityMismatch,
+    /// Incorrect object ownership transitions (e.g., sharing non-fresh objects)
+    OwnershipViolation,
+    /// Admin/sensitive capabilities leaking scope
+    CapabilityEscape,
+    /// Values going to wrong destinations (e.g., ignored return values)
+    ValueFlow,
+    /// Using stdlib functions incorrectly (e.g., Coin in struct field)
+    ApiMisuse,
+    /// Operations in wrong sequence (e.g., use before check)
+    TemporalOrdering,
+    /// Numeric operations without validation (e.g., division by zero)
+    ArithmeticSafety,
+    /// Style/convention issues (no security impact)
+    StyleConvention,
+}
+
+impl TypeSystemGap {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            TypeSystemGap::AbilityMismatch => "ability_mismatch",
+            TypeSystemGap::OwnershipViolation => "ownership_violation",
+            TypeSystemGap::CapabilityEscape => "capability_escape",
+            TypeSystemGap::ValueFlow => "value_flow",
+            TypeSystemGap::ApiMisuse => "api_misuse",
+            TypeSystemGap::TemporalOrdering => "temporal_ordering",
+            TypeSystemGap::ArithmeticSafety => "arithmetic_safety",
+            TypeSystemGap::StyleConvention => "style_convention",
+        }
+    }
+
+    pub fn description(&self) -> &'static str {
+        match self {
+            TypeSystemGap::AbilityMismatch => "Wrong ability combinations",
+            TypeSystemGap::OwnershipViolation => "Incorrect object ownership transitions",
+            TypeSystemGap::CapabilityEscape => "Capabilities leaking scope",
+            TypeSystemGap::ValueFlow => "Values going to wrong destinations",
+            TypeSystemGap::ApiMisuse => "Incorrect stdlib function usage",
+            TypeSystemGap::TemporalOrdering => "Operations in wrong sequence",
+            TypeSystemGap::ArithmeticSafety => "Numeric operations without validation",
+            TypeSystemGap::StyleConvention => "Style/convention issues",
+        }
+    }
+}
+
 /// Static metadata describing a lint rule.
 #[derive(Debug)]
 pub struct LintDescriptor {
     pub name: &'static str,
     pub category: LintCategory,
     pub description: &'static str,
-    /// Stability group: Stable, Preview, or Deprecated.
+    /// Stability group: Stable, Preview, or Experimental.
     pub group: RuleGroup,
     /// Auto-fix availability and safety classification.
     pub fix: FixDescriptor,
+    /// Detection method used by this lint.
+    pub analysis: AnalysisKind,
+    /// The type system gap this lint addresses (for security/suspicious lints).
+    /// None for style/convention lints.
+    pub gap: Option<TypeSystemGap>,
 }
 
 impl LintDescriptor {
-    /// Helper to create a stable lint descriptor with no fix.
+    /// Helper to create a stable syntactic lint descriptor with no fix.
     pub const fn stable(
         name: &'static str,
         category: LintCategory,
@@ -163,10 +313,12 @@ impl LintDescriptor {
             description,
             group: RuleGroup::Stable,
             fix: FixDescriptor::none(),
+            analysis: AnalysisKind::Syntactic,
+            gap: None,
         }
     }
 
-    /// Helper to create a stable lint descriptor with a safe fix.
+    /// Helper to create a stable syntactic lint descriptor with a safe fix.
     pub const fn stable_with_fix(
         name: &'static str,
         category: LintCategory,
@@ -179,10 +331,12 @@ impl LintDescriptor {
             description,
             group: RuleGroup::Stable,
             fix: FixDescriptor::safe(fix_description),
+            analysis: AnalysisKind::Syntactic,
+            gap: None,
         }
     }
 
-    /// Helper to create a preview lint descriptor with no fix.
+    /// Helper to create a preview syntactic lint descriptor with no fix.
     pub const fn preview(
         name: &'static str,
         category: LintCategory,
@@ -194,10 +348,12 @@ impl LintDescriptor {
             description,
             group: RuleGroup::Preview,
             fix: FixDescriptor::none(),
+            analysis: AnalysisKind::Syntactic,
+            gap: None,
         }
     }
 
-    /// Helper to create a preview lint descriptor with a safe fix.
+    /// Helper to create a preview syntactic lint descriptor with a safe fix.
     pub const fn preview_with_fix(
         name: &'static str,
         category: LintCategory,
@@ -210,6 +366,76 @@ impl LintDescriptor {
             description,
             group: RuleGroup::Preview,
             fix: FixDescriptor::safe(fix_description),
+            analysis: AnalysisKind::Syntactic,
+            gap: None,
+        }
+    }
+
+    /// Helper to create a stable type-based lint descriptor (requires --mode full).
+    pub const fn stable_type_based(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Stable,
+            fix: FixDescriptor::none(),
+            analysis: AnalysisKind::TypeBased,
+            gap: None,
+        }
+    }
+
+    /// Helper to create a preview type-based lint descriptor (requires --mode full).
+    pub const fn preview_type_based(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Preview,
+            fix: FixDescriptor::none(),
+            analysis: AnalysisKind::TypeBased,
+            gap: None,
+        }
+    }
+
+    /// Helper to create a preview CFG-aware lint descriptor (requires --mode full --preview).
+    pub const fn preview_cfg(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Preview,
+            fix: FixDescriptor::none(),
+            analysis: AnalysisKind::TypeBasedCFG,
+            gap: None,
+        }
+    }
+
+    /// Helper to create a preview cross-module lint descriptor (requires --mode full --preview).
+    pub const fn preview_cross_module(
+        name: &'static str,
+        category: LintCategory,
+        description: &'static str,
+    ) -> Self {
+        Self {
+            name,
+            category,
+            description,
+            group: RuleGroup::Preview,
+            fix: FixDescriptor::none(),
+            analysis: AnalysisKind::CrossModule,
+            gap: None,
         }
     }
 }
@@ -396,20 +622,18 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     "empty_vector_literal",
     "typed_abort_code",
     // Security lints (audit-backed, see docs/SECURITY_LINTS.md)
-    "droppable_hot_potato",
-    "excessive_token_abilities",
-    "shared_capability",
     "stale_oracle_price",
     "single_step_ownership_transfer",
     "missing_witness_drop",
     "public_random_access",
-    // Preview lints (require --preview flag)
+    "suspicious_overflow_check", // Promoted to stable
+    "ignored_boolean_return",    // Typus hack pattern
+    // Experimental lints (require --experimental flag)
+    "unchecked_coin_split", // Name-based, high FP
+    "capability_leak",      // Name-based, needs type-based rewrite
+    "unchecked_withdrawal", // Name-based, needs CFG-based rewrite
     "pure_function_transfer",
     "unsafe_arithmetic",
-    "suspicious_overflow_check",
-    "unchecked_coin_split",
-    "unbounded_vector_growth",
-    "hardcoded_address",
 ];
 
 const FULL_MODE_SUPERSEDED_LINTS: &[&str] = &["public_mut_tx_context", "unnecessary_public_entry"];
@@ -435,6 +659,12 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
     "oracle_zero_price",
     "unused_return_value",
     "missing_access_control",
+    // Phase II (AbsInt) lints (require --mode full --preview)
+    "phantom_capability",
+    "unchecked_division_v2",
+    // Phase III (cross-module) lints (require --mode full --preview)
+    "transitive_capability_leak",
+    "flashloan_without_repay",
 ];
 
 pub fn is_semantic_lint(name: &str) -> bool {
@@ -556,20 +786,24 @@ impl LintRegistry {
             .with_rule(crate::rules::EmptyVectorLiteralLint)
             .with_rule(crate::rules::TypedAbortCodeLint)
             // Security lints (audit-backed)
-            .with_rule(crate::rules::DroppableHotPotatoLint)
-            .with_rule(crate::rules::ExcessiveTokenAbilitiesLint)
-            .with_rule(crate::rules::SharedCapabilityLint)
             .with_rule(crate::rules::StaleOraclePriceLint)
             .with_rule(crate::rules::SingleStepOwnershipTransferLint)
             .with_rule(crate::rules::MissingWitnessDropLint)
             .with_rule(crate::rules::PublicRandomAccessLint)
+            .with_rule(crate::rules::SuspiciousOverflowCheckLint) // Promoted to stable
+            .with_rule(crate::rules::IgnoredBooleanReturnLint) // Typus hack pattern
+            .with_rule(crate::rules::DivideByZeroLiteralLint) // NEW: Type system gap lint
             // Preview lints (only included when preview mode enabled)
             .with_rule(crate::rules::PureFunctionTransferLint)
             .with_rule(crate::rules::UnsafeArithmeticLint)
-            .with_rule(crate::rules::SuspiciousOverflowCheckLint)
             .with_rule(crate::rules::UncheckedCoinSplitLint)
-            .with_rule(crate::rules::UnboundedVectorGrowthLint)
-            .with_rule(crate::rules::HardcodedAddressLint)
+            .with_rule(crate::rules::UncheckedWithdrawalLint) // NEW: Thala hack pattern
+            .with_rule(crate::rules::CapabilityLeakLint) // NEW: MoveScanner pattern
+            // NEW: Type system gap lints (preview)
+            .with_rule(crate::rules::DestroyZeroUncheckedLint)
+            .with_rule(crate::rules::OtwPatternViolationLint)
+            .with_rule(crate::rules::DigestAsRandomnessLint)
+            .with_rule(crate::rules::FreshAddressReuseLint)
     }
 
     pub fn default_rules_filtered(
@@ -579,6 +813,23 @@ impl LintRegistry {
         full_mode: bool,
         preview: bool,
     ) -> Result<Self> {
+        // Note: experimental flag implies preview
+        Self::default_rules_filtered_with_experimental(
+            only, skip, disabled, full_mode, preview, false,
+        )
+    }
+
+    /// Filter rules with full tier support including experimental.
+    pub fn default_rules_filtered_with_experimental(
+        only: &[String],
+        skip: &[String],
+        disabled: &[String],
+        full_mode: bool,
+        preview: bool,
+        experimental: bool,
+    ) -> Result<Self> {
+        // Experimental implies preview
+        let effective_preview = preview || experimental;
         // Use the extended set that includes aliases for validation
         let known = all_known_lints_with_aliases();
 
@@ -616,10 +867,12 @@ impl LintRegistry {
                 continue;
             }
 
-            // Get the rule's group and filter if preview mode is disabled
+            // Get the rule's group and filter based on tier flags
             let group = get_lint_group(name);
-            if group == RuleGroup::Preview && !preview {
-                continue;
+            match group {
+                RuleGroup::Preview if !effective_preview => continue,
+                RuleGroup::Experimental if !experimental => continue,
+                _ => {}
             }
 
             match *name {
@@ -696,15 +949,6 @@ impl LintRegistry {
                     reg = reg.with_rule(crate::rules::TypedAbortCodeLint);
                 }
                 // Security lints (audit-backed)
-                "droppable_hot_potato" => {
-                    reg = reg.with_rule(crate::rules::DroppableHotPotatoLint);
-                }
-                "excessive_token_abilities" => {
-                    reg = reg.with_rule(crate::rules::ExcessiveTokenAbilitiesLint);
-                }
-                "shared_capability" => {
-                    reg = reg.with_rule(crate::rules::SharedCapabilityLint);
-                }
                 "stale_oracle_price" => {
                     reg = reg.with_rule(crate::rules::StaleOraclePriceLint);
                 }
@@ -717,24 +961,43 @@ impl LintRegistry {
                 "public_random_access" => {
                     reg = reg.with_rule(crate::rules::PublicRandomAccessLint);
                 }
-                // Preview lints
+                "suspicious_overflow_check" => {
+                    reg = reg.with_rule(crate::rules::SuspiciousOverflowCheckLint);
+                }
+                "ignored_boolean_return" => {
+                    reg = reg.with_rule(crate::rules::IgnoredBooleanReturnLint);
+                }
+                // Experimental lints
                 "pure_function_transfer" => {
                     reg = reg.with_rule(crate::rules::PureFunctionTransferLint);
                 }
                 "unsafe_arithmetic" => {
                     reg = reg.with_rule(crate::rules::UnsafeArithmeticLint);
                 }
-                "suspicious_overflow_check" => {
-                    reg = reg.with_rule(crate::rules::SuspiciousOverflowCheckLint);
+                "unchecked_withdrawal" => {
+                    reg = reg.with_rule(crate::rules::UncheckedWithdrawalLint);
+                }
+                "capability_leak" => {
+                    reg = reg.with_rule(crate::rules::CapabilityLeakLint);
                 }
                 "unchecked_coin_split" => {
                     reg = reg.with_rule(crate::rules::UncheckedCoinSplitLint);
                 }
-                "unbounded_vector_growth" => {
-                    reg = reg.with_rule(crate::rules::UnboundedVectorGrowthLint);
+                // NEW: Type system gap lints
+                "divide_by_zero_literal" => {
+                    reg = reg.with_rule(crate::rules::DivideByZeroLiteralLint);
                 }
-                "hardcoded_address" => {
-                    reg = reg.with_rule(crate::rules::HardcodedAddressLint);
+                "destroy_zero_unchecked" => {
+                    reg = reg.with_rule(crate::rules::DestroyZeroUncheckedLint);
+                }
+                "otw_pattern_violation" => {
+                    reg = reg.with_rule(crate::rules::OtwPatternViolationLint);
+                }
+                "digest_as_randomness" => {
+                    reg = reg.with_rule(crate::rules::DigestAsRandomnessLint);
+                }
+                "fresh_address_reuse" => {
+                    reg = reg.with_rule(crate::rules::FreshAddressReuseLint);
                 }
                 other => unreachable!("unexpected fast lint name: {other}"),
             }
@@ -776,21 +1039,25 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "empty_vector_literal"
         | "typed_abort_code"
         // Security lints (audit-backed, stable)
-        | "droppable_hot_potato"
-        | "excessive_token_abilities"
-        | "shared_capability"
         | "stale_oracle_price"
         | "single_step_ownership_transfer"
         | "missing_witness_drop"
-        | "public_random_access" => RuleGroup::Stable,
+        | "public_random_access"
+        | "suspicious_overflow_check"     // Promoted to stable
+        | "ignored_boolean_return"        // Typus hack pattern
+        | "divide_by_zero_literal" => RuleGroup::Stable,  // NEW: Type system gap lint
 
-        // Preview lints (higher FP risk, require --preview flag)
+        // Experimental lints (high FP risk, require --experimental flag)
+        "unchecked_coin_split"      // Name-based, high FP
+        | "capability_leak"           // Name-based, needs type-based rewrite
+        | "unchecked_withdrawal"      // Name-based, needs CFG-based rewrite
         | "pure_function_transfer"
         | "unsafe_arithmetic"
-        | "suspicious_overflow_check"
-        | "unchecked_coin_split"
-        | "unbounded_vector_growth"
-        | "hardcoded_address" => RuleGroup::Preview,
+        // Type system gap lints (heuristic-based, need CFG for low FP)
+        | "destroy_zero_unchecked"    // Needs dataflow to track zero-checks
+        | "otw_pattern_violation"     // Needs better module name handling
+        | "digest_as_randomness"      // Keyword-based, needs taint analysis
+        | "fresh_address_reuse" => RuleGroup::Experimental,  // Needs usage tracking
 
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,

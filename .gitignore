@@ -1,15 +1,81 @@
+# Build artifacts
 /target
 *.pending-snap
 /tests/fixtures/**/build/
 
-# Local research and analysis (not for commit)
+# ============================================================================
+# Internal Research & Development (NOT for commit)
+# ============================================================================
+
+# Internal research and analysis directories
 /audit-analysis/
 /notes/
-/docs/local_lint_plan/
+/validation/
 
-# Ecosystem validation and triage (internal only)
+# Internal documentation (implementation details, not user-facing)
+/docs/DATAFLOW_ANALYSIS_GAPS.md
+/docs/KEY_STORE_PROXY_ANALYSIS.md
+/docs/LINT_GROUNDING_ANALYSIS.md
+/docs/LINT_INVENTORY.md
+/docs/LOCAL_ECOSYSTEM_VALIDATION.md
+/docs/PHASE_I_SUMMARY.md
+/docs/PHASE_II_III_COMPLETION_SUMMARY.md
+/docs/PHASE_II_III_IMPLEMENTATION.md
+/docs/IMPLEMENTATION_COMPLETE.md
+/docs/SEMANTIC_LINTER_EXPANSION_SPEC.md
+
+# Ecosystem validation and triage (internal analysis only)
 /tests/ecosystem_validation/
+!/tests/ecosystem_validation/README.md
+
+# Internal scripts
+/scripts/
+
+# Triage databases (can be regenerated, not version controlled)
 triage.json
+triage_*.json
+*.triage.json
 
 # Backup files created by --fix
 *.bak
+
+# Debug output
+*.out
+*.err
+debug-*
+# Internal AI slop / session notes (keep local only)
+AUTOFIX_*.md
+CLEANUP_*.md
+LINT_QUALITY_*.md
+SYSTEMATIC_*.md
+cleanup-internal-files.sh
+.remove-ai-slop.sh
+.commit-strategy*.md
+.cleanup-plan.txt
+
+# Internal docs (keep local only)
+docs/AST_INVESTIGATION.md
+docs/DEPRECATED_LINT_REMOVAL.md
+docs/GOLDEN_TESTS.md
+docs/IMPLEMENTATION_*.md
+docs/PHASE*.md
+docs/SEMANTIC_LINTER_EXPANSION_SPEC.md
+docs/SEMANTIC_LINT_STATUS.md
+docs/DATAFLOW_ANALYSIS_GAPS.md
+docs/KEY_STORE_PROXY_ANALYSIS.md
+docs/LINT_GROUNDING_ANALYSIS.md
+docs/LOCAL_ECOSYSTEM_VALIDATION.md
+docs/research/
+
+# Ecosystem validation internal analysis (keep local only)
+tests/ecosystem_validation/FP_ANALYSIS.md
+tests/ecosystem_validation/INITIAL_ANALYSIS.md
+tests/ecosystem_validation/TRIAGE_REPORT.md
+tests/ecosystem_validation/VALIDATION_REPORT.md
+tests/ecosystem_validation/REVIEW_PLAYBOOK.md
+tests/ecosystem_validation/analysis/
+tests/ecosystem_validation/decisions/
+tests/ecosystem_validation/triage*.json
+tests/ecosystem_validation/findings/*.json
+tests/ecosystem_validation/results/*.json
+tests/ecosystem_validation/results/*.log

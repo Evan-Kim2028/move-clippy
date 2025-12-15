@@ -2,18 +2,9 @@
 source: tests/sui_lints.rs
 expression: output
 ---
-sources/main.move:9:19: capability_naming: Capability struct should be suffixed with `_cap`: `S1_cap`
-sources/main.move:22:5: missing_access_control: Public function `public_transfer_bad` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
 sources/main.move:23:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
 sources/main.move:23:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
-sources/main.move:26:5: missing_access_control: Public function `private_transfer_bad` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
 sources/main.move:27:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
 sources/main.move:27:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
-sources/main.move:30:5: missing_access_control: Public function `private_transfer_no_store` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:36:5: missing_access_control: Public function `transfer_through_assigns_bad` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
 sources/main.move:39:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
 sources/main.move:39:9: self_transfer: non-composable transfer to sender: Transfer of an object to transaction sender address
-sources/main.move:42:5: missing_access_control: Public function `transfer_to_param_ok` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:47:5: missing_access_control: Public function `conditional_transfer_ok` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:54:5: missing_access_control: Public function `public_transfer_bad_suppressed` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.
-sources/main.move:64:5: missing_access_control: Public function `new` modifies state (has &mut parameter) but has no capability parameter for access control. Consider adding an AdminCap or similar to restrict access.

@@ -1,5 +1,7 @@
 use crate::diagnostics::{Applicability, Span, Suggestion};
-use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
+use crate::lint::{
+    AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
+};
 use tree_sitter::Node;
 
 use super::util::{compact_ws, extract_braced_items, slice, walk};
@@ -16,6 +18,8 @@ static ABILITIES_ORDER: LintDescriptor = LintDescriptor {
     description: "Struct abilities should be ordered: key, copy, drop, store",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Reorder abilities to canonical order"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 /// The canonical order of abilities per Sui Move conventions
@@ -128,6 +132,8 @@ static DOC_COMMENT_STYLE: LintDescriptor = LintDescriptor {
     description: "Use `///` for doc comments, not `/** */` or `/* */`",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for DocCommentStyleLint {
@@ -185,8 +191,8 @@ fn precedes_documentable_item(node: Node, _source: &str) -> bool {
     while let Some(s) = sibling {
         let kind = s.kind();
 
-        // Skip whitespace and other comments
-        if kind == "line_comment" || kind == "block_comment" {
+        // Skip whitespace, newlines, and other comments
+        if kind == "line_comment" || kind == "block_comment" || kind == "newline" {
             sibling = s.next_sibling();
             continue;
         }
@@ -220,6 +226,8 @@ static EXPLICIT_SELF_ASSIGNMENTS: LintDescriptor = LintDescriptor {
     description: "Use `..` to ignore multiple struct fields instead of explicit `: _` bindings",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for ExplicitSelfAssignmentsLint {
@@ -281,6 +289,8 @@ static EVENT_SUFFIX: LintDescriptor = LintDescriptor {
     description: "Event structs should end with `Event` suffix",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for EventSuffixLint {
@@ -356,6 +366,8 @@ static EMPTY_VECTOR_LITERAL: LintDescriptor = LintDescriptor {
     description: "Prefer `vector[]` over `vector::empty()`",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Replace with `vector[]`"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for EmptyVectorLiteralLint {
@@ -428,6 +440,8 @@ static TYPED_ABORT_CODE: LintDescriptor = LintDescriptor {
     description: "Prefer named error constants over numeric abort codes",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for TypedAbortCodeLint {
@@ -465,7 +479,7 @@ impl LintRule for TypedAbortCodeLint {
             }
 
             // Check assert! with numeric abort codes
-            if node.kind() == "macro_invocation" {
+            if node.kind() == "macro_call_expression" {
                 let text = slice(source, node).trim();
                 if text.starts_with("assert!")
                     && !text.starts_with("assert_eq!")
@@ -585,7 +599,9 @@ static REDUNDANT_SELF_IMPORT: LintDescriptor = LintDescriptor {
     category: LintCategory::Style,
     description: "Avoid `use pkg::mod::{Self};`; prefer `use pkg::mod;`",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Remove redundant `{Self}`"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for RedundantSelfImportLint {
@@ -613,11 +629,32 @@ impl LintRule for RedundantSelfImportLint {
                 .collect();
 
             if items.len() == 1 && items[0] == "Self" {
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    "Redundant `{Self}` import; prefer `use pkg::mod;`",
-                );
+                // Generate the fixed version by removing "::{Self}"
+                let replacement = text.replace("::{Self}", "").replace("::{ Self }", "");
+
+                // Create diagnostic with auto-fix
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: "Redundant `{Self}` import; prefer `use pkg::mod;`".to_string(),
+                    help: Some("Remove `{Self}`".to_string()),
+                    suggestion: Some(Suggestion {
+                        message: "Remove redundant `{Self}`".to_string(),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    }),
+                };
+
+                // Check for suppression
+                let node_start = node.start_byte();
+                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name)
+                {
+                    return;
+                }
+
+                ctx.report_diagnostic(diagnostic);
             }
         });
     }
@@ -631,6 +668,8 @@ static PREFER_TO_STRING: LintDescriptor = LintDescriptor {
     description: "Prefer b\"...\".to_string() over std::string::utf8(b\"...\") (import-only check)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for PreferToStringLint {
@@ -665,7 +704,9 @@ static CONSTANT_NAMING: LintDescriptor = LintDescriptor {
     category: LintCategory::Naming,
     description: "Error constants should use EPascalCase; other constants should be SCREAMING_SNAKE_CASE",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Rename to correct case"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for ConstantNamingLint {
@@ -688,22 +729,64 @@ impl LintRule for ConstantNamingLint {
 
             match classify_constant(name) {
                 ConstantKind::Error if !is_valid_error_constant(name) => {
-                    ctx.report_node(
-                        self.descriptor(),
-                        name_node,
-                        format!(
-                            "Error constants should use EPascalCase (e.g. `ENotAuthorized`), found `{name}`"
-                        ),
+                    let suggested = to_e_pascal_case(name);
+                    let message = format!(
+                        "Error constants should use EPascalCase (e.g. `ENotAuthorized`), found `{name}`"
                     );
+
+                    // Check for suppression
+                    if crate::suppression::is_suppressed_at(
+                        source,
+                        name_node.start_byte(),
+                        self.descriptor().name,
+                    ) {
+                        return;
+                    }
+
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(name_node.range()),
+                        message: message.clone(),
+                        help: Some(format!("Consider renaming to `{}`", suggested)),
+                        suggestion: Some(Suggestion {
+                            message: format!("Rename to `{}`", suggested),
+                            replacement: suggested,
+                            applicability: Applicability::MaybeIncorrect, // Renaming affects all usages
+                        }),
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
                 ConstantKind::Regular if !is_valid_regular_constant(name) => {
-                    ctx.report_node(
-                        self.descriptor(),
-                        name_node,
-                        format!(
-                            "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `{name}`"
-                        ),
+                    let suggested = to_screaming_snake_case(name);
+                    let message = format!(
+                        "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `{name}`"
                     );
+
+                    // Check for suppression
+                    if crate::suppression::is_suppressed_at(
+                        source,
+                        name_node.start_byte(),
+                        self.descriptor().name,
+                    ) {
+                        return;
+                    }
+
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(name_node.range()),
+                        message: message.clone(),
+                        help: Some(format!("Consider renaming to `{}`", suggested)),
+                        suggestion: Some(Suggestion {
+                            message: format!("Rename to `{}`", suggested),
+                            replacement: suggested,
+                            applicability: Applicability::MaybeIncorrect, // Renaming affects all usages
+                        }),
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
                 _ => {}
             }
@@ -719,6 +802,8 @@ static UNNEEDED_RETURN: LintDescriptor = LintDescriptor {
     description: "Avoid trailing `return` statements; let the final expression return implicitly",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Remove `return` keyword"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for UnneededReturnLint {
@@ -844,6 +929,57 @@ fn is_valid_regular_constant(name: &str) -> bool {
     }
     name.chars()
         .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+}
+
+/// Convert a name to EPascalCase (e.g., E_NOT_AUTHORIZED -> ENotAuthorized)
+fn to_e_pascal_case(name: &str) -> String {
+    // If already starts with E, keep it; otherwise add it
+    let without_e = name.strip_prefix('E').unwrap_or(name);
+
+    // Split on underscores and capitalize each word
+    let parts: Vec<String> = without_e
+        .split('_')
+        .filter(|s| !s.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => {
+                    first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase()
+                }
+            }
+        })
+        .collect();
+
+    format!("E{}", parts.join(""))
+}
+
+/// Convert a name to SCREAMING_SNAKE_CASE (e.g., maxSupply -> MAX_SUPPLY)
+fn to_screaming_snake_case(name: &str) -> String {
+    let mut result = String::new();
+    let mut prev_was_lowercase = false;
+
+    for (i, ch) in name.chars().enumerate() {
+        if ch == '_' {
+            result.push('_');
+            prev_was_lowercase = false;
+        } else if ch.is_ascii_uppercase() {
+            // Add underscore before uppercase if previous was lowercase (camelCase boundary)
+            if i > 0 && prev_was_lowercase {
+                result.push('_');
+            }
+            result.push(ch);
+            prev_was_lowercase = false;
+        } else if ch.is_ascii_lowercase() {
+            result.push(ch.to_ascii_uppercase());
+            prev_was_lowercase = true;
+        } else {
+            result.push(ch);
+            prev_was_lowercase = false;
+        }
+    }
+
+    result
 }
 
 fn trailing_return_expression(block: Node) -> Option<Node> {

@@ -1,5 +1,7 @@
 use crate::diagnostics::Span;
-use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
+use crate::lint::{
+    AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
+};
 use tree_sitter::Node;
 
 use super::patterns::{
@@ -7,14 +9,65 @@ use super::patterns::{
     parse_length_comparison,
 };
 use super::util::{
-    compact_ws, is_simple_ident, parse_ref_ident, parse_ref_mut_ident, slice, split_args,
-    split_call, walk,
+    compact_ws, generate_method_call_fix, is_simple_ident, is_simple_receiver, parse_ref_ident,
+    parse_ref_mut_ident, slice, split_args, split_call, walk,
 };
 use crate::diagnostics::{Applicability, Suggestion};
 
 // ============================================================================
 // EqualityInAssertLint - P1 (Near-Zero FP)
 // ============================================================================
+
+/// Generate assert_eq! fix from assert!(a == b, ...) pattern
+fn generate_assert_eq_fix(assert_text: &str, condition: &str) -> Option<Suggestion> {
+    // Split condition on == to get left and right operands
+    let parts: Vec<&str> = condition.split("==").collect();
+    if parts.len() != 2 {
+        return None;
+    }
+
+    let left = parts[0].trim();
+    let right = parts[1].trim();
+
+    // Extract everything after the condition (error code, message, etc.)
+    // Pattern: assert!(condition, error_code, message)
+    let start = assert_text.find("assert!")? + 7; // Skip "assert!"
+    let rest = assert_text.get(start..)?.trim_start();
+    let inner_start = rest.find('(')? + 1;
+    let inner_end = rest.rfind(')')?;
+    let full_args = rest.get(inner_start..inner_end)?;
+
+    // Find first comma at depth 0 (after condition, before error args)
+    let mut depth: i32 = 0;
+    let mut comma_pos = None;
+    for (i, c) in full_args.char_indices() {
+        match c {
+            '(' | '[' | '{' => depth += 1,
+            ')' | ']' | '}' => depth = depth.saturating_sub(1),
+            ',' if depth == 0 => {
+                comma_pos = Some(i);
+                break;
+            }
+            _ => {}
+        }
+    }
+
+    // Build replacement: assert_eq!(left, right, ...remaining_args)
+    let error_part = if let Some(pos) = comma_pos {
+        let after_comma = full_args.get(pos + 1..)?.trim();
+        format!(", {}", after_comma)
+    } else {
+        String::new()
+    };
+
+    let replacement = format!("assert_eq!({}, {}{})", left, right, error_part);
+
+    Some(Suggestion {
+        message: "Replace with assert_eq!".to_string(),
+        replacement,
+        applicability: Applicability::MachineApplicable,
+    })
+}
 
 pub struct EqualityInAssertLint;
 
@@ -23,7 +76,9 @@ static EQUALITY_IN_ASSERT: LintDescriptor = LintDescriptor {
     category: LintCategory::Style,
     description: "Prefer `assert_eq!(a, b)` over `assert!(a == b)` for clearer failure messages",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Replace `assert!(a == b)` with `assert_eq!(a, b)`"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for EqualityInAssertLint {
@@ -33,7 +88,7 @@ impl LintRule for EqualityInAssertLint {
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
         walk(root, &mut |node| {
-            if node.kind() != "macro_invocation" {
+            if node.kind() != "macro_call_expression" {
                 return;
             }
 
@@ -51,11 +106,20 @@ impl LintRule for EqualityInAssertLint {
             if let Some(condition) = extract_assert_condition(text) {
                 // Check if it's a simple equality comparison
                 if is_simple_equality_comparison(condition) {
-                    ctx.report_node(
-                        self.descriptor(),
-                        node,
-                        "Prefer `assert_eq!(a, b)` for clearer failure messages",
-                    );
+                    // Generate auto-fix: assert!(a == b, ...) -> assert_eq!(a, b, ...)
+                    let suggestion = generate_assert_eq_fix(text, condition);
+
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: "Prefer `assert_eq!(a, b)` for clearer failure messages"
+                            .to_string(),
+                        help: Some("Use assert_eq! for better error messages".to_string()),
+                        suggestion,
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
             }
         });
@@ -66,6 +130,76 @@ impl LintRule for EqualityInAssertLint {
 // ManualOptionCheckLint - P1 (Near-Zero FP)
 // ============================================================================
 
+/// Generate do! macro fix from manual is_some() + destroy_some() pattern
+fn generate_manual_option_fix(
+    _if_text: &str,
+    body_text: &str,
+    var_name: &str,
+) -> Option<Suggestion> {
+    // Find the destroy_some line to extract binding name and remove it
+    // Pattern: let binding_name = var_name.destroy_some();
+
+    let destroy_pattern = format!("{}.destroy_some()", var_name);
+
+    // Split body into lines
+    let body_lines: Vec<&str> = body_text.lines().collect();
+
+    // Find the line with destroy_some and extract binding name
+    let mut binding_name = "value".to_string(); // default
+    let mut filtered_lines = Vec::new();
+    let mut found_destroy = false;
+
+    for line in body_lines {
+        let trimmed = line.trim();
+
+        if trimmed.contains(&destroy_pattern) {
+            found_destroy = true;
+            // Try to extract binding name from: let binding_name = opt.destroy_some();
+            if let Some(let_pos) = trimmed.find("let ") {
+                let after_let = &trimmed[let_pos + 4..];
+                if let Some(eq_pos) = after_let.find('=') {
+                    binding_name = after_let[..eq_pos].trim().to_string();
+                }
+            }
+            // Skip this line (don't add to filtered_lines)
+            continue;
+        }
+
+        filtered_lines.push(line);
+    }
+
+    if !found_destroy {
+        return None;
+    }
+
+    // Reconstruct body without the destroy_some line
+    let new_body = filtered_lines.join("\n");
+
+    // Extract just the statements part (remove opening/closing braces)
+    let body_inner = new_body
+        .trim()
+        .strip_prefix('{')
+        .and_then(|s| s.strip_suffix('}'))
+        .unwrap_or(&new_body)
+        .trim();
+
+    // Build the do! macro call
+    let replacement = if body_inner.is_empty() {
+        format!("{}.do!(|{}| {{}})", var_name, binding_name)
+    } else {
+        format!(
+            "{}.do!(|{}| {{\n{}\n}})",
+            var_name, binding_name, body_inner
+        )
+    };
+
+    Some(Suggestion {
+        message: format!("Replace with {}.do! macro", var_name),
+        replacement,
+        applicability: Applicability::MaybeIncorrect,
+    })
+}
+
 pub struct ManualOptionCheckLint;
 
 static MANUAL_OPTION_CHECK: LintDescriptor = LintDescriptor {
@@ -73,7 +207,9 @@ static MANUAL_OPTION_CHECK: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer option macros (`do!`, `destroy_or!`) over manual `is_some()` + `destroy_some()` patterns",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::unsafe_fix("Replace with do! macro"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for ManualOptionCheckLint {
@@ -87,13 +223,28 @@ impl LintRule for ManualOptionCheckLint {
                 return;
             }
 
-            // Extract condition
-            let condition_node = node
-                .child_by_field_name("condition")
-                .or_else(|| node.child_by_field_name("eb"));
-            let body_node = node
-                .child_by_field_name("consequence")
-                .or_else(|| node.child_by_field_name("e"));
+            // Extract condition and body by walking children
+            // Structure: if ( condition ) block [else block]
+            let mut condition_node = None;
+            let mut body_node = None;
+
+            let mut cursor = node.walk();
+            for child in node.children(&mut cursor) {
+                match child.kind() {
+                    "dot_expression" | "binary_expression" | "call_expression"
+                    | "name_expression" => {
+                        if condition_node.is_none() {
+                            condition_node = Some(child);
+                        }
+                    }
+                    "block" => {
+                        if body_node.is_none() {
+                            body_node = Some(child);
+                        }
+                    }
+                    _ => {}
+                }
+            }
 
             let Some(condition_node) = condition_node else {
                 return;
@@ -107,14 +258,23 @@ impl LintRule for ManualOptionCheckLint {
             if let Some(var_name) = extract_is_some_receiver(condition) {
                 let destroy_pattern = format!("{}.destroy_some()", var_name);
                 if body.contains(&destroy_pattern) {
-                    ctx.report_node(
-                        self.descriptor(),
-                        node,
-                        format!(
+                    // Generate auto-fix
+                    let if_text = slice(source, node);
+                    let suggestion = generate_manual_option_fix(if_text, body, var_name);
+
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: format!(
                             "Consider `{}.do!(|v| ...)` instead of manual `is_some()` + `destroy_some()`",
                             var_name
                         ),
-                    );
+                        help: Some("Use do! macro for cleaner option handling".to_string()),
+                        suggestion,
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
             }
         });
@@ -125,6 +285,90 @@ impl LintRule for ManualOptionCheckLint {
 // ManualLoopIterationLint - P1 (Near-Zero FP)
 // ============================================================================
 
+/// Generate do_ref! macro fix from manual while loop with index
+fn generate_manual_loop_fix(body_text: &str, iter_var: &str, vec_var: &str) -> Option<Suggestion> {
+    // Find the borrow line to extract binding name
+    // Pattern: let binding_name = vec_var.borrow(iter_var);
+
+    let borrow_pattern = format!("{}.borrow({})", vec_var, iter_var);
+
+    // Split body into lines
+    let body_lines: Vec<&str> = body_text.lines().collect();
+
+    // Find the line with borrow and extract binding name
+    let mut binding_name = "elem".to_string(); // default
+    let mut filtered_lines = Vec::new();
+
+    for line in body_lines {
+        let trimmed = line.trim();
+
+        // Skip increment lines
+        let increment_patterns = [
+            format!("{} = {} + 1", iter_var, iter_var),
+            format!("{} = 1 + {}", iter_var, iter_var),
+            format!("{}={} + 1", iter_var, iter_var),
+            format!("{}={}+1", iter_var, iter_var),
+        ];
+
+        if increment_patterns.iter().any(|p| trimmed.contains(p)) {
+            continue; // Skip increment line
+        }
+
+        // Extract binding from borrow line
+        if trimmed.contains(&borrow_pattern) {
+            if let Some(let_pos) = trimmed.find("let ") {
+                let after_let = &trimmed[let_pos + 4..];
+                if let Some(eq_pos) = after_let.find('=') {
+                    binding_name = after_let[..eq_pos].trim().to_string();
+                }
+            }
+            // Keep this line but will need to transform it
+            filtered_lines.push(line);
+            continue;
+        }
+
+        filtered_lines.push(line);
+    }
+
+    // Reconstruct body without increment
+    let new_body = filtered_lines.join("\n");
+
+    // Extract just the statements (remove braces)
+    let body_inner = new_body
+        .trim()
+        .strip_prefix('{')
+        .and_then(|s| s.strip_suffix('}'))
+        .unwrap_or(&new_body)
+        .trim();
+
+    // Remove the borrow line from body_inner since it becomes the parameter
+    let body_final: Vec<&str> = body_inner
+        .lines()
+        .filter(|line| !line.trim().contains(&borrow_pattern))
+        .collect();
+
+    let body_final_str = body_final.join("\n").trim().to_string();
+
+    // Build the do_ref! macro call
+    let replacement = if body_final_str.is_empty() {
+        format!("{}.do_ref!(|{}| {{}})", vec_var, binding_name)
+    } else {
+        format!(
+            "{}.do_ref!(|{}| {{\n{}\n}})",
+            vec_var, binding_name, body_final_str
+        )
+    };
+
+    Some(Suggestion {
+        message: format!(
+            "Replace with {}.do_ref! macro (note: manually remove `let mut {} = 0;` above)",
+            vec_var, iter_var
+        ),
+        replacement,
+        applicability: Applicability::MaybeIncorrect,
+    })
+}
+
 pub struct ManualLoopIterationLint;
 
 static MANUAL_LOOP_ITERATION: LintDescriptor = LintDescriptor {
@@ -132,7 +376,9 @@ static MANUAL_LOOP_ITERATION: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer loop macros (`do_ref!`, `fold!`) over manual while loops with index",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::unsafe_fix("Replace with do_ref! macro"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for ManualLoopIterationLint {
@@ -174,15 +420,30 @@ impl LintRule for ManualLoopIterationLint {
 
                 let has_increment = increment_patterns.iter().any(|p| body.contains(p));
 
-                if has_increment {
-                    ctx.report_node(
-                        self.descriptor(),
-                        node,
-                        format!(
+                // CRITICAL: Also check for borrow pattern to avoid false positives
+                let borrow_pattern = format!("{}.borrow({})", vec_var, iter_var);
+                let has_borrow = body.contains(&borrow_pattern);
+
+                if has_increment && has_borrow {
+                    // Generate auto-fix
+                    let suggestion = generate_manual_loop_fix(body, iter_var, vec_var);
+
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: format!(
                             "Consider `{}.do_ref!(|e| ...)` instead of manual while loop with index",
                             vec_var
                         ),
-                    );
+                        help: Some(format!(
+                            "Use do_ref! macro for cleaner iteration. Note: You must manually remove `let mut {} = 0;` above this loop.",
+                            iter_var
+                        )),
+                        suggestion,
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
             }
         });
@@ -200,7 +461,9 @@ static MODERN_MODULE_SYNTAX: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer Move 2024 module label syntax (module x::y;) over block form (module x::y { ... })",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Convert to Move 2024 module label syntax"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for ModernModuleSyntaxLint {
@@ -231,11 +494,55 @@ impl LintRule for ModernModuleSyntaxLint {
             };
 
             if is_legacy_block {
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    "Use Move 2024 module label syntax: `module pkg::mod;`",
-                );
+                // Extract module identity for the fix
+                // Find the module identity node to get the module path
+                let module_identity = node
+                    .children(&mut node.walk())
+                    .find(|child| child.kind() == "module_identity")
+                    .map(|id_node| slice(source, id_node).trim());
+
+                if let Some(module_path) = module_identity {
+                    // Create the replacement: "module path;"
+                    let replacement = format!("module {};", module_path);
+
+                    // Create diagnostic with auto-fix suggestion
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: "Use Move 2024 module label syntax: `module pkg::mod;`"
+                            .to_string(),
+                        help: Some("Convert to label syntax".to_string()),
+                        suggestion: Some(Suggestion {
+                            message: format!(
+                                "Convert `module {} {{ ... }}` to `{}`",
+                                module_path, replacement
+                            ),
+                            replacement,
+                            applicability: Applicability::MachineApplicable,
+                        }),
+                    };
+
+                    // Check for suppression
+                    let node_start = node.start_byte();
+                    if crate::suppression::is_suppressed_at(
+                        source,
+                        node_start,
+                        self.descriptor().name,
+                    ) {
+                        return;
+                    }
+
+                    ctx.report_diagnostic(diagnostic);
+                } else {
+                    // Fallback if we can't extract module identity
+                    ctx.report_node(
+                        self.descriptor(),
+                        node,
+                        "Use Move 2024 module label syntax: `module pkg::mod;`",
+                    );
+                }
             }
         });
     }
@@ -248,7 +555,9 @@ static PREFER_VECTOR_METHODS: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer method syntax on vectors (e.g., v.push_back(x), v.length())",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Convert to method syntax"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for PreferVectorMethodsLint {
@@ -279,11 +588,29 @@ impl LintRule for PreferVectorMethodsLint {
                     return;
                 };
 
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    format!("Prefer method syntax: `{receiver}.push_back(...)`"),
-                );
+                // Generate auto-fix
+                let suggestion = if is_simple_receiver(receiver) {
+                    let replacement =
+                        generate_method_call_fix(receiver, "push_back", vec![args[1]]);
+                    Some(Suggestion {
+                        message: format!("Use method syntax: {}", replacement),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    })
+                } else {
+                    None
+                };
+
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: format!("Prefer method syntax: `{receiver}.push_back(...)`"),
+                    help: Some("Use method call syntax for cleaner code".to_string()),
+                    suggestion,
+                };
+                ctx.report_diagnostic(diagnostic);
             } else if callee == "vector::length" {
                 let Some(args) = split_args(args_str) else {
                     return;
@@ -295,11 +622,28 @@ impl LintRule for PreferVectorMethodsLint {
                     return;
                 };
 
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    format!("Prefer method syntax: `{receiver}.length()`"),
-                );
+                // Generate auto-fix
+                let suggestion = if is_simple_receiver(receiver) {
+                    let replacement = generate_method_call_fix(receiver, "length", vec![]);
+                    Some(Suggestion {
+                        message: format!("Use method syntax: {}", replacement),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    })
+                } else {
+                    None
+                };
+
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: format!("Prefer method syntax: `{receiver}.length()`"),
+                    help: Some("Use method call syntax for cleaner code".to_string()),
+                    suggestion,
+                };
+                ctx.report_diagnostic(diagnostic);
             }
         });
     }
@@ -312,7 +656,9 @@ static MODERN_METHOD_SYNTAX: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer Move 2024 method call syntax for common allowlisted functions",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Convert to method syntax"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 /// Extended allowlist of known-safe method syntax transformations
@@ -444,11 +790,31 @@ impl LintRule for ModernMethodSyntaxLint {
                     continue;
                 }
 
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    format!("Prefer method syntax: `{}.{}(...)`", clean_receiver, method),
-                );
+                // Generate auto-fix
+                let suggestion = if is_simple_receiver(clean_receiver) {
+                    // Remaining args (skip first arg which is receiver)
+                    let remaining_args: Vec<&str> = args.iter().skip(1).copied().collect();
+                    let replacement =
+                        generate_method_call_fix(clean_receiver, method, remaining_args);
+                    Some(Suggestion {
+                        message: format!("Use method syntax: {}", replacement),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    })
+                } else {
+                    None
+                };
+
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: format!("Prefer method syntax: `{}.{}(...)`", clean_receiver, method),
+                    help: Some("Use method call syntax for cleaner code".to_string()),
+                    suggestion,
+                };
+                ctx.report_diagnostic(diagnostic);
                 return;
             }
         });
@@ -462,7 +828,9 @@ pub(crate) static UNNECESSARY_PUBLIC_ENTRY: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Use either `public` or `entry`, but not both on the same function",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Remove redundant `public` modifier"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for UnnecessaryPublicEntryLint {
@@ -478,11 +846,19 @@ impl LintRule for UnnecessaryPublicEntryLint {
 
             let (has_public, has_entry) = function_modifiers(node, source);
             if has_public && has_entry {
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    "Functions should not be both `public` and `entry`; remove one of the modifiers",
-                );
+                // Generate auto-fix to remove public
+                let suggestion = generate_remove_public_fix(node, source);
+
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: "Functions should not be both `public` and `entry`; remove one of the modifiers".to_string(),
+                    help: Some("Remove `public` modifier - `entry` functions are implicitly public".to_string()),
+                    suggestion,
+                };
+                ctx.report_diagnostic(diagnostic);
             }
         });
     }
@@ -495,7 +871,9 @@ pub(crate) static PUBLIC_MUT_TX_CONTEXT: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "TxContext parameters should be `&mut TxContext`, not `&TxContext`",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Add `mut` to TxContext parameter"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for PublicMutTxContextLint {
@@ -506,6 +884,12 @@ impl LintRule for PublicMutTxContextLint {
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
         walk(root, &mut |node| {
             if node.kind() != "function_definition" {
+                return;
+            }
+
+            // Only check public or entry functions
+            let (has_public, has_entry) = function_modifiers(node, source);
+            if !has_public && !has_entry {
                 return;
             }
 
@@ -520,8 +904,21 @@ impl LintRule for PublicMutTxContextLint {
                     let Some(ty) = param.child_by_field_name("type") else {
                         continue;
                     };
-                    if let Some(message) = needs_mut_tx_context(slice(source, ty)) {
-                        ctx.report_node(self.descriptor(), ty, message);
+                    let type_text = slice(source, ty);
+                    if let Some(message) = needs_mut_tx_context(type_text) {
+                        // Generate auto-fix
+                        let suggestion = generate_mut_tx_context_fix(type_text);
+
+                        let diagnostic = crate::diagnostics::Diagnostic {
+                            lint: self.descriptor(),
+                            level: ctx.settings().level_for(self.descriptor().name),
+                            file: None,
+                            span: Span::from_range(ty.range()),
+                            message,
+                            help: Some("Add `mut` to make TxContext mutable".to_string()),
+                            suggestion,
+                        };
+                        ctx.report_diagnostic(diagnostic);
                     }
                 }
             }
@@ -537,6 +934,8 @@ static WHILE_TRUE_TO_LOOP: LintDescriptor = LintDescriptor {
     description: "Prefer `loop { ... }` over `while (true) { ... }`",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Replace `while (true)` with `loop`"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for WhileTrueToLoopLint {
@@ -630,6 +1029,60 @@ fn function_modifiers(node: Node, source: &str) -> (bool, bool) {
     (has_public, has_entry)
 }
 
+/// Generate fix to remove `public` modifier from `public entry` functions
+fn generate_remove_public_fix(node: Node, source: &str) -> Option<Suggestion> {
+    let function_text = slice(source, node);
+
+    // Find the public modifier node
+    let mut cursor = node.walk();
+    let mut public_node = None;
+    let mut seen_fun = false;
+
+    for child in node.children(&mut cursor) {
+        if seen_fun {
+            break;
+        }
+        if child.kind() == "modifier" {
+            let text = slice(source, child);
+            if text.starts_with("public") {
+                public_node = Some(child);
+            }
+        } else if child.kind() == "fun" {
+            seen_fun = true;
+        }
+    }
+
+    let public_node = public_node?;
+
+    // Get the text of the public modifier (might be "public" or "public(...)")
+    let public_text = slice(source, public_node);
+
+    // Simple approach: replace "public " with empty string
+    // Handle various spacing: "public entry", "public  entry", "public\nentry"
+    let replacement = if function_text.contains("public entry") {
+        function_text.replace("public entry", "entry")
+    } else if function_text.contains("public  entry") {
+        function_text.replace("public  entry", "entry")
+    } else {
+        // General case: remove "public" and any trailing whitespace before "entry"
+        // Find where "public" appears and remove it along with trailing spaces
+        let public_start = function_text.find(public_text)?;
+        let before = &function_text[..public_start];
+        let after_public = public_start + public_text.len();
+        let after = &function_text[after_public..];
+
+        // Skip whitespace after "public" until we find "entry"
+        let after_trimmed = after.trim_start();
+        format!("{}{}", before, after_trimmed)
+    };
+
+    Some(Suggestion {
+        message: "Remove redundant `public` modifier".to_string(),
+        replacement,
+        applicability: Applicability::MachineApplicable,
+    })
+}
+
 fn needs_mut_tx_context(type_text: &str) -> Option<String> {
     let trimmed = type_text.trim_start();
     if !trimmed.starts_with('&') {
@@ -655,8 +1108,45 @@ fn needs_mut_tx_context(type_text: &str) -> Option<String> {
     }
 }
 
+/// Generate fix to add `mut` to TxContext reference
+fn generate_mut_tx_context_fix(type_text: &str) -> Option<Suggestion> {
+    let trimmed = type_text.trim_start();
+
+    // Pattern: &TxContext or & TxContext
+    if !trimmed.starts_with('&') {
+        return None;
+    }
+
+    let after_ref = trimmed[1..].trim_start();
+
+    // Already has mut?
+    if after_ref.starts_with("mut") {
+        return None;
+    }
+
+    // Check it's actually TxContext (including module-qualified)
+    let base = after_ref.trim_end_matches(|c: char| c == ';' || c.is_whitespace());
+    if let Some(idx) = base.find('<') {
+        // Strip type arguments
+        if !base[..idx].ends_with("TxContext") {
+            return None;
+        }
+    } else if !base.ends_with("TxContext") {
+        return None;
+    }
+
+    // Insert "mut " after the "&"
+    let replacement = format!("&mut {}", after_ref);
+
+    Some(Suggestion {
+        message: "Add `mut` to TxContext parameter".to_string(),
+        replacement,
+        applicability: Applicability::MachineApplicable,
+    })
+}
+
 // ============================================================================
-// PureFunctionTransferLint - Preview (Medium FP Risk)
+// PureFunctionTransferLint - Experimental (Medium-High FP Risk)
 // ============================================================================
 
 pub struct PureFunctionTransferLint;
@@ -664,9 +1154,11 @@ pub struct PureFunctionTransferLint;
 static PURE_FUNCTION_TRANSFER: LintDescriptor = LintDescriptor {
     name: "pure_function_transfer",
     category: LintCategory::Suspicious,
-    description: "Non-entry functions should not call transfer internally; return the object instead",
-    group: RuleGroup::Preview,
+    description: "Non-entry functions should not call transfer internally; return the object instead (experimental - many legitimate patterns)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for PureFunctionTransferLint {
@@ -747,9 +1239,11 @@ pub struct UnsafeArithmeticLint;
 static UNSAFE_ARITHMETIC: LintDescriptor = LintDescriptor {
     name: "unsafe_arithmetic",
     category: LintCategory::Suspicious,
-    description: "Potential integer overflow/underflow without bounds check",
-    group: RuleGroup::Preview,
+    description: "Detect potentially unsafe arithmetic operations (experimental, requires dataflow analysis)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 /// Variable name patterns that suggest financial/balance operations

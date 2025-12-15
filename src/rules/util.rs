@@ -171,3 +171,31 @@ pub(crate) fn position_from_byte_offset(source: &str, byte_offset: usize) -> Pos
 
     Position { row, column: col }
 }
+
+/// Generate method call fix for function-to-method syntax transformations.
+/// Shared by prefer_vector_methods and modern_method_syntax.
+///
+/// Example: `vector::push_back(&mut v, x)` → `v.push_back(x)`
+pub(crate) fn generate_method_call_fix(
+    receiver: &str,
+    method: &str,
+    remaining_args: Vec<&str>,
+) -> String {
+    let args_str = if remaining_args.is_empty() {
+        String::new()
+    } else {
+        remaining_args.join(", ")
+    };
+
+    if args_str.is_empty() {
+        format!("{}.{}()", receiver, method)
+    } else {
+        format!("{}.{}({})", receiver, method, args_str)
+    }
+}
+
+/// Check if a receiver expression is safe for method call transformation.
+/// Only apply auto-fixes to simple identifiers to avoid breaking complex expressions.
+pub(crate) fn is_simple_receiver(receiver: &str) -> bool {
+    is_simple_ident(receiver)
+}

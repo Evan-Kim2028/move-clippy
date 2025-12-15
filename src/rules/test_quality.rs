@@ -1,5 +1,7 @@
 use crate::diagnostics::Span;
-use crate::lint::{FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup};
+use crate::lint::{
+    AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
+};
 use crate::suppression;
 use tree_sitter::Node;
 
@@ -20,6 +22,8 @@ static TEST_ABORT_CODE: LintDescriptor = LintDescriptor {
     description: "Avoid numeric abort codes in test assertions; they may collide with application error codes",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for TestAbortCodeLint {
@@ -33,7 +37,7 @@ impl LintRule for TestAbortCodeLint {
 
         walk(root, &mut |node| {
             // Only check macro calls
-            if node.kind() != "macro_invocation" {
+            if node.kind() != "macro_call_expression" {
                 return;
             }
 
@@ -58,11 +62,12 @@ impl LintRule for TestAbortCodeLint {
             // Parse assert!(condition, CODE) - look for numeric second arg
             if let Some(abort_code) = extract_assert_abort_code(text)
                 && is_numeric_literal(abort_code)
+                && is_low_error_code(abort_code)
             {
                 ctx.report_node(
                         self.descriptor(),
                         node,
-                        "Avoid numeric abort codes in test assertions; use `assert!(cond)` or a named constant",
+                        "Avoid low numeric abort codes in test assertions; use `assert!(cond)` or a named constant to avoid collisions with app error codes",
                     );
             }
         });
@@ -73,7 +78,7 @@ impl LintRule for TestAbortCodeLint {
 fn is_test_only_module(root: Node, source: &str) -> bool {
     let mut cursor = root.walk();
     for child in root.children(&mut cursor) {
-        if child.kind() == "attributes" || child.kind() == "attribute" {
+        if child.kind() == "annotation" {
             let text = slice(source, child);
             if text.contains("test_only") {
                 return true;
@@ -88,15 +93,20 @@ fn is_inside_test_function(node: Node, source: &str) -> bool {
     let mut current = node.parent();
     while let Some(parent) = current {
         if parent.kind() == "function_definition" {
-            // Check for #[test] attribute
-            let mut cursor = parent.walk();
-            for child in parent.children(&mut cursor) {
-                if child.kind() == "attributes" || child.kind() == "attribute" {
-                    let text = slice(source, child);
+            // Check for #[test] annotation - need to check siblings before the function
+            let mut sibling = parent.prev_sibling();
+            while let Some(sib) = sibling {
+                if sib.kind() == "annotation" {
+                    let text = slice(source, sib);
                     if text.contains("#[test") {
                         return true;
                     }
                 }
+                // Stop at non-annotation, non-newline siblings
+                if sib.kind() != "annotation" && sib.kind() != "newline" {
+                    break;
+                }
+                sibling = sib.prev_sibling();
             }
             return false;
         }
@@ -162,6 +172,27 @@ fn is_numeric_literal(s: &str) -> bool {
     false
 }
 
+/// Check if error code is low (< 1000) and likely to collide with app codes
+fn is_low_error_code(s: &str) -> bool {
+    let trimmed = s.trim();
+
+    // Decimal number
+    if let Ok(val) = trimmed.parse::<u64>() {
+        return val < 1000;
+    }
+
+    // Hex number
+    if let Some(hex) = trimmed
+        .strip_prefix("0x")
+        .or_else(|| trimmed.strip_prefix("0X"))
+        && let Ok(val) = u64::from_str_radix(hex, 16)
+    {
+        return val < 1000;
+    }
+
+    false
+}
+
 // ============================================================================
 // RedundantTestPrefixLint - P0 (Zero FP)
 // ============================================================================
@@ -174,6 +205,8 @@ static REDUNDANT_TEST_PREFIX: LintDescriptor = LintDescriptor {
     description: "In `*_tests` modules, omit redundant `test_` prefix from test functions",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for RedundantTestPrefixLint {
@@ -182,14 +215,6 @@ impl LintRule for RedundantTestPrefixLint {
     }
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        // First, check if this is a *_tests module
-        let module_name = extract_module_name(root, source);
-
-        // Only apply in modules ending with _tests
-        if !module_name.ends_with("_tests") {
-            return;
-        }
-
         walk(root, &mut |node| {
             if node.kind() != "function_definition" {
                 return;
@@ -197,6 +222,12 @@ impl LintRule for RedundantTestPrefixLint {
 
             // Check if this function has #[test] attribute
             if !has_test_attribute(node, source) {
+                return;
+            }
+
+            // Check if this function is in a *_tests module
+            let module_name = get_enclosing_module_name(node, source);
+            if !module_name.ends_with("_tests") {
                 return;
             }
 
@@ -221,31 +252,44 @@ impl LintRule for RedundantTestPrefixLint {
     }
 }
 
-/// Extract the module name from the AST
-fn extract_module_name(root: Node, source: &str) -> String {
-    let mut cursor = root.walk();
-    for child in root.children(&mut cursor) {
-        if child.kind() == "module_identity" {
-            // Get the last part of the module path (the actual module name)
-            let text = slice(source, child);
-            if let Some(name) = text.split("::").last() {
-                return name.trim().to_string();
+/// Get the name of the enclosing module for a node
+fn get_enclosing_module_name(node: Node, source: &str) -> String {
+    let mut current = Some(node);
+    while let Some(n) = current {
+        if n.kind() == "module_definition" {
+            // Find module_identity inside this module_definition
+            let mut cursor = n.walk();
+            for child in n.children(&mut cursor) {
+                if child.kind() == "module_identity" {
+                    // Get the last part of the module path (the actual module name)
+                    let text = slice(source, child);
+                    if let Some(name) = text.split("::").last() {
+                        return name.trim().to_string();
+                    }
+                }
             }
         }
+        current = n.parent();
     }
     String::new()
 }
 
 /// Check if a function has a #[test] attribute
 fn has_test_attribute(node: Node, source: &str) -> bool {
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        if child.kind() == "attributes" || child.kind() == "attribute" {
-            let text = slice(source, child);
+    // Check siblings before the function for annotations
+    let mut sibling = node.prev_sibling();
+    while let Some(sib) = sibling {
+        if sib.kind() == "annotation" {
+            let text = slice(source, sib);
             if text.contains("#[test") {
                 return true;
             }
         }
+        // Stop at non-annotation, non-newline siblings
+        if sib.kind() != "annotation" && sib.kind() != "newline" {
+            break;
+        }
+        sibling = sib.prev_sibling();
     }
     false
 }
@@ -261,7 +305,9 @@ static MERGE_TEST_ATTRIBUTES: LintDescriptor = LintDescriptor {
     category: LintCategory::TestQuality,
     description: "Merge stacked #[test] and #[expected_failure] into a single attribute list",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Merge into single attribute"),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
 };
 
 impl LintRule for MergeTestAttributesLint {
@@ -306,12 +352,31 @@ impl LintRule for MergeTestAttributesLint {
                 end: position_from_byte_offset(source, b_end),
             };
 
-            ctx.report_span_with_anchor(
-                self.descriptor(),
-                a_anchor,
+            // Generate the merged attribute
+            let replacement = "#[test, expected_failure]".to_string();
+
+            // Check for suppression
+            if crate::suppression::is_suppressed_at(source, a_anchor, self.descriptor().name) {
+                continue;
+            }
+
+            // Create diagnostic with auto-fix suggestion
+            let diagnostic = crate::diagnostics::Diagnostic {
+                lint: self.descriptor(),
+                level: ctx.settings().level_for(self.descriptor().name),
+                file: None,
                 span,
-                "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`",
-            );
+                message: "Merge `#[test]` and `#[expected_failure]` into a single attribute list"
+                    .to_string(),
+                help: Some("Combine into `#[test, expected_failure]`".to_string()),
+                suggestion: Some(crate::diagnostics::Suggestion {
+                    message: "Merge attributes".to_string(),
+                    replacement,
+                    applicability: crate::diagnostics::Applicability::MachineApplicable,
+                }),
+            };
+
+            ctx.report_diagnostic(diagnostic);
         }
     }
 }
