@@ -236,32 +236,6 @@ fn golden_unneeded_return_negative() {
 // Golden Tests for Security Lints (Preview/Experimental)
 // ============================================================================
 
-#[test]
-fn golden_shared_capability_positive() {
-    let engine = create_default_engine();
-    let src = include_str!("golden/shared_capability/positive.move");
-    let diags = engine.lint_source(src).expect("linting should succeed");
-    let filtered = filter_lint(&diags, "shared_capability");
-
-    // Security lint - may require preview mode
-    if filtered.is_empty() {
-        eprintln!("INFO: shared_capability may require --preview flag to be enabled");
-    }
-}
-
-#[test]
-fn golden_shared_capability_negative() {
-    let engine = create_default_engine();
-    let src = include_str!("golden/shared_capability/negative.move");
-    let diags = engine.lint_source(src).expect("linting should succeed");
-    let filtered = filter_lint(&diags, "shared_capability");
-
-    assert!(
-        filtered.is_empty(),
-        "shared_capability should NOT trigger on proper capability handling.\nGot: {}",
-        format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
-    );
-}
 
 // ============================================================================
 // Golden Tests for Additional Stable Lints
@@ -379,33 +353,7 @@ fn golden_constant_naming_negative() {
     );
 }
 
-#[test]
-fn golden_droppable_hot_potato_positive() {
-    let engine = create_default_engine();
-    let src = include_str!("golden/droppable_hot_potato/positive.move");
-    let diags = engine.lint_source(src).expect("linting should succeed");
-    let filtered = filter_lint(&diags, "droppable_hot_potato");
 
-    assert!(
-        !filtered.is_empty(),
-        "droppable_hot_potato should trigger on hot potato with drop.\nAll diagnostics: {}",
-        format_diags(&diags)
-    );
-}
-
-#[test]
-fn golden_droppable_hot_potato_negative() {
-    let engine = create_default_engine();
-    let src = include_str!("golden/droppable_hot_potato/negative.move");
-    let diags = engine.lint_source(src).expect("linting should succeed");
-    let filtered = filter_lint(&diags, "droppable_hot_potato");
-
-    assert!(
-        filtered.is_empty(),
-        "droppable_hot_potato should NOT trigger on proper hot potato.\nGot: {}",
-        format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
-    );
-}
 
 #[test]
 fn golden_stale_oracle_price_positive() {

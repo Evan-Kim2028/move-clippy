@@ -15,413 +15,21 @@ use crate::lint::{
 use tree_sitter::Node;
 
 // ============================================================================
-// droppable_hot_potato - Detects hot potato structs with drop ability
+// Helper functions for syntax-based ability checking
 // ============================================================================
 
-/// Detects flash loan receipts and hot potato structs with the `drop` ability.
-///
-/// # Security References
-///
-/// - **Trail of Bits (2025-09-10)**: "How Sui Move rethinks flash loan security"
-///   URL: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/
-///   Verified: 2025-12-13 (DeepBookV3 FlashLoan struct analysis)
-///
-/// - **Mirage Audits (2025-10-01)**: "The Ability Mistakes That Will Drain Your Sui Move Protocol"
-///   URL: https://www.mirageaudits.com/blog/sui-move-ability-security-mistakes
-///   Verified: 2025-12-13 (Production audit findings, "The Accidental Droppable Hot Potato")
-///
-/// - **Sui Official Documentation**: Flash Loans in DeepBookV3
-///   URL: https://docs.sui.io/standards/deepbookv3/flash-loans
-///   Verified: 2025-12-13 (Hot potato pattern specification)
-///
-/// # Why This Matters
-///
-/// Adding `drop` to a hot potato silently breaks the security model.
-/// The compiler accepts it as valid syntax, but attackers can then
-/// borrow assets and simply drop the receipt without repaying.
-///
-/// # Example
-///
-/// ```move
-/// // CRITICAL BUG - enables theft
-/// struct FlashLoanReceipt has drop {
-///     pool_id: ID,
-///     amount: u64,
-/// }
-///
-/// // Attacker can do this:
-/// public fun exploit(pool: &mut Pool) {
-///     let (stolen_coins, receipt) = borrow(pool, 1_000_000);
-///     // Don't call repay - receipt gets dropped automatically!
-///     transfer::public_transfer(stolen_coins, @attacker);
-/// }
-/// ```
-///
-/// # Correct Pattern
-///
-/// ```move
-/// // No abilities = hot potato, must be consumed
-/// struct FlashLoanReceipt {
-///     pool_id: ID,
-///     amount: u64,
-/// }
-/// ```
-pub static DROPPABLE_HOT_POTATO: LintDescriptor = LintDescriptor {
-    name: "droppable_hot_potato",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Use droppable_hot_potato_v2 (type-based) - this version uses name heuristics",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-};
-
-/// Keywords that indicate a struct is likely intended to be a hot potato.
-/// These patterns come from real-world DeFi protocols and audit reports.
-/// Note: We require the name to contain both a "hot potato indicator" keyword
-/// AND NOT be an event struct (which legitimately has copy+drop).
-/// Also excludes empty structs (0 fields) which are typically witness types.
-const HOT_POTATO_KEYWORDS: &[&str] = &[
-    "receipt", // FlashLoanReceipt
-    "promise", // RepaymentPromise
-    "ticket",  // BorrowTicket
-    "potato",  // HotPotato (explicit)
-    "voucher", // LoanVoucher
-               // NOTE: "obligation" removed - too many FPs with witness types like ObligationOwnership
-];
-
-/// Keywords that indicate a struct is an event (and legitimately has copy+drop).
-const EVENT_KEYWORDS: &[&str] = &["event", "emitted", "log"];
-
-/// Keywords that indicate a struct is a witness type (legitimately has drop only).
-/// These are empty marker structs used for type-level access control.
-const WITNESS_KEYWORDS: &[&str] = &[
-    "ownership",   // ObligationOwnership - witness for Ownership pattern
-    "collaterals", // ObligationCollaterals - witness for WitTable
-    "debts",       // ObligationDebts - witness for WitTable
-    "witness",     // Explicit witness
-    "marker",      // Marker type
-];
-
-pub struct DroppableHotPotatoLint;
-
-impl LintRule for DroppableHotPotatoLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &DROPPABLE_HOT_POTATO
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_droppable_hot_potato(root, source, ctx);
-    }
-}
-
-fn check_droppable_hot_potato(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for struct definitions
-    if node.kind() == "struct_definition"
-        && let Some(name_node) = node.child_by_field_name("name")
-    {
-        let struct_name = name_node
-            .utf8_text(source.as_bytes())
-            .unwrap_or("")
-            .to_lowercase();
-
-        // Skip if this is an event struct (events legitimately have copy+drop)
-        let is_event = EVENT_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
-        if is_event {
-            // Recurse and return early
-            let mut cursor = node.walk();
-            for child in node.children(&mut cursor) {
-                check_droppable_hot_potato(child, source, ctx);
-            }
-            return;
-        }
-
-        // Skip if this is a witness type (witness types legitimately have drop only)
-        let is_witness = WITNESS_KEYWORDS.iter().any(|kw| struct_name.contains(kw));
-        if is_witness {
-            let mut cursor = node.walk();
-            for child in node.children(&mut cursor) {
-                check_droppable_hot_potato(child, source, ctx);
-            }
-            return;
-        }
-
-        // Skip empty structs (0 fields) - these are typically witness/marker types
-        if is_empty_struct(node, source) {
-            let mut cursor = node.walk();
-            for child in node.children(&mut cursor) {
-                check_droppable_hot_potato(child, source, ctx);
-            }
-            return;
-        }
-
-        // Check if this looks like a hot potato struct
-        let is_hot_potato = HOT_POTATO_KEYWORDS
-            .iter()
-            .any(|kw| struct_name.contains(kw));
-
-        if is_hot_potato {
-            // Check if it has the drop ability
-            let has_drop = has_drop_ability(node, source);
-            let has_copy = has_copy_ability(node, source);
-
-            // Skip if it has BOTH copy AND drop - this is likely a data transfer object
-            // Hot potatoes should have ONLY drop (or no abilities at all)
-            // A struct with copy+drop is typically used for events or tracking, not enforcement
-            if has_drop && !has_copy {
-                let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-                ctx.report_node(
-                        &DROPPABLE_HOT_POTATO,
-                        node,
-                        format!(
-                            "Struct `{}` appears to be a hot potato but has `drop` ability. \
-                             Hot potatoes must have no abilities to enforce consumption. \
-                             See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/",
-                            original_name
-                        ),
-                    );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_droppable_hot_potato(child, source, ctx);
-    }
-}
-
-/// Check if a struct definition has the `drop` ability.
-fn has_drop_ability(struct_node: Node, source: &str) -> bool {
-    // Look for ability_decls child which contains the abilities
-    let mut cursor = struct_node.walk();
-    for child in struct_node.children(&mut cursor) {
-        if child.kind() == "ability_decls" {
-            let abilities_text = child.utf8_text(source.as_bytes()).unwrap_or("");
-            // Check for "drop" keyword in the abilities
-            // Abilities are in format: "has copy, drop, store" or "has drop"
-            return abilities_text
-                .split(|c: char| c == ',' || c.is_whitespace())
-                .any(|ability| ability.trim().eq_ignore_ascii_case("drop"));
-        }
-    }
-    false
-}
-
-/// Check if a struct definition has the `copy` ability.
-fn has_copy_ability(struct_node: Node, source: &str) -> bool {
-    // Look for ability_decls child which contains the abilities
-    let mut cursor = struct_node.walk();
-    for child in struct_node.children(&mut cursor) {
-        if child.kind() == "ability_decls" {
-            let abilities_text = child.utf8_text(source.as_bytes()).unwrap_or("");
-            // Check for "copy" keyword in the abilities
-            return abilities_text
-                .split(|c: char| c == ',' || c.is_whitespace())
-                .any(|ability| ability.trim().eq_ignore_ascii_case("copy"));
-        }
-    }
-    false
-}
-
-/// Check if a struct has an empty body (0 fields).
-/// Used to detect witness/marker types.
-fn is_empty_struct(struct_node: Node, source: &str) -> bool {
-    let struct_text = struct_node.utf8_text(source.as_bytes()).unwrap_or("");
-    // Check for empty body patterns like "{}" or "{ }"
-    struct_text.contains("{}") || struct_text.contains("{ }")
-}
-// shared_capability - Detects capability objects being shared publicly
-// ============================================================================
-
-/// Detects capability objects (AdminCap, OwnerCap, etc.) being shared via
-/// `transfer::share_object` or `transfer::public_share_object`.
-///
-/// # Security References
-///
-/// - **Sui Official Documentation**: "Object Ownership"
-///   URL: https://docs.sui.io/concepts/object-ownership
-///   Verified: 2025-12-13 (Capability pattern best practices)
-///
-/// - **OtterSec Audits**: Multiple findings across DeFi protocols
-///   Common finding: "AdminCap shared instead of transferred to admin"
-///
-/// - **MoveBit (2023-07-07)**: "Sui Objects Security Principles"
-///   URL: https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html
-///   Verified: 2025-12-13 (Capability object patterns)
-///
-/// # Why This Matters
-///
-/// Capabilities are meant to grant exclusive administrative rights to a single
-/// owner. Sharing a capability makes it publicly accessible, meaning ANYONE
-/// can call privileged functions. This is one of the most common security bugs
-/// in Sui Move contracts.
-///
-/// # Example
-///
-/// ```move
-/// // CRITICAL BUG - Anyone can use the AdminCap!
-/// public fun init(ctx: &mut TxContext) {
-///     let admin_cap = AdminCap { id: object::new(ctx) };
-///     transfer::share_object(admin_cap);  // BUG!
-/// }
-///
-/// // Now any attacker can call admin-only functions:
-/// public fun drain_treasury(cap: &AdminCap, treasury: &mut Treasury) {
-///     // Cap check passes because it's shared!
-///     transfer_all_funds(treasury, @attacker);
-/// }
-/// ```
-///
-/// # Correct Pattern
-///
-/// ```move
-/// public fun init(ctx: &mut TxContext) {
-///     let admin_cap = AdminCap { id: object::new(ctx) };
-///     // Transfer to the deployer (tx sender)
-///     transfer::transfer(admin_cap, tx_context::sender(ctx));
-/// }
-/// ```
-pub static SHARED_CAPABILITY: LintDescriptor = LintDescriptor {
-    name: "shared_capability",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Use share_owned_authority (type-based) or Sui's share_owned lint",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-};
-
-/// Keywords that indicate a struct/variable is a capability object.
-/// These MUST be at the end of the name (word boundary) to avoid false positives
-/// like "Capacity" or "Capital".
-const CAPABILITY_SUFFIXES: &[&str] = &[
-    "Cap",        // AdminCap, OwnerCap, MintCap
-    "Capability", // AdminCapability (verbose form)
-];
-
-/// Full capability names to match exactly (case-insensitive after first char).
-const CAPABILITY_NAMES: &[&str] = &[
-    "AdminCap",
-    "OwnerCap",
-    "TreasuryCap",
-    "MintCap",
-    "BurnCap",
-    "PauseCap",
-    "UpgradeCap",
-    "TransferCap",
-    "FreezerCap",
-    "DenyCap",
-    "GovernorCap",
-    "ManagerCap",
-    "OperatorCap",
-];
-
-/// Functions that share objects publicly.
-const SHARE_FUNCTIONS: &[&str] = &["share_object", "public_share_object"];
-
-pub struct SharedCapabilityLint;
-
-impl LintRule for SharedCapabilityLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &SHARED_CAPABILITY
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_shared_capability(root, source, ctx);
-    }
-}
-
-fn check_shared_capability(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for function calls
-    if node.kind() == "call_expression" || node.kind() == "macro_call" {
-        let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // Check if this is a share_object or public_share_object call
-        let is_share_call = SHARE_FUNCTIONS.iter().any(|func| {
-            node_text.contains(&format!("{}(", func)) || node_text.contains(&format!("{}::", func))
-        });
-
-        if is_share_call {
-            // Check if the argument looks like a capability
-            if is_capability_argument(node_text) {
-                ctx.report_node(
-                    &SHARED_CAPABILITY,
-                    node,
-                    "Capability object appears to be shared via `share_object`. \
-                         Capabilities should be transferred to a specific owner, not shared publicly. \
-                         Use `transfer::transfer(cap, owner_address)` instead.".to_string(),
-                );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_shared_capability(child, source, ctx);
-    }
-}
-
-/// Check if the argument to share_object looks like a capability object.
-fn is_capability_argument(call_text: &str) -> bool {
-    // Check for common capability suffixes/names in the call
-    let call_lower = call_text.to_lowercase();
-
-    // Check exact capability names (case-insensitive)
-    for name in CAPABILITY_NAMES {
-        if call_lower.contains(&name.to_lowercase()) {
-            return true;
-        }
-    }
-
-    // Check for "Cap" suffix but NOT "Capacity", "Capital", "Recap", etc.
-    // We need to check for word boundaries on BOTH sides of "cap"
-    for suffix in CAPABILITY_SUFFIXES {
-        let suffix_lower = suffix.to_lowercase();
-        let mut search_pos = 0;
-
-        while let Some(pos) = call_lower[search_pos..].find(&suffix_lower) {
-            let actual_pos = search_pos + pos;
-
-            // Check char BEFORE "cap" - must be word boundary (not alphabetic)
-            // This prevents matching "recap", "escape", etc.
-            let char_before = if actual_pos > 0 {
-                call_lower.chars().nth(actual_pos - 1)
-            } else {
-                None
-            };
-
-            let valid_prefix = match char_before {
-                None => true,                  // Start of string is valid
-                Some(c) => !c.is_alphabetic(), // Non-alpha before is valid (e.g., "_cap", " cap")
-            };
-
-            if !valid_prefix {
-                // Move past this match and continue searching
-                search_pos = actual_pos + suffix_lower.len();
-                continue;
-            }
-
-            // Check char AFTER "cap" - must be word boundary (not alphabetic)
-            // This prevents matching "capacity", "capital", etc.
-            let after_pos = actual_pos + suffix_lower.len();
-            if after_pos >= call_lower.len() {
-                // Suffix at end of string is valid
-                return true;
-            }
-
-            let next_char = call_lower.chars().nth(after_pos);
-            if let Some(c) = next_char
-                && !c.is_alphabetic()
-            {
-                return true;
-            }
-
-            // Move past this match and continue searching
-            search_pos = actual_pos + suffix_lower.len();
-        }
-    }
-
-    false
+/// Check if a struct definition node has the `drop` ability (syntax-based).
+fn has_drop_ability(node: Node, source: &str) -> bool {
+    let struct_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+    struct_text.contains("has drop")
+        || struct_text.contains("has key, drop")
+        || struct_text.contains("has drop, key")
+        || struct_text.contains("has store, drop")
+        || struct_text.contains("has drop, store")
+        || struct_text.contains("has copy, drop")
+        || struct_text.contains("has drop, copy")
+        || struct_text.contains("drop,")
+        || struct_text.contains(", drop")
 }
 
 // ============================================================================
@@ -1277,100 +885,6 @@ fn get_enclosing_function_name<'a>(node: Node<'a>, source: &'a str) -> &'a str {
 }
 
 // ============================================================================
-// shared_capability_object - Detects capability-like objects being shared
-// ============================================================================
-
-/// Detects when objects with capability-like names are shared instead of transferred.
-///
-/// # Security References
-///
-/// - **Typus Finance Hack (Oct 2025)**: UpdateAuthority was shared instead of transferred to admin
-///   URL: https://slowmist.medium.com/is-the-move-language-secure-the-typus-permission-validation-vulnerability-755a5175f7c3
-///   Verified: 2025-12-13
-///
-/// # Why This Matters
-///
-/// Objects that control access (authorities, registries with whitelists) should generally
-/// be owned, not shared. When shared, anyone can pass them to functions, bypassing
-/// the intended access control.
-///
-/// # Example
-///
-/// ```move
-/// // VULNERABLE
-/// entry fun new_update_authority(_cap: &ManagerCap, ctx: &mut TxContext) {
-///     let authority = UpdateAuthority { id: object::new(ctx), whitelist: vector[] };
-///     transfer::share_object(authority);  // Anyone can now access this!
-/// }
-///
-/// // CORRECT - two-step with confirmation
-/// entry fun new_update_authority(_cap: &ManagerCap, ctx: &mut TxContext) {
-///     let authority = UpdateAuthority { id: object::new(ctx), whitelist: vector[] };
-///     transfer::transfer(authority, tx_context::sender(ctx));  // Only owner can use
-/// }
-/// ```
-pub static SHARED_CAPABILITY_OBJECT: LintDescriptor = LintDescriptor {
-    name: "shared_capability_object",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Use share_owned_authority (type-based) - this version uses name heuristics",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-};
-
-/// Keywords that indicate an object controls access and shouldn't be shared
-/// These are more specific than general "registry" to reduce false positives
-const ACCESS_CONTROL_KEYWORDS: &[&str] = &[
-    "authority",  // UpdateAuthority
-    "whitelist",  // Whitelist
-    "allowlist",  // Allowlist
-    "permission", // PermissionSet
-];
-
-pub struct SharedCapabilityObjectLint;
-
-impl LintRule for SharedCapabilityObjectLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &SHARED_CAPABILITY_OBJECT
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_shared_capability_object(root, source, ctx);
-    }
-}
-
-fn check_shared_capability_object(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for share_object calls
-    if node.kind() == "call_expression" {
-        let call_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // Check if the call text contains access-control keywords
-        for keyword in ACCESS_CONTROL_KEYWORDS {
-            if call_text.contains(keyword) {
-                let func_name = get_enclosing_function_name(node, source);
-                ctx.report_node(
-                    &SHARED_CAPABILITY_OBJECT,
-                    node,
-                    format!(
-                        "Function `{}` shares an object with access-control name pattern '{}'. \
-                         Objects that control authorization should typically be owned (transferred), not shared. \
-                         Shared objects can be accessed by anyone.",
-                        func_name, keyword
-                    ),
-                );
-                break;
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_shared_capability_object(child, source, ctx);
-    }
-}
-
-// ============================================================================
 // unchecked_withdrawal - Detects withdrawals without balance checks
 // ============================================================================
 
@@ -1573,6 +1087,76 @@ fn check_capability_leak(node: Node, source: &str, ctx: &mut LintContext<'_>) {
     }
 }
 
+// ============================================================================
+// Deprecated Lints (stubs for backward compatibility)
+// ============================================================================
+
+pub static DROPPABLE_HOT_POTATO: LintDescriptor = LintDescriptor {
+    name: "droppable_hot_potato",
+    category: LintCategory::Security,
+    description: "[DEPRECATED] Use droppable_hot_potato_v2 (type-based) - this version uses name heuristics",
+    group: RuleGroup::Deprecated,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+};
+
+pub struct DroppableHotPotatoLint;
+
+impl LintRule for DroppableHotPotatoLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &DROPPABLE_HOT_POTATO
+    }
+
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // Deprecated: no-op stub for backward compatibility
+        // Use droppable_hot_potato_v2 (type-based) instead
+    }
+}
+
+pub static SHARED_CAPABILITY: LintDescriptor = LintDescriptor {
+    name: "shared_capability",
+    category: LintCategory::Security,
+    description: "[DEPRECATED] Use share_owned_authority (type-based) or Sui's share_owned lint",
+    group: RuleGroup::Deprecated,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+};
+
+pub struct SharedCapabilityLint;
+
+impl LintRule for SharedCapabilityLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &SHARED_CAPABILITY
+    }
+
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // Deprecated: no-op stub for backward compatibility
+        // Use share_owned_authority (type-based) instead
+    }
+}
+
+pub static SHARED_CAPABILITY_OBJECT: LintDescriptor = LintDescriptor {
+    name: "shared_capability_object",
+    category: LintCategory::Security,
+    description: "[DEPRECATED] Use share_owned_authority (type-based) - this version uses name heuristics",
+    group: RuleGroup::Deprecated,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+};
+
+pub struct SharedCapabilityObjectLint;
+
+impl LintRule for SharedCapabilityObjectLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &SHARED_CAPABILITY_OBJECT
+    }
+
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // Deprecated: no-op stub for backward compatibility
+        // Use share_owned_authority (type-based) instead
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1582,12 +1166,6 @@ mod tests {
     fn lint_source(source: &str) -> Vec<String> {
         let tree = parse_source(source).unwrap();
         let mut ctx = LintContext::new(source, LintSettings::default());
-
-        let lint = DroppableHotPotatoLint;
-        lint.check(tree.root_node(), source, &mut ctx);
-
-        let lint3 = SharedCapabilityLint;
-        lint3.check(tree.root_node(), source, &mut ctx);
 
         let lint4 = SuspiciousOverflowCheckLint;
         lint4.check(tree.root_node(), source, &mut ctx);
@@ -1607,12 +1185,8 @@ mod tests {
         let lint9 = PublicRandomAccessLint;
         lint9.check(tree.root_node(), source, &mut ctx);
 
-        // New lints
         let lint12 = IgnoredBooleanReturnLint;
         lint12.check(tree.root_node(), source, &mut ctx);
-
-        let lint13 = SharedCapabilityObjectLint;
-        lint13.check(tree.root_node(), source, &mut ctx);
 
         let lint14 = UncheckedWithdrawalLint;
         lint14.check(tree.root_node(), source, &mut ctx);
@@ -1624,23 +1198,6 @@ mod tests {
             .into_iter()
             .map(|d| d.message)
             .collect()
-    }
-
-    #[test]
-    fn test_droppable_hot_potato_detected() {
-        let source = r#"
-            module example::flash {
-                struct FlashLoanReceipt has drop {
-                    pool_id: ID,
-                    amount: u64,
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("FlashLoanReceipt"));
-        assert!(messages[0].contains("hot potato"));
     }
 
     #[test]
@@ -1756,61 +1313,8 @@ mod tests {
     }
 
     // =========================================================================
-    // SharedCapabilityLint tests
+    // SharedCapabilityLint tests (DEPRECATED - now no-op stubs)
     // =========================================================================
-
-    #[test]
-    fn test_shared_admin_cap_detected() {
-        let source = r#"
-            module example::admin {
-                use sui::transfer;
-                
-                public fun init(ctx: &mut TxContext) {
-                    let admin_cap = AdminCap { id: object::new(ctx) };
-                    transfer::share_object(admin_cap);
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("Capability"));
-        assert!(messages[0].contains("share_object"));
-    }
-
-    #[test]
-    fn test_shared_mint_cap_detected() {
-        let source = r#"
-            module example::token {
-                use sui::transfer;
-                
-                public fun init(ctx: &mut TxContext) {
-                    let mint_cap = MintCap { id: object::new(ctx) };
-                    transfer::public_share_object(mint_cap);
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("Capability"));
-    }
-
-    #[test]
-    fn test_shared_treasury_cap_detected() {
-        let source = r#"
-            module example::coin {
-                use sui::transfer;
-                
-                public fun init(ctx: &mut TxContext) {
-                    transfer::share_object(TreasuryCap { id: object::new(ctx) });
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-    }
 
     #[test]
     fn test_transferred_cap_ok() {
@@ -1865,24 +1369,6 @@ mod tests {
         let messages = lint_source(source);
         // Should NOT fire because there's no "unsafe" in the function name
         assert!(messages.is_empty());
-    }
-
-    #[test]
-    fn test_custom_cap_suffix_detected() {
-        // Custom capability with Cap suffix should be detected
-        let source = r#"
-            module example::gov {
-                use sui::transfer;
-                
-                public fun init(ctx: &mut TxContext) {
-                    let governance_cap = GovernanceCap { id: object::new(ctx) };
-                    transfer::share_object(governance_cap);
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
     }
 
     // =========================================================================
@@ -2278,25 +1764,8 @@ module example::auth {
     }
 
     // =========================================================================
-    // SharedCapabilityObjectLint tests
+    // SharedCapabilityObjectLint tests (DEPRECATED - now no-op stubs)
     // =========================================================================
-
-    #[test]
-    fn test_shared_authority_detected() {
-        let source = r#"
-module example::oracle {
-    public fun new_update_authority(ctx: &mut TxContext) {
-        let authority = UpdateAuthority { id: object::new(ctx), whitelist: vector[] };
-        transfer::share_object(authority);
-    }
-}
-        "#;
-
-        let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("authority"));
-        assert!(messages[0].contains("share"));
-    }
 
     #[test]
     fn test_shared_normal_object_ok() {

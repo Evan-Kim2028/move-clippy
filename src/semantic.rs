@@ -15,23 +15,7 @@ use std::path::Path;
 ///
 /// These lints are only available when `move-clippy` is built with the
 /// `full` feature and run in `--mode full` against a Move package.
-pub static CAPABILITY_NAMING: LintDescriptor = LintDescriptor {
-    name: "capability_naming",
-    category: LintCategory::Naming,
-    description: "[DEPRECATED] Sui uses Cap suffix (AdminCap, TreasuryCap), not _cap",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::TypeBased,
-};
 
-pub static EVENT_NAMING: LintDescriptor = LintDescriptor {
-    name: "event_naming",
-    category: LintCategory::Naming,
-    description: "[DEPRECATED] Sui events don't use _event suffix (Transferred, PoolCreated)",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::TypeBased,
-};
 
 // ============================================================================
 // Sui-Delegated Lints (production-ready, type-based)
@@ -373,7 +357,29 @@ pub static CAPABILITY_TRANSFER_V2: LintDescriptor = LintDescriptor {
 
 // NOTE: The following lints are implemented elsewhere or require future work:
 // - phantom_capability: Implemented in absint_lints.rs (CFG-aware)
-// - unused_hot_potato: Requires dataflow analysis (future work)
+// - unused_hot_potato: Implemented in absint_lints.rs (CFG-aware dataflow analysis)
+
+// ============================================================================
+// Deprecated naming lints (stubs for backward compatibility)
+// ============================================================================
+
+pub static CAPABILITY_NAMING: LintDescriptor = LintDescriptor {
+    name: "capability_naming",
+    category: LintCategory::Naming,
+    description: "[DEPRECATED] Sui uses Cap suffix convention, not _cap - this lint was incorrect",
+    group: RuleGroup::Deprecated,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+};
+
+pub static EVENT_NAMING: LintDescriptor = LintDescriptor {
+    name: "event_naming",
+    category: LintCategory::Naming,
+    description: "[DEPRECATED] Sui events don't require _event suffix - this lint was incorrect",
+    group: RuleGroup::Deprecated,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+};
 
 static DESCRIPTORS: &[&LintDescriptor] = &[
     // Naming (type-based)
@@ -535,8 +541,6 @@ mod full {
             }
 
             // Type-based naming lints
-            lint_capability_naming(&mut out, settings, &file_map, &typing_info)?;
-            lint_event_naming(&mut out, settings, &file_map, &typing_info)?;
             // Type-based security lints
             lint_unchecked_division(&mut out, settings, &file_map, &typing_ast)?;
             lint_unused_return_value(&mut out, settings, &file_map, &typing_ast)?;
@@ -682,121 +686,7 @@ mod full {
         });
     }
 
-    fn lint_capability_naming(
-        out: &mut Vec<Diagnostic>,
-        settings: &LintSettings,
-        file_map: &MappedFiles,
-        info: &TypingProgramInfo,
-    ) -> Result<()> {
-        for (mident, minfo) in info.modules.key_cloned_iter() {
-            match minfo.target_kind {
-                TargetKind::Source {
-                    is_root_package: true,
-                } => {}
-                _ => continue,
-            }
 
-            for (sname, sdef) in minfo.structs.key_cloned_iter() {
-                let abilities = &sdef.abilities;
-                let is_cap = abilities.has_ability_(move_compiler::parser::ast::Ability_::Key)
-                    && abilities.has_ability_(move_compiler::parser::ast::Ability_::Store)
-                    && !abilities.has_ability_(Ability_::Copy)
-                    && !abilities.has_ability_(Ability_::Drop);
-                if !is_cap {
-                    continue;
-                }
-
-                let sym = sname.value();
-                let name_str = sym.as_str();
-                if name_str.ends_with("_cap") {
-                    continue;
-                }
-
-                let loc = sname.loc();
-                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                    continue;
-                };
-                let anchor = loc.start() as usize;
-                push_diag(
-                    out,
-                    settings,
-                    &CAPABILITY_NAMING,
-                    file,
-                    span,
-                    contents.as_ref(),
-                    anchor,
-                    format!("Capability struct should be suffixed with `_cap`: `{name_str}_cap`"),
-                );
-            }
-        }
-
-        Ok(())
-    }
-
-    fn lint_event_naming(
-        out: &mut Vec<Diagnostic>,
-        settings: &LintSettings,
-        file_map: &MappedFiles,
-        info: &TypingProgramInfo,
-    ) -> Result<()> {
-        for (mident, minfo) in info.modules.key_cloned_iter() {
-            match minfo.target_kind {
-                TargetKind::Source {
-                    is_root_package: true,
-                } => {}
-                _ => continue,
-            }
-
-            for (sname, sdef) in minfo.structs.key_cloned_iter() {
-                let abilities = &sdef.abilities;
-                let is_event = abilities.has_ability_(Ability_::Copy)
-                    && abilities.has_ability_(Ability_::Drop)
-                    && !abilities.has_ability_(Ability_::Key)
-                    && !abilities.has_ability_(Ability_::Store);
-                if !is_event {
-                    continue;
-                }
-
-                let sym = sname.value();
-                let name_str = sym.as_str();
-                let loc = sname.loc();
-                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                    continue;
-                };
-                let anchor = loc.start() as usize;
-
-                if !name_str.ends_with("_event") {
-                    push_diag(
-                        out,
-                        settings,
-                        &EVENT_NAMING,
-                        file,
-                        span,
-                        contents.as_ref(),
-                        anchor,
-                        format!("Event struct should end with `_event`: `{name_str}_event`"),
-                    );
-                    continue;
-                }
-
-                let first = name_str.split('_').next().unwrap_or("");
-                if !first.ends_with("ed") {
-                    push_diag(
-                        out,
-                        settings,
-                        &EVENT_NAMING,
-                        file,
-                        span,
-                        contents.as_ref(),
-                        anchor,
-                        "Event struct should use a past-tense verb prefix (e.g. `transferred_..._event`)".to_string(),
-                    );
-                }
-            }
-        }
-
-        Ok(())
-    }
 
     // =========================================================================
     // Droppable Hot Potato V2 Lint (type-based, zero FP)
@@ -1239,12 +1129,12 @@ mod full {
                     );
                 }
             }
-            T::UnannotatedExp_::IfElse(cond, then_e, else_e_opt) => {
+            T::UnannotatedExp_::IfElse(cond, t, e_opt) => {
                 check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
-                check_division_in_exp(then_e, validated_vars, out, settings, file_map, func_name);
-                if let Some(else_e) = else_e_opt {
+                check_division_in_exp(t, validated_vars, out, settings, file_map, func_name);
+                if let Some(e) = e_opt {
                     check_division_in_exp(
-                        else_e,
+                        e,
                         validated_vars,
                         out,
                         settings,

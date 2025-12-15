@@ -546,14 +546,10 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     "public_random_access",
     "suspicious_overflow_check", // Promoted to stable
     "ignored_boolean_return",    // Typus hack pattern
-    // Deprecated lints (kept for backward compatibility)
-    "droppable_hot_potato",      // DEPRECATED: Use droppable_hot_potato_v2
-    "shared_capability",         // DEPRECATED: Use share_owned_authority
-    "shared_capability_object",  // DEPRECATED: Use share_owned_authority (type-based)
-    "unchecked_coin_split",      // DEPRECATED: Sui runtime protects
-    "capability_leak",           // DEPRECATED: Name-based, needs type-based rewrite
-    "unchecked_withdrawal",      // DEPRECATED: Name-based, needs CFG-based rewrite
-    // Preview lints (require --preview flag)
+    // Experimental lints (require --experimental flag)
+    "unchecked_coin_split",      // Name-based, high FP
+    "capability_leak",           // Name-based, needs type-based rewrite
+    "unchecked_withdrawal",      // Name-based, needs CFG-based rewrite
     "pure_function_transfer",
     "unsafe_arithmetic",
 ];
@@ -584,6 +580,7 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
     // Phase II (AbsInt) lints (require --mode full --preview)
     "phantom_capability",
     "unchecked_division_v2",
+    "unused_hot_potato",
     // Phase III (cross-module) lints (require --mode full --preview)
     "transitive_capability_leak",
     "flashloan_without_repay",
@@ -868,12 +865,6 @@ impl LintRegistry {
                     reg = reg.with_rule(crate::rules::TypedAbortCodeLint);
                 }
                 // Security lints (audit-backed)
-                "droppable_hot_potato" => {
-                    reg = reg.with_rule(crate::rules::DroppableHotPotatoLint);
-                }
-                "shared_capability" => {
-                    reg = reg.with_rule(crate::rules::SharedCapabilityLint);
-                }
                 "stale_oracle_price" => {
                     reg = reg.with_rule(crate::rules::StaleOraclePriceLint);
                 }
@@ -892,10 +883,7 @@ impl LintRegistry {
                 "ignored_boolean_return" => {
                     reg = reg.with_rule(crate::rules::IgnoredBooleanReturnLint);
                 }
-                "shared_capability_object" => {
-                    reg = reg.with_rule(crate::rules::SharedCapabilityObjectLint);
-                }
-                // Preview lints
+                // Experimental lints
                 "pure_function_transfer" => {
                     reg = reg.with_rule(crate::rules::PureFunctionTransferLint);
                 }
@@ -957,14 +945,6 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "public_random_access"
         | "suspicious_overflow_check"     // Promoted to stable
         | "ignored_boolean_return" => RuleGroup::Stable,  // Typus hack pattern
-
-        // Deprecated lints (name-based, not recommended)
-        | "droppable_hot_potato"      // Use droppable_hot_potato_v2 (type-based)
-        | "shared_capability"         // Use share_owned_authority (type-based)
-        | "shared_capability_object"  // Use share_owned_authority (type-based)
-        | "capability_naming"         // Sui uses Cap suffix, not _cap
-        | "event_naming"              // Sui events don't use _event suffix
-        | "getter_naming" => RuleGroup::Deprecated,  // Sui uses get_ prefix
 
         // Experimental lints (high FP risk, require --experimental flag)
         | "unchecked_coin_split"      // Name-based, high FP
