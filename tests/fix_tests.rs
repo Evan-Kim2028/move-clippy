@@ -170,6 +170,90 @@ fn manual_loop_iteration_simple() {
 }
 
 // ============================================================================
+// modern_method_syntax Tests
+// ============================================================================
+
+#[test]
+fn modern_method_syntax_option() {
+    let source = r#"
+        module test::m {
+            use std::option::Option;
+            fun test(opt: &Option<u64>): bool {
+                option::is_some(opt)
+            }
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "modern_method_syntax should generate a fix");
+    assert!(fix.unwrap().contains("opt.is_some()"), "Fix should use method syntax");
+}
+
+#[test]
+fn modern_method_syntax_transfer() {
+    let source = r#"
+        module test::m {
+            struct Obj has key { id: UID }
+            fun test(obj: Obj, addr: address) {
+                transfer::transfer(obj, addr);
+            }
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(fix.unwrap().contains("obj.transfer(addr)"), "Fix should preserve remaining args");
+}
+
+#[test]
+fn modern_method_syntax_coin_value() {
+    let source = r#"
+        module test::m {
+            use sui::coin::Coin;
+            fun test(c: &Coin<SUI>): u64 {
+                coin::value(c)
+            }
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(fix.unwrap().contains("c.value()"), "Fix should work with single arg");
+}
+
+#[test]
+fn modern_method_syntax_multi_arg() {
+    let source = r#"
+        module test::m {
+            use std::option::Option;
+            fun test(opt: &Option<u64>, default: u64): u64 {
+                option::get_with_default(opt, default)
+            }
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(fix.unwrap().contains("opt.get_with_default(default)"), "Fix should handle multi-arg methods");
+}
+
+#[test]
+fn modern_method_syntax_table() {
+    let source = r#"
+        module test::m {
+            use sui::table::Table;
+            fun test<K: copy + drop, V>(t: &Table<K, V>, k: K): bool {
+                table::contains(t, k)
+            }
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(fix.unwrap().contains("t.contains(k)"), "Fix should work with table operations");
+}
+
+// ============================================================================
 // prefer_vector_methods Tests
 // ============================================================================
 

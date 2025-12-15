@@ -635,7 +635,7 @@ static MODERN_METHOD_SYNTAX: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer Move 2024 method call syntax for common allowlisted functions",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Convert to method syntax"),
     analysis: AnalysisKind::Syntactic,
 };
 
@@ -768,11 +768,30 @@ impl LintRule for ModernMethodSyntaxLint {
                     continue;
                 }
 
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    format!("Prefer method syntax: `{}.{}(...)`", clean_receiver, method),
-                );
+                // Generate auto-fix
+                let suggestion = if is_simple_receiver(clean_receiver) {
+                    // Remaining args (skip first arg which is receiver)
+                    let remaining_args: Vec<&str> = args.iter().skip(1).copied().collect();
+                    let replacement = generate_method_call_fix(clean_receiver, method, remaining_args);
+                    Some(Suggestion {
+                        message: format!("Use method syntax: {}", replacement),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    })
+                } else {
+                    None
+                };
+
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: format!("Prefer method syntax: `{}.{}(...)`", clean_receiver, method),
+                    help: Some("Use method call syntax for cleaner code".to_string()),
+                    suggestion,
+                };
+                ctx.report_diagnostic(diagnostic);
                 return;
             }
         });
