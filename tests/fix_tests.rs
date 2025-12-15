@@ -170,6 +170,87 @@ fn manual_loop_iteration_simple() {
 }
 
 // ============================================================================
+// prefer_vector_methods Tests
+// ============================================================================
+
+#[test]
+fn prefer_vector_methods_push_back() {
+    let source = r#"
+        module test::m {
+            use std::vector;
+            fun test(v: &mut vector<u64>, x: u64) {
+                vector::push_back(&mut v, x);
+            }
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "prefer_vector_methods should generate a fix");
+    assert!(fix.unwrap().contains("v.push_back(x)"), "Fix should use method syntax");
+}
+
+#[test]
+fn prefer_vector_methods_length() {
+    let source = r#"
+        module test::m {
+            use std::vector;
+            fun test(v: &vector<u64>): u64 {
+                vector::length(&v)
+            }
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(fix.unwrap().contains("v.length()"), "Fix should use method syntax with no args");
+}
+
+// ============================================================================
+// public_mut_tx_context Tests
+// ============================================================================
+
+#[test]
+fn public_mut_tx_context_simple() {
+    let source = r#"
+        module test::m {
+            public entry fun foo(ctx: &TxContext) {}
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "public_mut_tx_context should generate a fix");
+    assert!(fix.unwrap().contains("&mut TxContext"), "Fix should add mut");
+}
+
+#[test]
+fn public_mut_tx_context_with_spacing() {
+    let source = r#"
+        module test::m {
+            entry fun bar(ctx: & TxContext) {}
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    let fixed = fix.unwrap();
+    assert!(fixed.contains("&mut"), "Fix should add mut");
+    assert!(fixed.contains("TxContext"), "Fix should preserve TxContext");
+}
+
+#[test]
+fn public_mut_tx_context_qualified() {
+    let source = r#"
+        module test::m {
+            public fun baz(ctx: &tx_context::TxContext) {}
+        }
+    "#;
+    
+    let fix = get_first_fix(source);
+    assert!(fix.is_some());
+    assert!(fix.unwrap().contains("&mut tx_context::TxContext"), "Fix should work with module-qualified type");
+}
+
+// ============================================================================
 // while_true_to_loop Tests
 // ============================================================================
 

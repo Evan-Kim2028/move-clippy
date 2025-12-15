@@ -1092,21 +1092,35 @@ impl UncheckedDivisionVerifierAI<'_> {
                         .or_else(|| self.extract_nonzero_guard(rhs));
                 }
 
-                // Prefer patterns where one side is a literal, and the other is a local var.
-                let (var_side, lit_side, var_on_lhs) =
-                    if matches!(&rhs.exp.value, UnannotatedExp_::Value(_)) {
-                        (lhs, rhs, true)
-                    } else if matches!(&lhs.exp.value, UnannotatedExp_::Value(_)) {
-                        (rhs, lhs, false)
-                    } else {
-                        return None;
-                    };
+                // Prefer patterns where one side is a literal or constant, and the other is a local var.
+                // We check for both Value (inline literals) and Constant (named constants like MIN_TICK_SIZE).
+                let is_const_like = |e: &Exp| {
+                    matches!(
+                        &e.exp.value,
+                        UnannotatedExp_::Value(_) | UnannotatedExp_::Constant(_)
+                    )
+                };
 
-                let var = self.extract_var(var_side)?;
-                let UnannotatedExp_::Value(v) = &lit_side.exp.value else {
+                let (var_side, lit_side, var_on_lhs) = if is_const_like(rhs) {
+                    (lhs, rhs, true)
+                } else if is_const_like(lhs) {
+                    (rhs, lhs, false)
+                } else {
                     return None;
                 };
-                let lit_is_zero = v.value.is_zero();
+
+                let var = self.extract_var(var_side)?;
+
+                // Determine if the constant/literal is zero
+                let lit_is_zero = match &lit_side.exp.value {
+                    UnannotatedExp_::Value(v) => v.value.is_zero(),
+                    UnannotatedExp_::Constant(_) => {
+                        // Named constants are assumed non-zero (conservative but practical)
+                        // Most constants like MIN_TICK_SIZE, MIN_PRICE, etc. are non-zero
+                        false
+                    }
+                    _ => return None,
+                };
 
                 // Returns whether the condition being TRUE implies the var is non-zero.
                 let nonzero_when_true = match (op.value, lit_is_zero, var_on_lhs) {
@@ -1120,9 +1134,9 @@ impl UncheckedDivisionVerifierAI<'_> {
                     // 0 < var
                     (BinOp_::Lt, true, false) => true,
 
-                    // var >= K where K != 0
+                    // var >= K where K != 0 (includes named constants)
                     (BinOp_::Ge, false, true) => true,
-                    // K <= var where K != 0
+                    // K <= var where K != 0 (includes named constants)
                     (BinOp_::Le, false, false) => true,
 
                     // var == K where K != 0

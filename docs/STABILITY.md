@@ -72,12 +72,20 @@ experimental = true  # Implies preview = true
 
 ### Deprecated
 
-**Definition:** Rules scheduled for removal in the next major version.
+**Definition:** Rules that have been superseded by better implementations or are no longer useful.
 
 **Characteristics:**
-- Emit warnings when explicitly enabled
+- Not enabled by default
+- Require `--experimental` flag to enable (for backwards compatibility)
 - Will be removed in next major version
-- Usually replaced by better alternatives
+
+**Current Deprecated Lints:**
+
+| Lint | Reason |
+|------|--------|
+| `unchecked_coin_split` | Sui runtime already enforces balance checks |
+| `unchecked_withdrawal` | Business logic bugs require formal verification, not linting |
+| `capability_leak` | Superseded by `capability_transfer_v2` (type-based) |
 
 ## Promotion Criteria: Preview → Stable
 

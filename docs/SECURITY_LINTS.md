@@ -602,9 +602,13 @@ droppable_hot_potato = "allow"
 
 ## Related Resources
 
-### Sui Built-in Linters
+### Sui Monorepo Lints (pass-through from sui_mode::linters)
 
-These lints complement (do not duplicate) Sui's built-in compiler lints:
+> **Note:** The following lints are pass-through wrappers for the official Sui Move compiler 
+> lints from the Sui monorepo. They provide unified output formatting in `--mode full`.
+
+**Source:** [sui_mode::linters](https://github.com/MystenLabs/sui/tree/main/external-crates/move/crates/move-compiler/src/sui_mode/linters)
+
 - `share_owned` - Sharing potentially owned objects
 - `self_transfer` - Transferring to sender (prefer return)
 - `custom_state_change` - Custom transfer/share/freeze calls

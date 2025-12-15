@@ -33,6 +33,11 @@ pub enum RuleGroup {
     /// Require `--experimental` flag or `experimental = true` in config.
     /// These rules are useful for research but not recommended for CI.
     Experimental,
+
+    /// Deprecated rules that are no longer active.
+    /// These are kept for backwards compatibility but produce no diagnostics.
+    /// Require `--experimental` flag to be included (for config compatibility).
+    Deprecated,
 }
 
 impl RuleGroup {
@@ -41,6 +46,7 @@ impl RuleGroup {
             RuleGroup::Stable => "stable",
             RuleGroup::Preview => "preview",
             RuleGroup::Experimental => "experimental",
+            RuleGroup::Deprecated => "deprecated",
         }
     }
 
@@ -55,6 +61,7 @@ impl RuleGroup {
             RuleGroup::Stable => None,
             RuleGroup::Preview => Some("--preview"),
             RuleGroup::Experimental => Some("--experimental"),
+            RuleGroup::Deprecated => Some("--experimental"), // Deprecated lints require experimental flag
         }
     }
 }

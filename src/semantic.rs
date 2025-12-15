@@ -18,13 +18,19 @@ use std::path::Path;
 
 
 // ============================================================================
-// Sui-Delegated Lints (production-ready, type-based)
+// Sui Monorepo Lints (delegated from sui_mode::linters)
+//
+// These lints are pass-through wrappers for the official Sui Move compiler
+// lints from the Sui monorepo. They run in --mode full and provide unified
+// output formatting through move-clippy.
+//
+// Source: https://github.com/MystenLabs/sui/tree/main/external-crates/move/crates/move-compiler/src/sui_mode/linters
 // ============================================================================
 
 pub static SHARE_OWNED: LintDescriptor = LintDescriptor {
     name: "share_owned",
     category: LintCategory::Suspicious,
-    description: "Possible owned object share (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Possible owned object share (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -33,7 +39,7 @@ pub static SHARE_OWNED: LintDescriptor = LintDescriptor {
 pub static SELF_TRANSFER: LintDescriptor = LintDescriptor {
     name: "self_transfer",
     category: LintCategory::Suspicious,
-    description: "Transferring or sharing objects back to the sender (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Transferring object to self - consider returning instead (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -42,7 +48,7 @@ pub static SELF_TRANSFER: LintDescriptor = LintDescriptor {
 pub static CUSTOM_STATE_CHANGE: LintDescriptor = LintDescriptor {
     name: "custom_state_change",
     category: LintCategory::Suspicious,
-    description: "Custom transfer/share/freeze functions must call private variants (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Custom transfer/share/freeze should call private variants (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -51,7 +57,7 @@ pub static CUSTOM_STATE_CHANGE: LintDescriptor = LintDescriptor {
 pub static COIN_FIELD: LintDescriptor = LintDescriptor {
     name: "coin_field",
     category: LintCategory::Suspicious,
-    description: "Avoid storing sui::coin::Coin fields inside structs (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Use Balance instead of Coin in struct fields (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -60,7 +66,7 @@ pub static COIN_FIELD: LintDescriptor = LintDescriptor {
 pub static FREEZE_WRAPPED: LintDescriptor = LintDescriptor {
     name: "freeze_wrapped",
     category: LintCategory::Suspicious,
-    description: "Do not wrap shared objects before freezing (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Do not freeze objects containing wrapped objects (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -69,7 +75,7 @@ pub static FREEZE_WRAPPED: LintDescriptor = LintDescriptor {
 pub static COLLECTION_EQUALITY: LintDescriptor = LintDescriptor {
     name: "collection_equality",
     category: LintCategory::Suspicious,
-    description: "Avoid equality checks over bags/tables/collections (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Avoid equality checks on collections (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -78,7 +84,7 @@ pub static COLLECTION_EQUALITY: LintDescriptor = LintDescriptor {
 pub static PUBLIC_RANDOM: LintDescriptor = LintDescriptor {
     name: "public_random",
     category: LintCategory::Suspicious,
-    description: "Random state should remain private and uncopyable (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Random state should remain private (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -87,7 +93,7 @@ pub static PUBLIC_RANDOM: LintDescriptor = LintDescriptor {
 pub static MISSING_KEY: LintDescriptor = LintDescriptor {
     name: "missing_key",
     category: LintCategory::Suspicious,
-    description: "Warn when shared/transferred structs lack the key ability (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Shared/transferred object missing key ability (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -96,7 +102,7 @@ pub static MISSING_KEY: LintDescriptor = LintDescriptor {
 pub static FREEZING_CAPABILITY: LintDescriptor = LintDescriptor {
     name: "freezing_capability",
     category: LintCategory::Suspicious,
-    description: "Avoid storing freeze capabilities (Sui lint, type-based, requires --mode full)",
+    description: "[Sui Linter] Avoid freezing capability objects (from sui_mode::linters)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
@@ -271,12 +277,8 @@ pub static SHARE_OWNED_AUTHORITY: LintDescriptor = LintDescriptor {
 /// # Detection Logic
 ///
 /// This lint fires when a struct has ONLY the `drop` ability (no other abilities).
-/// A struct with only `drop` is almost always a bug - either:
-/// 1. It's a hot potato that should have NO abilities (remove `drop`)
-/// 2. It's a witness that should be empty (verify it's actually empty)
-///
-/// Structs with `copy + drop` are NOT flagged (they're events/DTOs).
-/// Structs with `key + store` are NOT flagged (they're resources).
+/// A struct with `copy + drop` is NOT flagged (they're events/DTOs).
+/// A struct with `key + store` is NOT flagged (they're resources).
 ///
 /// # Example (Bad)
 ///
@@ -835,8 +837,12 @@ mod full {
             if is_transfer_call {
                 // Check if type argument is a capability type
                 if let Some(type_arg) = call.type_arguments.first() {
-                    if is_capability_type_from_ty(&type_arg.value) {
-                        // This is transferring a capability - check if recipient is sender
+                    // Skip Coin types - they have capability-like abilities (key+store, no copy/drop)
+                    // but are value tokens, not access control capabilities
+                    if is_coin_type(&type_arg.value) {
+                        // Not a capability - it's a coin transfer, skip
+                    } else if is_capability_type_from_ty(&type_arg.value) {
+                        // This is transferring a non-coin capability - check if recipient is sender
                         // For now, we flag all capability transfers as preview-level warnings
                         let loc = exp.exp.loc;
                         let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
@@ -855,7 +861,7 @@ mod full {
                             contents.as_ref(),
                             anchor,
                             format!(
-                                "Capability `{type_name}` transferred in `{func_name}`. \
+                                "Non-coin capability `{type_name}` transferred in `{func_name}`. \
                                  Ensure the recipient is authorized (e.g., tx_context::sender(ctx))."
                             ),
                         );
@@ -867,7 +873,14 @@ mod full {
         // Recurse into subexpressions
         match &exp.exp.value {
             T::UnannotatedExp_::ModuleCall(call) => {
-                check_capability_transfer_in_exp(&call.arguments, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(
+                    &call.arguments,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
@@ -1060,7 +1073,8 @@ mod full {
                         push_diag(
                             out,
                             settings,
-                                                    file,
+                            &UNUSED_RETURN_VALUE,
+                            file,
                             span,
                             contents.as_ref(),
                             anchor,
@@ -1539,6 +1553,28 @@ mod full {
             N::Type_::Ref(_, inner) => get_type_abilities(&inner.value),
             N::Type_::Param(tp) => Some(tp.abilities.clone()),
             _ => None,
+        }
+    }
+
+    /// Check if a type is `sui::coin::Coin<T>`.
+    /// 
+    /// Coin types have the same ability pattern as capabilities (key+store, no copy/drop)
+    /// but they are value tokens, not access control objects. We exclude them from
+    /// capability transfer warnings to avoid false positives.
+    fn is_coin_type(ty: &N::Type_) -> bool {
+        match ty {
+            N::Type_::Apply(_, type_name, _) => {
+                if let N::TypeName_::ModuleType(mident, struct_name) = &type_name.value {
+                    let module_sym = mident.value.module.value();
+                    let struct_sym = struct_name.value();
+                    // Match sui::coin::Coin or any coin module's Coin type
+                    module_sym.as_str() == "coin" && struct_sym.as_str() == "Coin"
+                } else {
+                    false
+                }
+            }
+            N::Type_::Ref(_, inner) => is_coin_type(&inner.value),
+            _ => false,
         }
     }
 

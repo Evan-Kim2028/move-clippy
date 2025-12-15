@@ -9,8 +9,8 @@ use super::patterns::{
     parse_length_comparison,
 };
 use super::util::{
-    compact_ws, is_simple_ident, parse_ref_ident, parse_ref_mut_ident, slice, split_args,
-    split_call, walk,
+    compact_ws, generate_method_call_fix, is_simple_ident, is_simple_receiver, parse_ref_ident,
+    parse_ref_mut_ident, slice, split_args, split_call, walk,
 };
 use crate::diagnostics::{Applicability, Suggestion};
 
@@ -536,7 +536,7 @@ static PREFER_VECTOR_METHODS: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "Prefer method syntax on vectors (e.g., v.push_back(x), v.length())",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Convert to method syntax"),
     analysis: AnalysisKind::Syntactic,
 };
 
@@ -568,11 +568,28 @@ impl LintRule for PreferVectorMethodsLint {
                     return;
                 };
 
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    format!("Prefer method syntax: `{receiver}.push_back(...)`"),
-                );
+                // Generate auto-fix
+                let suggestion = if is_simple_receiver(receiver) {
+                    let replacement = generate_method_call_fix(receiver, "push_back", vec![args[1]]);
+                    Some(Suggestion {
+                        message: format!("Use method syntax: {}", replacement),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    })
+                } else {
+                    None
+                };
+
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: format!("Prefer method syntax: `{receiver}.push_back(...)`"),
+                    help: Some("Use method call syntax for cleaner code".to_string()),
+                    suggestion,
+                };
+                ctx.report_diagnostic(diagnostic);
             } else if callee == "vector::length" {
                 let Some(args) = split_args(args_str) else {
                     return;
@@ -584,11 +601,28 @@ impl LintRule for PreferVectorMethodsLint {
                     return;
                 };
 
-                ctx.report_node(
-                    self.descriptor(),
-                    node,
-                    format!("Prefer method syntax: `{receiver}.length()`"),
-                );
+                // Generate auto-fix
+                let suggestion = if is_simple_receiver(receiver) {
+                    let replacement = generate_method_call_fix(receiver, "length", vec![]);
+                    Some(Suggestion {
+                        message: format!("Use method syntax: {}", replacement),
+                        replacement,
+                        applicability: Applicability::MachineApplicable,
+                    })
+                } else {
+                    None
+                };
+
+                let diagnostic = crate::diagnostics::Diagnostic {
+                    lint: self.descriptor(),
+                    level: ctx.settings().level_for(self.descriptor().name),
+                    file: None,
+                    span: Span::from_range(node.range()),
+                    message: format!("Prefer method syntax: `{receiver}.length()`"),
+                    help: Some("Use method call syntax for cleaner code".to_string()),
+                    suggestion,
+                };
+                ctx.report_diagnostic(diagnostic);
             }
         });
     }
@@ -786,7 +820,7 @@ pub(crate) static PUBLIC_MUT_TX_CONTEXT: LintDescriptor = LintDescriptor {
     category: LintCategory::Modernization,
     description: "TxContext parameters should be `&mut TxContext`, not `&TxContext`",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Add `mut` to TxContext parameter"),
     analysis: AnalysisKind::Syntactic,
 };
 
@@ -818,8 +852,21 @@ impl LintRule for PublicMutTxContextLint {
                     let Some(ty) = param.child_by_field_name("type") else {
                         continue;
                     };
-                    if let Some(message) = needs_mut_tx_context(slice(source, ty)) {
-                        ctx.report_node(self.descriptor(), ty, message);
+                    let type_text = slice(source, ty);
+                    if let Some(message) = needs_mut_tx_context(type_text) {
+                        // Generate auto-fix
+                        let suggestion = generate_mut_tx_context_fix(type_text);
+                        
+                        let diagnostic = crate::diagnostics::Diagnostic {
+                            lint: self.descriptor(),
+                            level: ctx.settings().level_for(self.descriptor().name),
+                            file: None,
+                            span: Span::from_range(ty.range()),
+                            message,
+                            help: Some("Add `mut` to make TxContext mutable".to_string()),
+                            suggestion,
+                        };
+                        ctx.report_diagnostic(diagnostic);
                     }
                 }
             }
@@ -952,6 +999,43 @@ fn needs_mut_tx_context(type_text: &str) -> Option<String> {
     } else {
         None
     }
+}
+
+/// Generate fix to add `mut` to TxContext reference
+fn generate_mut_tx_context_fix(type_text: &str) -> Option<Suggestion> {
+    let trimmed = type_text.trim_start();
+    
+    // Pattern: &TxContext or & TxContext
+    if !trimmed.starts_with('&') {
+        return None;
+    }
+    
+    let after_ref = trimmed[1..].trim_start();
+    
+    // Already has mut?
+    if after_ref.starts_with("mut") {
+        return None;
+    }
+    
+    // Check it's actually TxContext (including module-qualified)
+    let base = after_ref.trim_end_matches(|c: char| c == ';' || c.is_whitespace());
+    if let Some(idx) = base.find('<') {
+        // Strip type arguments
+        if !base[..idx].ends_with("TxContext") {
+            return None;
+        }
+    } else if !base.ends_with("TxContext") {
+        return None;
+    }
+    
+    // Insert "mut " after the "&"
+    let replacement = format!("&mut {}", after_ref);
+    
+    Some(Suggestion {
+        message: "Add `mut` to TxContext parameter".to_string(),
+        replacement,
+        applicability: Applicability::MachineApplicable,
+    })
 }
 
 // ============================================================================

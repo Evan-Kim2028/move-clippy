@@ -137,8 +137,10 @@ This is a representative sample (not a full list):
 
 - Style/modernization: `while_true_to_loop`, `abilities_order`, `modern_module_syntax`
 - Test quality: `test_abort_code`, `redundant_test_prefix`
-- Suspicious/Sui: `share_owned`, `self_transfer`, `coin_field`, `missing_key`
-- Security: `droppable_hot_potato`, `stale_oracle_price`, `public_random_access`
+- Security: `droppable_hot_potato_v2`, `stale_oracle_price`, `public_random_access`, `share_owned_authority`
+- Sui Monorepo (pass-through): `share_owned`, `self_transfer`, `coin_field`, `missing_key`
+
+> **Note:** Sui Monorepo lints are pass-through wrappers for the official lints from `sui_mode::linters`. They provide unified output formatting in `--mode full`.
 
 ## Full mode and Sui integration
 

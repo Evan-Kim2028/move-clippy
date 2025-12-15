@@ -516,15 +516,16 @@ fn experimental_unchecked_coin_split_not_enabled_by_default() {
 
 #[test]
 fn experimental_unchecked_coin_split_positive() {
+    // DEPRECATED: This lint is now a no-op, Sui runtime already enforces balance checks
     let engine = create_experimental_engine();
     let src = include_str!("golden/experimental/unchecked_coin_split/positive.move");
     let diags = engine.lint_source(src).expect("linting should succeed");
     let filtered = filter_lint(&diags, "unchecked_coin_split");
 
     assert!(
-        !filtered.is_empty(),
-        "unchecked_coin_split should trigger with --experimental on unvalidated splits.\nAll diagnostics: {}",
-        format_diags(&diags)
+        filtered.is_empty(),
+        "unchecked_coin_split is DEPRECATED and should never fire.\nGot: {}",
+        format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
     );
 }
 
@@ -558,15 +559,16 @@ fn experimental_unchecked_withdrawal_not_enabled_by_default() {
 
 #[test]
 fn experimental_unchecked_withdrawal_positive() {
+    // DEPRECATED: This lint is now a no-op, business logic bugs need formal verification
     let engine = create_experimental_engine();
     let src = include_str!("golden/experimental/unchecked_withdrawal/positive.move");
     let diags = engine.lint_source(src).expect("linting should succeed");
     let filtered = filter_lint(&diags, "unchecked_withdrawal");
 
     assert!(
-        !filtered.is_empty(),
-        "unchecked_withdrawal should trigger with --experimental on unvalidated withdrawals.\nAll diagnostics: {}",
-        format_diags(&diags)
+        filtered.is_empty(),
+        "unchecked_withdrawal is DEPRECATED and should never fire.\nGot: {}",
+        format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
     );
 }
 
@@ -600,15 +602,16 @@ fn experimental_capability_leak_not_enabled_by_default() {
 
 #[test]
 fn experimental_capability_leak_positive() {
+    // DEPRECATED: This lint is now a no-op, superseded by capability_transfer_v2
     let engine = create_experimental_engine();
     let src = include_str!("golden/experimental/capability_leak/positive.move");
     let diags = engine.lint_source(src).expect("linting should succeed");
     let filtered = filter_lint(&diags, "capability_leak");
 
     assert!(
-        !filtered.is_empty(),
-        "capability_leak should trigger with --experimental on unvalidated transfers.\nAll diagnostics: {}",
-        format_diags(&diags)
+        filtered.is_empty(),
+        "capability_leak is DEPRECATED and should never fire.\nGot: {}",
+        format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
     );
 }
 

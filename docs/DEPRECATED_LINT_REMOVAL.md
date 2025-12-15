@@ -1,16 +1,32 @@
 # Comprehensive Deprecated Lint Removal
 
 **Date**: 2025-12-15  
-**Status**: ✅ Complete  
-**Test Results**: 138/138 tests passing (78 library + 60 golden)
+**Status**: ✅ Complete
+**Test Results**: 78/78 library tests passing
 
 ## Summary
 
-Completed comprehensive removal of 6 deprecated lints from move-clippy codebase:
+### Phase 1: Name-Based Heuristic Lints (Removed)
+
+Removed 6 deprecated lints that used name-based heuristics with high false positive rates:
 - 3 from `security.rs`: `droppable_hot_potato`, `shared_capability`, `shared_capability_object`
 - 3 from `semantic.rs`: `capability_naming`, `event_naming`, `getter_naming`
 
-These lints were deprecated because they used name-based heuristics with high false positive rates and have been superseded by type-based implementations.
+### Phase 2: Syntactic Lints with High FP (Deprecated)
+
+Deprecated 3 syntactic lints:
+- `unchecked_coin_split` - Sui runtime already enforces balance checks
+- `unchecked_withdrawal` - Business logic bugs require formal verification, not linting
+- `capability_leak` - Superseded by `capability_transfer_v2` (type-based)
+
+### Sui Monorepo Lints (NOT Deprecated)
+
+The following 9 lints are **pass-through wrappers** for the official Sui Move compiler lints from `sui_mode::linters`.
+They remain **Stable** and provide unified output formatting through move-clippy in `--mode full`:
+- `share_owned`, `self_transfer`, `custom_state_change`, `coin_field`, `freeze_wrapped`
+- `collection_equality`, `public_random`, `missing_key`, `freezing_capability`
+
+**Source:** [sui_mode::linters](https://github.com/MystenLabs/sui/tree/main/external-crates/move/crates/move-compiler/src/sui_mode/linters)
 
 ## Files Modified
 

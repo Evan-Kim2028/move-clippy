@@ -426,8 +426,8 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
 pub static UNCHECKED_COIN_SPLIT: LintDescriptor = LintDescriptor {
     name: "unchecked_coin_split",
     category: LintCategory::Security,
-    description: "Detect potential coin::split without balance check (experimental, name-based)",
-    group: RuleGroup::Experimental,
+    description: "[DEPRECATED] Sui runtime already enforces balance checks - coin::split panics on insufficient balance",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
 };
@@ -439,53 +439,9 @@ impl LintRule for UncheckedCoinSplitLint {
         &UNCHECKED_COIN_SPLIT
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_unchecked_coin_split(root, source, ctx);
-    }
-}
-
-fn check_unchecked_coin_split(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for function definitions
-    if node.kind() == "function_definition" {
-        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        let func_text_lower = func_text.to_lowercase();
-
-        // Check if function contains coin::split
-        if func_text_lower.contains("coin::split") || func_text_lower.contains("split(") {
-            // Check if there's a balance check before the split
-            // Look for patterns like: coin::value, .value(), >= amount, > amount
-            let has_balance_check = func_text_lower.contains("coin::value")
-                || func_text_lower.contains(".value()")
-                || func_text_lower.contains("balance::value")
-                || func_text_lower.contains(">= amount")
-                || func_text_lower.contains("> amount")
-                || func_text_lower.contains("assert!");
-
-            if !has_balance_check {
-                // Get function name for reporting
-                let func_name = node
-                    .child_by_field_name("name")
-                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
-                    .unwrap_or("unknown");
-
-                ctx.report_node(
-                    &UNCHECKED_COIN_SPLIT,
-                    node,
-                    format!(
-                        "Function `{}` uses coin::split without an apparent balance check. \
-                         Consider adding `assert!(coin::value(&coin) >= amount, E_INSUFFICIENT)` \
-                         to provide a clearer error message than the default abort.",
-                        func_name
-                    ),
-                );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_unchecked_coin_split(child, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: Sui runtime already enforces this - coin::split panics on insufficient balance
+        // This lint only suggested better error messages, not a security fix
     }
 }
 
@@ -919,14 +875,11 @@ fn get_enclosing_function_name<'a>(node: Node<'a>, source: &'a str) -> &'a str {
 pub static UNCHECKED_WITHDRAWAL: LintDescriptor = LintDescriptor {
     name: "unchecked_withdrawal",
     category: LintCategory::Security,
-    description: "Detect potential withdrawal without balance check (experimental, name-based)",
-    group: RuleGroup::Experimental,
+    description: "[DEPRECATED] Business logic bugs require formal verification, not linting - name-based heuristics have high FP rate",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
 };
-
-/// Function name patterns that indicate withdrawal operations
-const WITHDRAWAL_PATTERNS: &[&str] = &["withdraw", "unstake", "redeem", "claim"];
 
 pub struct UncheckedWithdrawalLint;
 
@@ -935,92 +888,22 @@ impl LintRule for UncheckedWithdrawalLint {
         &UNCHECKED_WITHDRAWAL
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_unchecked_withdrawal(root, source, ctx);
-    }
-}
-
-fn check_unchecked_withdrawal(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for function definitions
-    if node.kind() == "function_definition"
-        && let Some(name_node) = node.child_by_field_name("name")
-    {
-        let func_name = name_node
-            .utf8_text(source.as_bytes())
-            .unwrap_or("")
-            .to_lowercase();
-
-        let is_withdrawal = WITHDRAWAL_PATTERNS.iter().any(|p| func_name.contains(p));
-
-        if is_withdrawal {
-            // Check if there's an assert! before any withdraw/take operations
-            let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-            // Simple heuristic: check if there's an assert with >= or balance check
-            let has_balance_check = func_text.contains("assert!")
-                && (func_text.contains(">=")
-                    || func_text.contains("balance")
-                    || func_text.contains("amount"));
-
-            if !has_balance_check {
-                let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-                ctx.report_node(
-                    &UNCHECKED_WITHDRAWAL,
-                    node,
-                    format!(
-                        "Function `{}` performs withdrawal but may lack balance validation. \
-                         Consider adding `assert!(user.balance >= amount, E_INSUFFICIENT)` \
-                         before the withdrawal operation.",
-                        original_name
-                    ),
-                );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_unchecked_withdrawal(child, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: Business logic bugs (like the Thala hack) cannot be caught by type analysis
+        // The concept of "withdrawal without balance check" is semantic, not syntactic
+        // Would need formal verification to properly catch this class of bugs
     }
 }
 
 // ============================================================================
-// capability_leak - Detects capabilities transferred to untrusted recipients
+// capability_leak - DEPRECATED
 // ============================================================================
 
-/// Detects when capability objects are transferred to arbitrary addresses without validation.
-///
-/// # Security References
-///
-/// - **MoveScanner Paper (2025)**: Capability leak detection via resource trajectory tracking
-///   URL: https://arxiv.org/html/2508.17964v2
-///   Verified: 2025-12-13
-///
-/// # Why This Matters
-///
-/// Capabilities should only be transferred to trusted recipients. Transferring to
-/// an arbitrary address parameter without validation allows privilege escalation.
-///
-/// # Example
-///
-/// ```move
-/// // VULNERABLE
-/// public fun transfer_admin_cap(cap: AdminCap, recipient: address) {
-///     transfer::transfer(cap, recipient);  // No validation of recipient!
-/// }
-///
-/// // CORRECT - require existing cap holder to authorize
-/// public fun transfer_admin_cap(cap: AdminCap, _auth: &AdminCap, recipient: address) {
-///     // Requires caller to already have AdminCap
-///     transfer::transfer(cap, recipient);
-/// }
-/// ```
 pub static CAPABILITY_LEAK: LintDescriptor = LintDescriptor {
     name: "capability_leak",
     category: LintCategory::Security,
-    description: "Detect capability leak via transfer (experimental, name-based)",
-    group: RuleGroup::Experimental,
+    description: "[DEPRECATED] Superseded by capability_transfer_v2 which uses type-based detection",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
 };
@@ -1032,58 +915,9 @@ impl LintRule for CapabilityLeakLint {
         &CAPABILITY_LEAK
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_capability_leak(root, source, ctx);
-    }
-}
-
-fn check_capability_leak(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for function definitions
-    if node.kind() == "function_definition"
-        && let Some(name_node) = node.child_by_field_name("name")
-    {
-        let func_name = name_node
-            .utf8_text(source.as_bytes())
-            .unwrap_or("")
-            .to_lowercase();
-
-        // Check if function name suggests capability transfer
-        let is_cap_transfer = func_name.contains("transfer")
-            && (func_name.contains("cap")
-                || func_name.contains("admin")
-                || func_name.contains("owner"));
-
-        if is_cap_transfer {
-            let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-            // Check if function takes a capability by value (consuming it)
-            let takes_cap_by_value = func_text.contains("Cap,") || func_text.contains("Cap)");
-
-            // Check if there's validation (another cap reference parameter)
-            let has_auth_param = func_text.contains("&AdminCap")
-                || func_text.contains("&OwnerCap")
-                || func_text.contains("_auth:")
-                || func_text.contains("_cap:");
-
-            if takes_cap_by_value && !has_auth_param {
-                let original_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-                ctx.report_node(
-                    &CAPABILITY_LEAK,
-                    node,
-                    format!(
-                        "Function `{}` transfers a capability without apparent authorization check. \
-                         Consider requiring an existing capability reference as proof of authorization.",
-                        original_name
-                    ),
-                );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_capability_leak(child, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: Superseded by capability_transfer_v2 in absint_lints.rs
+        // The v2 version uses type-based detection (checking abilities) instead of name heuristics
     }
 }
 
@@ -1537,7 +1371,8 @@ mod tests {
     // =========================================================================
 
     #[test]
-    fn test_unchecked_coin_split_detected() {
+    fn test_unchecked_coin_split_deprecated_no_diagnostics() {
+        // DEPRECATED: Sui runtime already enforces balance checks
         let source = r#"
             module example::payment {
                 public fun split_payment(coin: &mut Coin<SUI>, amount: u64, ctx: &mut TxContext): Coin<SUI> {
@@ -1547,9 +1382,12 @@ mod tests {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("coin::split"));
-        assert!(messages[0].contains("balance check"));
+        // Deprecated lint should produce no diagnostics
+        let coin_split_msgs: Vec<_> = messages
+            .iter()
+            .filter(|m| m.contains("coin::split"))
+            .collect();
+        assert!(coin_split_msgs.is_empty());
     }
 
     #[test]
@@ -1565,10 +1403,7 @@ mod tests {
 
         let messages = lint_source(source);
         // Should not fire when there's a balance check
-        let withdraw_msgs: Vec<_> = messages
-            .iter()
-            .filter(|m| m.contains("withdraw") && m.contains("balance"))
-            .collect();
+        let withdraw_msgs: Vec<_> = messages.iter().filter(|m| m.contains("withdraw")).collect();
         assert!(withdraw_msgs.is_empty());
     }
 
@@ -1722,11 +1557,12 @@ module example::pool {
     }
 
     // =========================================================================
-    // UncheckedWithdrawalLint tests
+    // UncheckedWithdrawalLint tests (DEPRECATED - lint is now a no-op)
     // =========================================================================
 
     #[test]
-    fn test_unchecked_withdraw_detected() {
+    fn test_unchecked_withdraw_deprecated_no_diagnostics() {
+        // DEPRECATED: Business logic bugs require formal verification
         let source = r#"
 module example::stake {
     public fun withdraw(user: &mut User, amount: u64): Coin<SUI> {
@@ -1736,9 +1572,12 @@ module example::stake {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("withdraw"));
-        assert!(messages[0].contains("balance"));
+        // Deprecated lint should produce no diagnostics
+        let withdraw_msgs: Vec<_> = messages
+            .iter()
+            .filter(|m| m.contains("withdraw") && m.contains("balance"))
+            .collect();
+        assert!(withdraw_msgs.is_empty());
     }
 
     #[test]
@@ -1763,11 +1602,12 @@ module example::stake {
     }
 
     // =========================================================================
-    // CapabilityLeakLint tests
+    // CapabilityLeakLint tests (DEPRECATED - lint is now a no-op)
     // =========================================================================
 
     #[test]
-    fn test_capability_leak_detected() {
+    fn test_capability_leak_deprecated_no_diagnostics() {
+        // DEPRECATED: Superseded by capability_transfer_v2
         let source = r#"
 module example::admin {
     public fun transfer_admin_cap(cap: AdminCap, recipient: address) {
@@ -1777,9 +1617,12 @@ module example::admin {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("transfer"));
-        assert!(messages[0].contains("capability"));
+        // Deprecated lint should produce no diagnostics
+        let cap_leak_msgs: Vec<_> = messages
+            .iter()
+            .filter(|m| m.contains("capability") && m.contains("transfer"))
+            .collect();
+        assert!(cap_leak_msgs.is_empty());
     }
 
     #[test]
@@ -1794,7 +1637,7 @@ module example::admin {
         "#;
 
         let messages = lint_source(source);
-        // Should not fire when there's an auth param
+        // Should not fire (lint is deprecated anyway)
         let cap_leak_msgs: Vec<_> = messages
             .iter()
             .filter(|m| m.contains("capability") && m.contains("transfer"))
