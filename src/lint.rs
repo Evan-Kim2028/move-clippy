@@ -212,6 +212,77 @@ impl LintCategory {
     }
 }
 
+// ============================================================================
+// Type System Gap Classification
+// ============================================================================
+
+/// Classification of the type system gap that a lint addresses.
+///
+/// This helps understand WHY a lint exists and guides systematic discovery
+/// of new lints.
+///
+/// **For users:** See [docs/TYPE_SYSTEM_GAPS.md](../docs/TYPE_SYSTEM_GAPS.md) for detailed gap taxonomy and examples.
+///
+/// **For developers:** Use this enum to classify new lints systematically. Ask "what invariant does the type system NOT enforce?"
+///
+/// # Gap Categories
+///
+/// - **AbilityMismatch**: Wrong ability combinations (e.g., hot potato with drop)
+/// - **OwnershipViolation**: Incorrect object ownership transitions
+/// - **CapabilityEscape**: Admin/sensitive capabilities leaking scope
+/// - **ValueFlow**: Values going to wrong destinations (e.g., ignored returns)
+/// - **ApiMisuse**: Using stdlib functions incorrectly
+/// - **TemporalOrdering**: Operations in wrong sequence (e.g., use before check)
+/// - **ArithmeticSafety**: Numeric operations without validation
+/// - **StyleConvention**: Style/convention issues (no security impact)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TypeSystemGap {
+    /// Wrong ability combinations (e.g., hot potato with drop, missing key)
+    AbilityMismatch,
+    /// Incorrect object ownership transitions (e.g., sharing non-fresh objects)
+    OwnershipViolation,
+    /// Admin/sensitive capabilities leaking scope
+    CapabilityEscape,
+    /// Values going to wrong destinations (e.g., ignored return values)
+    ValueFlow,
+    /// Using stdlib functions incorrectly (e.g., Coin in struct field)
+    ApiMisuse,
+    /// Operations in wrong sequence (e.g., use before check)
+    TemporalOrdering,
+    /// Numeric operations without validation (e.g., division by zero)
+    ArithmeticSafety,
+    /// Style/convention issues (no security impact)
+    StyleConvention,
+}
+
+impl TypeSystemGap {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            TypeSystemGap::AbilityMismatch => "ability_mismatch",
+            TypeSystemGap::OwnershipViolation => "ownership_violation",
+            TypeSystemGap::CapabilityEscape => "capability_escape",
+            TypeSystemGap::ValueFlow => "value_flow",
+            TypeSystemGap::ApiMisuse => "api_misuse",
+            TypeSystemGap::TemporalOrdering => "temporal_ordering",
+            TypeSystemGap::ArithmeticSafety => "arithmetic_safety",
+            TypeSystemGap::StyleConvention => "style_convention",
+        }
+    }
+
+    pub fn description(&self) -> &'static str {
+        match self {
+            TypeSystemGap::AbilityMismatch => "Wrong ability combinations",
+            TypeSystemGap::OwnershipViolation => "Incorrect object ownership transitions",
+            TypeSystemGap::CapabilityEscape => "Capabilities leaking scope",
+            TypeSystemGap::ValueFlow => "Values going to wrong destinations",
+            TypeSystemGap::ApiMisuse => "Incorrect stdlib function usage",
+            TypeSystemGap::TemporalOrdering => "Operations in wrong sequence",
+            TypeSystemGap::ArithmeticSafety => "Numeric operations without validation",
+            TypeSystemGap::StyleConvention => "Style/convention issues",
+        }
+    }
+}
+
 /// Static metadata describing a lint rule.
 #[derive(Debug)]
 pub struct LintDescriptor {
@@ -224,6 +295,9 @@ pub struct LintDescriptor {
     pub fix: FixDescriptor,
     /// Detection method used by this lint.
     pub analysis: AnalysisKind,
+    /// The type system gap this lint addresses (for security/suspicious lints).
+    /// None for style/convention lints.
+    pub gap: Option<TypeSystemGap>,
 }
 
 impl LintDescriptor {
@@ -240,6 +314,7 @@ impl LintDescriptor {
             group: RuleGroup::Stable,
             fix: FixDescriptor::none(),
             analysis: AnalysisKind::Syntactic,
+            gap: None,
         }
     }
 
@@ -257,6 +332,7 @@ impl LintDescriptor {
             group: RuleGroup::Stable,
             fix: FixDescriptor::safe(fix_description),
             analysis: AnalysisKind::Syntactic,
+            gap: None,
         }
     }
 
@@ -273,6 +349,7 @@ impl LintDescriptor {
             group: RuleGroup::Preview,
             fix: FixDescriptor::none(),
             analysis: AnalysisKind::Syntactic,
+            gap: None,
         }
     }
 
@@ -290,6 +367,7 @@ impl LintDescriptor {
             group: RuleGroup::Preview,
             fix: FixDescriptor::safe(fix_description),
             analysis: AnalysisKind::Syntactic,
+            gap: None,
         }
     }
 
@@ -306,6 +384,7 @@ impl LintDescriptor {
             group: RuleGroup::Stable,
             fix: FixDescriptor::none(),
             analysis: AnalysisKind::TypeBased,
+            gap: None,
         }
     }
 
@@ -322,6 +401,7 @@ impl LintDescriptor {
             group: RuleGroup::Preview,
             fix: FixDescriptor::none(),
             analysis: AnalysisKind::TypeBased,
+            gap: None,
         }
     }
 
@@ -338,6 +418,7 @@ impl LintDescriptor {
             group: RuleGroup::Preview,
             fix: FixDescriptor::none(),
             analysis: AnalysisKind::TypeBasedCFG,
+            gap: None,
         }
     }
 
@@ -354,6 +435,7 @@ impl LintDescriptor {
             group: RuleGroup::Preview,
             fix: FixDescriptor::none(),
             analysis: AnalysisKind::CrossModule,
+            gap: None,
         }
     }
 }
@@ -547,9 +629,9 @@ pub const FAST_LINT_NAMES: &[&str] = &[
     "suspicious_overflow_check", // Promoted to stable
     "ignored_boolean_return",    // Typus hack pattern
     // Experimental lints (require --experimental flag)
-    "unchecked_coin_split",      // Name-based, high FP
-    "capability_leak",           // Name-based, needs type-based rewrite
-    "unchecked_withdrawal",      // Name-based, needs CFG-based rewrite
+    "unchecked_coin_split", // Name-based, high FP
+    "capability_leak",      // Name-based, needs type-based rewrite
+    "unchecked_withdrawal", // Name-based, needs CFG-based rewrite
     "pure_function_transfer",
     "unsafe_arithmetic",
 ];
@@ -710,12 +792,18 @@ impl LintRegistry {
             .with_rule(crate::rules::PublicRandomAccessLint)
             .with_rule(crate::rules::SuspiciousOverflowCheckLint) // Promoted to stable
             .with_rule(crate::rules::IgnoredBooleanReturnLint) // Typus hack pattern
+            .with_rule(crate::rules::DivideByZeroLiteralLint) // NEW: Type system gap lint
             // Preview lints (only included when preview mode enabled)
             .with_rule(crate::rules::PureFunctionTransferLint)
             .with_rule(crate::rules::UnsafeArithmeticLint)
             .with_rule(crate::rules::UncheckedCoinSplitLint)
             .with_rule(crate::rules::UncheckedWithdrawalLint) // NEW: Thala hack pattern
             .with_rule(crate::rules::CapabilityLeakLint) // NEW: MoveScanner pattern
+            // NEW: Type system gap lints (preview)
+            .with_rule(crate::rules::DestroyZeroUncheckedLint)
+            .with_rule(crate::rules::OtwPatternViolationLint)
+            .with_rule(crate::rules::DigestAsRandomnessLint)
+            .with_rule(crate::rules::FreshAddressReuseLint)
     }
 
     pub fn default_rules_filtered(
@@ -895,6 +983,22 @@ impl LintRegistry {
                 "unchecked_coin_split" => {
                     reg = reg.with_rule(crate::rules::UncheckedCoinSplitLint);
                 }
+                // NEW: Type system gap lints
+                "divide_by_zero_literal" => {
+                    reg = reg.with_rule(crate::rules::DivideByZeroLiteralLint);
+                }
+                "destroy_zero_unchecked" => {
+                    reg = reg.with_rule(crate::rules::DestroyZeroUncheckedLint);
+                }
+                "otw_pattern_violation" => {
+                    reg = reg.with_rule(crate::rules::OtwPatternViolationLint);
+                }
+                "digest_as_randomness" => {
+                    reg = reg.with_rule(crate::rules::DigestAsRandomnessLint);
+                }
+                "fresh_address_reuse" => {
+                    reg = reg.with_rule(crate::rules::FreshAddressReuseLint);
+                }
                 other => unreachable!("unexpected fast lint name: {other}"),
             }
         }
@@ -940,14 +1044,20 @@ fn get_lint_group(name: &str) -> RuleGroup {
         | "missing_witness_drop"
         | "public_random_access"
         | "suspicious_overflow_check"     // Promoted to stable
-        | "ignored_boolean_return" => RuleGroup::Stable,  // Typus hack pattern
+        | "ignored_boolean_return"        // Typus hack pattern
+        | "divide_by_zero_literal" => RuleGroup::Stable,  // NEW: Type system gap lint
 
         // Experimental lints (high FP risk, require --experimental flag)
-        | "unchecked_coin_split"      // Name-based, high FP
+        "unchecked_coin_split"      // Name-based, high FP
         | "capability_leak"           // Name-based, needs type-based rewrite
         | "unchecked_withdrawal"      // Name-based, needs CFG-based rewrite
         | "pure_function_transfer"
-        | "unsafe_arithmetic" => RuleGroup::Experimental,
+        | "unsafe_arithmetic"
+        // Type system gap lints (heuristic-based, need CFG for low FP)
+        | "destroy_zero_unchecked"    // Needs dataflow to track zero-checks
+        | "otw_pattern_violation"     // Needs better module name handling
+        | "digest_as_randomness"      // Keyword-based, needs taint analysis
+        | "fresh_address_reuse" => RuleGroup::Experimental,  // Needs usage tracking
 
         // Default to stable for unknown lints
         _ => RuleGroup::Stable,
