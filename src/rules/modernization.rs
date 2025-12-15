@@ -18,6 +18,57 @@ use crate::diagnostics::{Applicability, Suggestion};
 // EqualityInAssertLint - P1 (Near-Zero FP)
 // ============================================================================
 
+/// Generate assert_eq! fix from assert!(a == b, ...) pattern
+fn generate_assert_eq_fix(assert_text: &str, condition: &str) -> Option<Suggestion> {
+    // Split condition on == to get left and right operands
+    let parts: Vec<&str> = condition.split("==").collect();
+    if parts.len() != 2 {
+        return None;
+    }
+    
+    let left = parts[0].trim();
+    let right = parts[1].trim();
+    
+    // Extract everything after the condition (error code, message, etc.)
+    // Pattern: assert!(condition, error_code, message)
+    let start = assert_text.find("assert!")? + 7; // Skip "assert!"
+    let rest = assert_text.get(start..)?.trim_start();
+    let inner_start = rest.find('(')? + 1;
+    let inner_end = rest.rfind(')')?;
+    let full_args = rest.get(inner_start..inner_end)?;
+    
+    // Find first comma at depth 0 (after condition, before error args)
+    let mut depth: i32 = 0;
+    let mut comma_pos = None;
+    for (i, c) in full_args.char_indices() {
+        match c {
+            '(' | '[' | '{' => depth += 1,
+            ')' | ']' | '}' => depth = depth.saturating_sub(1),
+            ',' if depth == 0 => {
+                comma_pos = Some(i);
+                break;
+            }
+            _ => {}
+        }
+    }
+    
+    // Build replacement: assert_eq!(left, right, ...remaining_args)
+    let error_part = if let Some(pos) = comma_pos {
+        let after_comma = full_args.get(pos + 1..)?.trim();
+        format!(", {}", after_comma)
+    } else {
+        String::new()
+    };
+    
+    let replacement = format!("assert_eq!({}, {}{})", left, right, error_part);
+    
+    Some(Suggestion {
+        message: "Replace with assert_eq!".to_string(),
+        replacement,
+        applicability: Applicability::MachineApplicable,
+    })
+}
+
 pub struct EqualityInAssertLint;
 
 static EQUALITY_IN_ASSERT: LintDescriptor = LintDescriptor {
@@ -25,7 +76,7 @@ static EQUALITY_IN_ASSERT: LintDescriptor = LintDescriptor {
     category: LintCategory::Style,
     description: "Prefer `assert_eq!(a, b)` over `assert!(a == b)` for clearer failure messages",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Replace `assert!(a == b)` with `assert_eq!(a, b)`"),
     analysis: AnalysisKind::Syntactic,
 };
 
@@ -54,11 +105,19 @@ impl LintRule for EqualityInAssertLint {
             if let Some(condition) = extract_assert_condition(text) {
                 // Check if it's a simple equality comparison
                 if is_simple_equality_comparison(condition) {
-                    ctx.report_node(
-                        self.descriptor(),
-                        node,
-                        "Prefer `assert_eq!(a, b)` for clearer failure messages",
-                    );
+                    // Generate auto-fix: assert!(a == b, ...) -> assert_eq!(a, b, ...)
+                    let suggestion = generate_assert_eq_fix(text, condition);
+                    
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: "Prefer `assert_eq!(a, b)` for clearer failure messages".to_string(),
+                        help: Some("Use assert_eq! for better error messages".to_string()),
+                        suggestion,
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
             }
         });

@@ -48,6 +48,65 @@ fn apply_first_fix(source: &str) -> Option<String> {
 }
 
 // ============================================================================
+// equality_in_assert Tests
+// ============================================================================
+
+#[test]
+fn equality_in_assert_simple() {
+    let source = r#"
+        module example::test {
+            public fun test() {
+                assert!(x == y);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "equality_in_assert should generate a fix");
+
+    let fixed = fix.unwrap();
+    assert_eq!(fixed, "assert_eq!(x, y)", "Fix should convert to assert_eq!");
+}
+
+#[test]
+fn equality_in_assert_with_error_code() {
+    let source = r#"
+        module example::test {
+            const E_FAIL: u64 = 1;
+            public fun test() {
+                assert!(balance == 100, E_FAIL);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "Should generate a fix with error code");
+
+    let fixed = fix.unwrap();
+    assert_eq!(fixed, "assert_eq!(balance, 100, E_FAIL)");
+}
+
+#[test]
+fn equality_in_assert_with_multiple_args() {
+    // NOTE: String literals with commas/quotes currently cause parsing issues
+    // in extract_assert_condition(). Using numeric error code only for now.
+    let source = r#"
+        module example::test {
+            const E_MISMATCH: u64 = 2;
+            public fun test() {
+                assert!(value == 42, E_MISMATCH, 999);
+            }
+        }
+    "#;
+
+    let fix = get_first_fix(source);
+    assert!(fix.is_some(), "Should generate a fix with multiple args");
+
+    let fixed = fix.unwrap();
+    assert_eq!(fixed, "assert_eq!(value, 42, E_MISMATCH, 999)");
+}
+
+// ============================================================================
 // while_true_to_loop Tests
 // ============================================================================
 

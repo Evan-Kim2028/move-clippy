@@ -573,7 +573,6 @@ pub const SEMANTIC_LINT_NAMES: &[&str] = &[
     // Phase II (AbsInt) lints (require --mode full --preview)
     "phantom_capability",
     "unchecked_division_v2",
-    "unused_hot_potato",
     // Phase III (cross-module) lints (require --mode full --preview)
     "transitive_capability_leak",
     "flashloan_without_repay",

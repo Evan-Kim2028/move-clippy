@@ -1303,28 +1303,4 @@ mod tests {
         assert_eq!(DivState::join_value(&Validated, &Unknown), Unknown);
         assert_eq!(DivState::join_value(&Constant, &Validated), Validated);
     }
-
-    #[test]
-    fn test_hot_potato_value_join() {
-        use HotPotatoValue::*;
-        let loc = Loc::invalid();
-
-        // Pessimistic: if either path has an unconsumed hot potato, keep it
-        assert!(matches!(
-            HotPotatoState::join_value(&FreshHotPotato(loc), &NotHotPotato),
-            FreshHotPotato(_)
-        ));
-        assert!(matches!(
-            HotPotatoState::join_value(&NotHotPotato, &FreshHotPotato(loc)),
-            FreshHotPotato(_)
-        ));
-        assert!(matches!(
-            HotPotatoState::join_value(&FreshHotPotato(loc), &FreshHotPotato(loc)),
-            FreshHotPotato(_)
-        ));
-        assert!(matches!(
-            HotPotatoState::join_value(&NotHotPotato, &NotHotPotato),
-            NotHotPotato
-        ));
-    }
 }
