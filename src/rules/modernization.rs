@@ -815,8 +815,8 @@ pub struct UnsafeArithmeticLint;
 static UNSAFE_ARITHMETIC: LintDescriptor = LintDescriptor {
     name: "unsafe_arithmetic",
     category: LintCategory::Suspicious,
-    description: "[DEPRECATED] Arithmetic overflow detection - too noisy without dataflow/range analysis",
-    group: RuleGroup::Deprecated,
+    description: "Detect potentially unsafe arithmetic operations (experimental, requires dataflow analysis)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
 };

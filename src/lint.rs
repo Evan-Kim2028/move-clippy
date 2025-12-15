@@ -18,7 +18,6 @@ use tree_sitter::Node;
 /// 1. Stable - Production-ready, zero/near-zero false positives
 /// 2. Preview - Good detection but may have edge case FPs
 /// 3. Experimental - High FP risk, requires explicit opt-in
-/// 4. Deprecated - Scheduled for removal
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub enum RuleGroup {
     /// Battle-tested rules with minimal false positives.
@@ -34,10 +33,6 @@ pub enum RuleGroup {
     /// Require `--experimental` flag or `experimental = true` in config.
     /// These rules are useful for research but not recommended for CI.
     Experimental,
-
-    /// Rules scheduled for removal in the next major version.
-    /// Emit a warning when explicitly enabled.
-    Deprecated,
 }
 
 impl RuleGroup {
@@ -46,7 +41,6 @@ impl RuleGroup {
             RuleGroup::Stable => "stable",
             RuleGroup::Preview => "preview",
             RuleGroup::Experimental => "experimental",
-            RuleGroup::Deprecated => "deprecated",
         }
     }
 
@@ -61,7 +55,6 @@ impl RuleGroup {
             RuleGroup::Stable => None,
             RuleGroup::Preview => Some("--preview"),
             RuleGroup::Experimental => Some("--experimental"),
-            RuleGroup::Deprecated => None, // Always available but warns
         }
     }
 }
@@ -218,7 +211,7 @@ pub struct LintDescriptor {
     pub name: &'static str,
     pub category: LintCategory,
     pub description: &'static str,
-    /// Stability group: Stable, Preview, or Deprecated.
+    /// Stability group: Stable, Preview, or Experimental.
     pub group: RuleGroup,
     /// Auto-fix availability and safety classification.
     pub fix: FixDescriptor,
@@ -705,15 +698,12 @@ impl LintRegistry {
             .with_rule(crate::rules::EmptyVectorLiteralLint)
             .with_rule(crate::rules::TypedAbortCodeLint)
             // Security lints (audit-backed)
-            .with_rule(crate::rules::DroppableHotPotatoLint)
-            .with_rule(crate::rules::SharedCapabilityLint)
             .with_rule(crate::rules::StaleOraclePriceLint)
             .with_rule(crate::rules::SingleStepOwnershipTransferLint)
             .with_rule(crate::rules::MissingWitnessDropLint)
             .with_rule(crate::rules::PublicRandomAccessLint)
             .with_rule(crate::rules::SuspiciousOverflowCheckLint) // Promoted to stable
-            .with_rule(crate::rules::IgnoredBooleanReturnLint) // NEW: Typus hack pattern
-            .with_rule(crate::rules::SharedCapabilityObjectLint) // NEW: Typus hack pattern
+            .with_rule(crate::rules::IgnoredBooleanReturnLint) // Typus hack pattern
             // Preview lints (only included when preview mode enabled)
             .with_rule(crate::rules::PureFunctionTransferLint)
             .with_rule(crate::rules::UnsafeArithmeticLint)

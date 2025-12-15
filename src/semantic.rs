@@ -135,15 +135,6 @@ pub static FREEZING_CAPABILITY: LintDescriptor = LintDescriptor {
 ///     total / count
 /// }
 /// ```
-pub static UNCHECKED_DIVISION: LintDescriptor = LintDescriptor {
-    name: "unchecked_division",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Use unchecked_division_v2 (CFG-aware) instead - this version lacks dataflow analysis",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::TypeBased,
-};
-
 /// Detects important return values that are ignored.
 ///
 /// # Security References
@@ -360,31 +351,12 @@ pub static CAPABILITY_TRANSFER_V2: LintDescriptor = LintDescriptor {
 // - unused_hot_potato: Implemented in absint_lints.rs (CFG-aware dataflow analysis)
 
 // ============================================================================
-// Deprecated naming lints (stubs for backward compatibility)
 // ============================================================================
-
-pub static CAPABILITY_NAMING: LintDescriptor = LintDescriptor {
-    name: "capability_naming",
-    category: LintCategory::Naming,
-    description: "[DEPRECATED] Sui uses Cap suffix convention, not _cap - this lint was incorrect",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::TypeBased,
-};
-
-pub static EVENT_NAMING: LintDescriptor = LintDescriptor {
-    name: "event_naming",
-    category: LintCategory::Naming,
-    description: "[DEPRECATED] Sui events don't require _event suffix - this lint was incorrect",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::TypeBased,
-};
+// Lint Registry
+// ============================================================================
 
 static DESCRIPTORS: &[&LintDescriptor] = &[
     // Naming (type-based)
-    &CAPABILITY_NAMING,
-    &EVENT_NAMING,
     // Sui-delegated (production, type-based)
     &SHARE_OWNED,
     &SELF_TRANSFER,
@@ -399,7 +371,6 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &EVENT_EMIT_TYPE_SANITY,
     &SHARE_OWNED_AUTHORITY,
     // Security (preview, type-based)
-    &UNCHECKED_DIVISION,
     &UNUSED_RETURN_VALUE,
     &DROPPABLE_HOT_POTATO_V2,
     &CAPABILITY_TRANSFER_V2,
@@ -1089,8 +1060,7 @@ mod full {
                         push_diag(
                             out,
                             settings,
-                            &UNCHECKED_DIVISION,
-                            file,
+                                                    file,
                             span,
                             contents.as_ref(),
                             anchor,

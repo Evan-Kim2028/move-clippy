@@ -604,7 +604,7 @@ impl UnusedCapabilityVerifierAI<'_> {
                 }
             }
             // Pack expressions
-            E::Pack(_, _, fields) | E::PackVariant(_, _, _, _, _, fields) => {
+            E::Pack(_, _, fields) | E::PackVariant(_, _, _, fields) => {
                 for (_, _, e) in fields {
                     self.collect_cap_accesses_recursive(e, accesses);
                 }
@@ -1316,7 +1316,8 @@ impl SimpleAbsInt for UnusedHotPotatoVerifierAI<'_> {
                         continue;
                     }
 
-                    let var_name = var.value().as_str();
+                    let var_sym = var.value();
+                    let var_name = var_sym.as_str();
                     let msg = format!(
                         "Hot potato in `{}` created but not consumed. \
                          Hot potatoes must be returned, passed to a consuming function, or unpacked.",
@@ -1461,12 +1462,11 @@ impl UnusedHotPotatoVerifierAI<'_> {
     /// Check if a struct type is a hot potato (no abilities at all).
     fn is_hot_potato_struct(&self, struct_name: &DatatypeName) -> bool {
         // Look up the struct in program info to get abilities
-        // We need to find the module that defines this struct
-        let name_str = struct_name.value().as_str();
+        let name_symbol = struct_name.value();
 
         // Search through all modules for this struct definition
-        for (mident, minfo) in self.info.modules.key_cloned_iter() {
-            if let Some(sdef) = minfo.structs.get_(struct_name) {
+        for (_mident, minfo) in self.info.modules.key_cloned_iter() {
+            if let Some(sdef) = minfo.structs.get_(&name_symbol) {
                 let abilities = &sdef.abilities;
                 // Hot potato = no abilities
                 let is_hot_potato = !abilities.has_ability_(Ability_::Key)

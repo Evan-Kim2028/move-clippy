@@ -426,8 +426,8 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
 pub static UNCHECKED_COIN_SPLIT: LintDescriptor = LintDescriptor {
     name: "unchecked_coin_split",
     category: LintCategory::Security,
-    description: "[DEPRECATED] Sui's coin::split already panics on insufficient balance (runtime protection)",
-    group: RuleGroup::Deprecated,
+    description: "Detect potential coin::split without balance check (experimental, name-based)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
 };
@@ -919,8 +919,8 @@ fn get_enclosing_function_name<'a>(node: Node<'a>, source: &'a str) -> &'a str {
 pub static UNCHECKED_WITHDRAWAL: LintDescriptor = LintDescriptor {
     name: "unchecked_withdrawal",
     category: LintCategory::Security,
-    description: "[DEPRECATED] Name-based detection too noisy - CFG-based version planned for future",
-    group: RuleGroup::Deprecated,
+    description: "Detect potential withdrawal without balance check (experimental, name-based)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
 };
@@ -1019,8 +1019,8 @@ fn check_unchecked_withdrawal(node: Node, source: &str, ctx: &mut LintContext<'_
 pub static CAPABILITY_LEAK: LintDescriptor = LintDescriptor {
     name: "capability_leak",
     category: LintCategory::Security,
-    description: "[DEPRECATED] Name-based detection has FPs - type-based version planned",
-    group: RuleGroup::Deprecated,
+    description: "Detect capability leak via transfer (experimental, name-based)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
 };
@@ -1088,74 +1088,8 @@ fn check_capability_leak(node: Node, source: &str, ctx: &mut LintContext<'_>) {
 }
 
 // ============================================================================
-// Deprecated Lints (stubs for backward compatibility)
+// Tests
 // ============================================================================
-
-pub static DROPPABLE_HOT_POTATO: LintDescriptor = LintDescriptor {
-    name: "droppable_hot_potato",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Use droppable_hot_potato_v2 (type-based) - this version uses name heuristics",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-};
-
-pub struct DroppableHotPotatoLint;
-
-impl LintRule for DroppableHotPotatoLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &DROPPABLE_HOT_POTATO
-    }
-
-    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
-        // Deprecated: no-op stub for backward compatibility
-        // Use droppable_hot_potato_v2 (type-based) instead
-    }
-}
-
-pub static SHARED_CAPABILITY: LintDescriptor = LintDescriptor {
-    name: "shared_capability",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Use share_owned_authority (type-based) or Sui's share_owned lint",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-};
-
-pub struct SharedCapabilityLint;
-
-impl LintRule for SharedCapabilityLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &SHARED_CAPABILITY
-    }
-
-    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
-        // Deprecated: no-op stub for backward compatibility
-        // Use share_owned_authority (type-based) instead
-    }
-}
-
-pub static SHARED_CAPABILITY_OBJECT: LintDescriptor = LintDescriptor {
-    name: "shared_capability_object",
-    category: LintCategory::Security,
-    description: "[DEPRECATED] Use share_owned_authority (type-based) - this version uses name heuristics",
-    group: RuleGroup::Deprecated,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-};
-
-pub struct SharedCapabilityObjectLint;
-
-impl LintRule for SharedCapabilityObjectLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &SHARED_CAPABILITY_OBJECT
-    }
-
-    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
-        // Deprecated: no-op stub for backward compatibility
-        // Use share_owned_authority (type-based) instead
-    }
-}
 
 #[cfg(test)]
 mod tests {
