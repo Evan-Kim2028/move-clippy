@@ -7,15 +7,19 @@ use move_clippy::LintEngine;
 use move_clippy::fix::{TextEdit, apply_fix};
 use move_clippy::lint::{LintRegistry, LintSettings};
 
-/// Helper to lint source and extract the first fix suggestion.
+/// Helper to lint source and extract the first fix suggestion from a specific lint.
+/// Returns the first fix suggestion found, preferring non-module-syntax lints.
 fn get_first_fix(source: &str) -> Option<String> {
     let registry = LintRegistry::default_rules();
     let engine = LintEngine::new_with_settings(registry, LintSettings::default());
 
     let diagnostics = engine.lint_source(source).unwrap();
 
+    // Skip modern_module_syntax fixes as they interfere with other lint tests
+    // We want the fix from the lint being tested, not the module syntax rewrite
     diagnostics
         .into_iter()
+        .filter(|d| d.lint.name != "modern_module_syntax")
         .find_map(|d| d.suggestion.map(|s| s.replacement))
 }
 

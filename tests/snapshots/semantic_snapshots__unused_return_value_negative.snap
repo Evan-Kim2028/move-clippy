@@ -8,5 +8,3 @@ expression: output
 23:9 - modern_method_syntax: Prefer method syntax: `taken.destroy_zero(...)`
 32:13 - modern_method_syntax: Prefer method syntax: `coin.split(...)`
 33:13 - modern_method_syntax: Prefer method syntax: `ctx.sender(...)`
-14:9 - pure_function_transfer: Non-entry public functions should return objects instead of transferring internally. This makes the function more composable.
-31:9 - pure_function_transfer: Non-entry public functions should return objects instead of transferring internally. This makes the function more composable.

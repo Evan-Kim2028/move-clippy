@@ -25,7 +25,7 @@ fn merge_test_attributes_positive() {
     let src = include_str!("fixtures/merge_test_attributes/positive.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###"merge_test_attributes:3:1: warning: Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`"###);
+    assert_snapshot!(format_diags(&diags), @"merge_test_attributes:3:1: warning: Merge `#[test]` and `#[expected_failure]` into a single attribute list");
 }
 
 #[test]
