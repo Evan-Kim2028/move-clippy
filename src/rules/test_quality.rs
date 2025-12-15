@@ -301,7 +301,7 @@ static MERGE_TEST_ATTRIBUTES: LintDescriptor = LintDescriptor {
     category: LintCategory::TestQuality,
     description: "Merge stacked #[test] and #[expected_failure] into a single attribute list",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Merge into single attribute"),
     analysis: AnalysisKind::Syntactic,
 };
 
@@ -347,12 +347,30 @@ impl LintRule for MergeTestAttributesLint {
                 end: position_from_byte_offset(source, b_end),
             };
 
-            ctx.report_span_with_anchor(
-                self.descriptor(),
-                a_anchor,
+            // Generate the merged attribute
+            let replacement = "#[test, expected_failure]".to_string();
+
+            // Check for suppression
+            if crate::suppression::is_suppressed_at(source, a_anchor, self.descriptor().name) {
+                continue;
+            }
+
+            // Create diagnostic with auto-fix suggestion
+            let diagnostic = crate::diagnostics::Diagnostic {
+                lint: self.descriptor(),
+                level: ctx.settings().level_for(self.descriptor().name),
+                file: None,
                 span,
-                "Merge `#[test]` and `#[expected_failure]` into `#[test, expected_failure]`",
-            );
+                message: "Merge `#[test]` and `#[expected_failure]` into a single attribute list".to_string(),
+                help: Some("Combine into `#[test, expected_failure]`".to_string()),
+                suggestion: Some(crate::diagnostics::Suggestion {
+                    message: "Merge attributes".to_string(),
+                    replacement,
+                    applicability: crate::diagnostics::Applicability::MachineApplicable,
+                }),
+            };
+
+            ctx.report_diagnostic(diagnostic);
         }
     }
 }

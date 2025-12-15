@@ -695,7 +695,7 @@ static CONSTANT_NAMING: LintDescriptor = LintDescriptor {
     category: LintCategory::Naming,
     description: "Error constants should use EPascalCase; other constants should be SCREAMING_SNAKE_CASE",
     group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
+    fix: FixDescriptor::safe("Rename to correct case"),
     analysis: AnalysisKind::Syntactic,
 };
 
@@ -719,22 +719,56 @@ impl LintRule for ConstantNamingLint {
 
             match classify_constant(name) {
                 ConstantKind::Error if !is_valid_error_constant(name) => {
-                    ctx.report_node(
-                        self.descriptor(),
-                        name_node,
-                        format!(
-                            "Error constants should use EPascalCase (e.g. `ENotAuthorized`), found `{name}`"
-                        ),
+                    let suggested = to_e_pascal_case(name);
+                    let message = format!(
+                        "Error constants should use EPascalCase (e.g. `ENotAuthorized`), found `{name}`"
                     );
+                    
+                    // Check for suppression
+                    if crate::suppression::is_suppressed_at(source, name_node.start_byte(), self.descriptor().name) {
+                        return;
+                    }
+                    
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(name_node.range()),
+                        message: message.clone(),
+                        help: Some(format!("Consider renaming to `{}`", suggested)),
+                        suggestion: Some(Suggestion {
+                            message: format!("Rename to `{}`", suggested),
+                            replacement: suggested,
+                            applicability: Applicability::MaybeIncorrect, // Renaming affects all usages
+                        }),
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
                 ConstantKind::Regular if !is_valid_regular_constant(name) => {
-                    ctx.report_node(
-                        self.descriptor(),
-                        name_node,
-                        format!(
-                            "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `{name}`"
-                        ),
+                    let suggested = to_screaming_snake_case(name);
+                    let message = format!(
+                        "Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `{name}`"
                     );
+                    
+                    // Check for suppression
+                    if crate::suppression::is_suppressed_at(source, name_node.start_byte(), self.descriptor().name) {
+                        return;
+                    }
+                    
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: self.descriptor(),
+                        level: ctx.settings().level_for(self.descriptor().name),
+                        file: None,
+                        span: Span::from_range(name_node.range()),
+                        message: message.clone(),
+                        help: Some(format!("Consider renaming to `{}`", suggested)),
+                        suggestion: Some(Suggestion {
+                            message: format!("Rename to `{}`", suggested),
+                            replacement: suggested,
+                            applicability: Applicability::MaybeIncorrect, // Renaming affects all usages
+                        }),
+                    };
+                    ctx.report_diagnostic(diagnostic);
                 }
                 _ => {}
             }
@@ -876,6 +910,58 @@ fn is_valid_regular_constant(name: &str) -> bool {
     }
     name.chars()
         .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+}
+
+/// Convert a name to EPascalCase (e.g., E_NOT_AUTHORIZED -> ENotAuthorized)
+fn to_e_pascal_case(name: &str) -> String {
+    // If already starts with E, keep it; otherwise add it
+    let without_e = name.strip_prefix('E').or(Some(name)).unwrap();
+    
+    // Split on underscores and capitalize each word
+    let parts: Vec<String> = without_e
+        .split('_')
+        .filter(|s| !s.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => {
+                    first.to_uppercase().collect::<String>() + 
+                    &chars.as_str().to_lowercase()
+                }
+            }
+        })
+        .collect();
+    
+    format!("E{}", parts.join(""))
+}
+
+/// Convert a name to SCREAMING_SNAKE_CASE (e.g., maxSupply -> MAX_SUPPLY)
+fn to_screaming_snake_case(name: &str) -> String {
+    let mut result = String::new();
+    let mut prev_was_lowercase = false;
+    
+    for (i, ch) in name.chars().enumerate() {
+        if ch == '_' {
+            result.push('_');
+            prev_was_lowercase = false;
+        } else if ch.is_ascii_uppercase() {
+            // Add underscore before uppercase if previous was lowercase (camelCase boundary)
+            if i > 0 && prev_was_lowercase {
+                result.push('_');
+            }
+            result.push(ch);
+            prev_was_lowercase = false;
+        } else if ch.is_ascii_lowercase() {
+            result.push(ch.to_ascii_uppercase());
+            prev_was_lowercase = true;
+        } else {
+            result.push(ch);
+            prev_was_lowercase = false;
+        }
+    }
+    
+    result
 }
 
 fn trailing_return_expression(block: Node) -> Option<Node> {
