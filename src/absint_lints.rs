@@ -1010,9 +1010,10 @@ impl UncheckedDivisionVerifierAI<'_> {
         self.exit_blocks.contains(&lbl)
     }
 
-    fn is_root_source_loc(&self, context: &CFGContext, loc: &Loc) -> bool {
-        let _ = loc;
-        !context.is_dependency && context.is_root_package
+    fn is_root_source_loc(&self, context: &CFGContext, _loc: &Loc) -> bool {
+        // Check if this is root package code (not a dependency)
+        let is_dependency = context.env.package_config(context.package).is_dependency;
+        !is_dependency
     }
 
     fn debug_provenance_if_enabled(&self, context: &CFGContext, loc: &Loc) {
@@ -1021,15 +1022,16 @@ impl UncheckedDivisionVerifierAI<'_> {
         }
 
         let file_hash = loc.file_hash();
-        let file_path = context.files.file_path(&file_hash).to_string_lossy();
+        let file_path = context
+            .env
+            .mapped_files()
+            .file_path(&file_hash)
+            .to_string_lossy();
+        let is_dependency = context.env.package_config(context.package).is_dependency;
 
         eprintln!(
-            "[move-clippy][phase2][unchecked_division_v2] file={} package={:?} is_dependency={} is_root_package={} target_kind={:?}",
-            file_path,
-            context.package,
-            context.is_dependency,
-            context.is_root_package,
-            context.target_kind
+            "[move-clippy][phase2][unchecked_division_v2] file={} package={:?} is_dependency={}",
+            file_path, context.package, is_dependency,
         );
     }
 
@@ -1444,8 +1446,14 @@ impl SimpleAbsInt for DestroyZeroVerifierAI<'_> {
 }
 
 impl DestroyZeroVerifierAI<'_> {
-    fn is_root_source_loc(&self, loc: &Loc) -> bool {
-        !self.context.is_dependency && self.context.is_root_package
+    fn is_root_source_loc(&self, _loc: &Loc) -> bool {
+        // Check if this is root package code (not a dependency)
+        let is_dependency = self
+            .context
+            .env
+            .package_config(self.context.package)
+            .is_dependency;
+        !is_dependency
     }
 
     fn is_zero_checked(&self, state: &DestroyZeroState, expr: &Exp) -> bool {
@@ -1762,8 +1770,14 @@ impl SimpleAbsInt for FreshAddressReuseVerifierAI<'_> {
 }
 
 impl FreshAddressReuseVerifierAI<'_> {
-    fn is_root_source_loc(&self, loc: &Loc) -> bool {
-        !self.context.is_dependency && self.context.is_root_package
+    fn is_root_source_loc(&self, _loc: &Loc) -> bool {
+        // Check if this is root package code (not a dependency)
+        let is_dependency = self
+            .context
+            .env
+            .package_config(self.context.package)
+            .is_dependency;
+        !is_dependency
     }
 
     fn extract_var(&self, e: &Exp) -> Option<Var> {

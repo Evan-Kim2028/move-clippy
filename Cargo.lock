@@ -506,6 +506,7 @@ checksum = "34aa73646ffb006b8f5147f3dc182bd4bcb190227ce861fc4a4844bf8e3cb2c0"
 [[package]]
 name = "enum-compat-util"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "serde_yaml",
 ]
@@ -1033,14 +1034,17 @@ checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
 [[package]]
 name = "move-abstract-interpreter"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 
 [[package]]
 name = "move-abstract-stack"
 version = "0.0.1"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 
 [[package]]
 name = "move-binary-format"
 version = "0.0.3"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "enum-compat-util",
@@ -1056,10 +1060,12 @@ dependencies = [
 [[package]]
 name = "move-borrow-graph"
 version = "0.0.1"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 
 [[package]]
 name = "move-bytecode-source-map"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1075,6 +1081,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-utils"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "indexmap 2.12.1",
@@ -1087,6 +1094,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-verifier"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "move-abstract-interpreter",
  "move-abstract-stack",
@@ -1102,6 +1110,7 @@ dependencies = [
 [[package]]
 name = "move-bytecode-verifier-meter"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "move-binary-format",
  "move-core-types",
@@ -1138,6 +1147,7 @@ dependencies = [
 [[package]]
 name = "move-command-line-common"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1158,6 +1168,7 @@ dependencies = [
 [[package]]
 name = "move-compiler"
 version = "0.0.1"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1193,6 +1204,7 @@ dependencies = [
 [[package]]
 name = "move-core-types"
 version = "0.0.4"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1217,6 +1229,7 @@ dependencies = [
 [[package]]
 name = "move-coverage"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1241,6 +1254,7 @@ dependencies = [
 [[package]]
 name = "move-disassembler"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1261,6 +1275,7 @@ dependencies = [
 [[package]]
 name = "move-docgen"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "clap",
@@ -1283,6 +1298,7 @@ dependencies = [
 [[package]]
 name = "move-ir-to-bytecode"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "codespan-reporting",
@@ -1300,6 +1316,7 @@ dependencies = [
 [[package]]
 name = "move-ir-to-bytecode-syntax"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "hex",
@@ -1312,6 +1329,7 @@ dependencies = [
 [[package]]
 name = "move-ir-types"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "hex",
  "move-command-line-common",
@@ -1324,6 +1342,7 @@ dependencies = [
 [[package]]
 name = "move-model-2"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1347,6 +1366,7 @@ dependencies = [
 [[package]]
 name = "move-package"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "anyhow",
  "clap",
@@ -1382,6 +1402,7 @@ dependencies = [
 [[package]]
 name = "move-proc-macros"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "enum-compat-util",
  "quote",
@@ -1391,6 +1412,7 @@ dependencies = [
 [[package]]
 name = "move-regex-borrow-graph"
 version = "0.0.1"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "itertools 0.10.5",
  "move-binary-format",
@@ -1402,6 +1424,7 @@ dependencies = [
 [[package]]
 name = "move-symbol-pool"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "once_cell",
  "phf",
@@ -1411,6 +1434,7 @@ dependencies = [
 [[package]]
 name = "move-trace-format"
 version = "0.0.1"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "move-binary-format",
  "move-core-types",
@@ -1422,6 +1446,7 @@ dependencies = [
 [[package]]
 name = "move-vm-config"
 version = "0.1.0"
+source = "git+https://github.com/Evan-Kim2028/mysten-move-snapshot#405fd0d9300437f41f74eb9e062e0b06ac7967bf"
 dependencies = [
  "move-binary-format",
  "once_cell",

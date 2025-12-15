@@ -65,11 +65,11 @@ chrono = { version = "0.4", features = ["serde"] }
 sha2 = "0.10"
 hex = "0.4"
 
-# Optional semantic analysis via local Mysten Move snapshot
-# NOTE: We use the local `packages/sui/external-crates/move` checkout so we can patch compiler APIs.
-move-compiler = { path = "../sui/external-crates/move/crates/move-compiler", optional = true }
-move-ir-types = { path = "../sui/external-crates/move/crates/move-ir-types", optional = true }
-move-package = { path = "../sui/external-crates/move/crates/move-package", optional = true }
+# Optional semantic analysis via Mysten Move snapshot
+# NOTE: Uses GitHub snapshot of Move compiler from Sui monorepo
+move-compiler = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", optional = true }
+move-ir-types = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", optional = true }
+move-package = { git = "https://github.com/Evan-Kim2028/mysten-move-snapshot", optional = true }
 
 [features]
 default = ["telemetry"]
