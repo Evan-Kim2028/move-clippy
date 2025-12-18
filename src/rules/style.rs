@@ -116,7 +116,7 @@ fn check_abilities_order(
             }),
         };
 
-        ctx.report_diagnostic(diagnostic);
+        ctx.report_diagnostic_for_node(node, diagnostic);
     }
 }
 
@@ -422,7 +422,7 @@ impl LintRule for EmptyVectorLiteralLint {
                     }),
                 };
 
-                ctx.report_diagnostic(diagnostic);
+                ctx.report_diagnostic_for_node(node, diagnostic);
             }
         });
     }
@@ -654,7 +654,7 @@ impl LintRule for RedundantSelfImportLint {
                     return;
                 }
 
-                ctx.report_diagnostic(diagnostic);
+                ctx.report_diagnostic_for_node(node, diagnostic);
             }
         });
     }
@@ -756,7 +756,7 @@ impl LintRule for ConstantNamingLint {
                             applicability: Applicability::MaybeIncorrect, // Renaming affects all usages
                         }),
                     };
-                    ctx.report_diagnostic(diagnostic);
+                    ctx.report_diagnostic_for_node(name_node, diagnostic);
                 }
                 ConstantKind::Regular if !is_valid_regular_constant(name) => {
                     let suggested = to_screaming_snake_case(name);
@@ -786,7 +786,7 @@ impl LintRule for ConstantNamingLint {
                             applicability: Applicability::MaybeIncorrect, // Renaming affects all usages
                         }),
                     };
-                    ctx.report_diagnostic(diagnostic);
+                    ctx.report_diagnostic_for_node(name_node, diagnostic);
                 }
                 _ => {}
             }
@@ -876,7 +876,7 @@ impl LintRule for UnneededReturnLint {
                     }),
                 };
 
-                ctx.report_diagnostic(diagnostic);
+                ctx.report_diagnostic_for_node(ret, diagnostic);
             }
         });
     }

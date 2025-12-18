@@ -355,28 +355,18 @@ impl LintRule for MergeTestAttributesLint {
             // Generate the merged attribute
             let replacement = "#[test, expected_failure]".to_string();
 
-            // Check for suppression
-            if crate::suppression::is_suppressed_at(source, a_anchor, self.descriptor().name) {
-                continue;
-            }
-
-            // Create diagnostic with auto-fix suggestion
-            let diagnostic = crate::diagnostics::Diagnostic {
-                lint: self.descriptor(),
-                level: ctx.settings().level_for(self.descriptor().name),
-                file: None,
+            ctx.report_span_diagnostic_with_anchor(
+                self.descriptor(),
+                a_anchor,
                 span,
-                message: "Merge `#[test]` and `#[expected_failure]` into a single attribute list"
-                    .to_string(),
-                help: Some("Combine into `#[test, expected_failure]`".to_string()),
-                suggestion: Some(crate::diagnostics::Suggestion {
+                "Merge `#[test]` and `#[expected_failure]` into a single attribute list",
+                Some("Combine into `#[test, expected_failure]`".to_string()),
+                Some(crate::diagnostics::Suggestion {
                     message: "Merge attributes".to_string(),
                     replacement,
                     applicability: crate::diagnostics::Applicability::MachineApplicable,
                 }),
-            };
-
-            ctx.report_diagnostic(diagnostic);
+            );
         }
     }
 }
