@@ -1,0 +1,8 @@
+[package]
+name = "droppable_capability_pkg"
+edition = "2024"
+
+[addresses]
+droppable_capability_pkg = "0x0"
+sui = "0x2"
+

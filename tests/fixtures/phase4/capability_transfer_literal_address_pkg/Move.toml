@@ -1,0 +1,8 @@
+[package]
+name = "capability_transfer_literal_address_pkg"
+edition = "2024"
+
+[addresses]
+capability_transfer_literal_address_pkg = "0x0"
+sui = "0x2"
+

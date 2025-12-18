@@ -1,0 +1,8 @@
+[package]
+name = "shared_capability_object_pkg"
+edition = "2024"
+
+[addresses]
+shared_capability_object_pkg = "0x0"
+sui = "0x2"
+

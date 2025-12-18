@@ -1,0 +1,8 @@
+[package]
+name = "mut_key_param_missing_authority_pkg"
+edition = "2024"
+
+[addresses]
+mut_key_param_missing_authority_pkg = "0x0"
+sui = "0x2"
+

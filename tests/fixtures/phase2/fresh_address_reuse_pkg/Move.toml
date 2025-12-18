@@ -1,0 +1,7 @@
+[package]
+name = "fresh_address_reuse_pkg"
+edition = "2024"
+
+[addresses]
+fresh_address_reuse_pkg = "0x0"
+sui = "0x2"

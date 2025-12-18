@@ -1,0 +1,9 @@
+[package]
+name = "generic_type_witness_unused_pkg"
+edition = "2024"
+
+[addresses]
+generic_type_witness_unused_pkg = "0x0"
+sui = "0x2"
+std = "0x1"
+
