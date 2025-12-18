@@ -1,0 +1,5 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+droppable_capability:sources/droppable_capability.move:16: 19: warning: Struct `Droppable` is `key + store + drop` (and not `copy`). This allows a transferable authority/asset to be silently discarded, which commonly breaks invariants (e.g., obligations can be bypassed). Remove `drop` or redesign the type.

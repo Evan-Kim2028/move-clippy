@@ -3,16 +3,9 @@ source: tests/sui_lints.rs
 expression: output
 ---
 sources/main.move:43:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'Wrapper' also freezes all objects wrapped in its field 'inner'.
-sources/main.move:43:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'Wrapper' also freezes all objects wrapped in its field 'inner'.
-sources/main.move:47:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'IndirectWrapper' also freezes all objects wrapped in its field 's'.
 sources/main.move:47:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'IndirectWrapper' also freezes all objects wrapped in its field 's'.
 sources/main.move:52:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'Wrapper' also freezes all objects wrapped in its field 'inner'.
-sources/main.move:52:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'Wrapper' also freezes all objects wrapped in its field 'inner'.
-sources/main.move:56:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'GenWrapper' also freezes all objects wrapped in its field 'inner'.
 sources/main.move:56:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'GenWrapper' also freezes all objects wrapped in its field 'inner'.
 sources/main.move:60:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'IndirectGenWrapper' also freezes all objects wrapped in its field 'inner'.
-sources/main.move:60:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'IndirectGenWrapper' also freezes all objects wrapped in its field 'inner'.
 sources/main.move:64:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'Wrapper' also freezes all objects wrapped in its field 'inner'.
-sources/main.move:64:40: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'Wrapper' also freezes all objects wrapped in its field 'inner'.
-sources/main.move:64:73: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'Wrapper' also freezes all objects wrapped in its field 'inner'.
 sources/main.move:64:73: freeze_wrapped: attempting to freeze wrapped objects: Freezing an object of type 'Wrapper' also freezes all objects wrapped in its field 'inner'.

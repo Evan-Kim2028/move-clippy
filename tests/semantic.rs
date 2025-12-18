@@ -27,7 +27,8 @@ fn semantic_lints_fire_on_fixture_package() {
     .expect("source copy should succeed");
 
     // Verify lint_package runs without error
-    let result = move_clippy::semantic::lint_package(tmp.path(), &LintSettings::default(), false);
+    let result =
+        move_clippy::semantic::lint_package(tmp.path(), &LintSettings::default(), false, false);
     assert!(
         result.is_ok(),
         "semantic linting should succeed, got: {:?}",

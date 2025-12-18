@@ -1,0 +1,6 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+destroy_zero_unchecked_v2:sources/destroy_zero_unchecked.move:23: 9: warning: destroy_zero called without verifying value is zero first
+destroy_zero_unchecked_v2:sources/destroy_zero_unchecked.move:30: 9: warning: destroy_zero called without verifying value is zero first

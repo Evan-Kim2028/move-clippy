@@ -301,3 +301,72 @@ fn ecosystem_scallop_lend() {
     };
     test.run().expect("ecosystem test failed");
 }
+
+// ============================================================================
+// Interest Protocol Repos (https://github.com/interest-protocol)
+// ============================================================================
+
+/// Suitears - Production-ready Move modules (math, defi, governance, utils)
+/// https://github.com/interest-protocol/suitears
+#[test]
+#[ignore = "requires ecosystem-test-repos clone"]
+fn ecosystem_suitears() {
+    let test = EcosystemTest {
+        name: "suitears",
+        repo_path: "../ecosystem-test-repos/suitears",
+        lint_path: Some("contracts"),
+    };
+    test.run().expect("ecosystem test failed");
+}
+
+/// Memez.gg - Meme token infrastructure
+/// https://github.com/interest-protocol/memez-gg
+#[test]
+#[ignore = "requires ecosystem-test-repos clone"]
+fn ecosystem_memez_gg() {
+    let test = EcosystemTest {
+        name: "memez-gg",
+        repo_path: "../ecosystem-test-repos/memez-gg",
+        lint_path: None,
+    };
+    test.run().expect("ecosystem test failed");
+}
+
+/// Interest MVR - Collection of Sui libs for MVR
+/// https://github.com/interest-protocol/interest-mvr
+#[test]
+#[ignore = "requires ecosystem-test-repos clone"]
+fn ecosystem_interest_mvr() {
+    let test = EcosystemTest {
+        name: "interest-mvr",
+        repo_path: "../ecosystem-test-repos/interest-mvr",
+        lint_path: None,
+    };
+    test.run().expect("ecosystem test failed");
+}
+
+/// Move Interfaces - Interface patterns for Move
+/// https://github.com/interest-protocol/move-interfaces
+#[test]
+#[ignore = "requires ecosystem-test-repos clone"]
+fn ecosystem_move_interfaces() {
+    let test = EcosystemTest {
+        name: "move-interfaces",
+        repo_path: "../ecosystem-test-repos/move-interfaces",
+        lint_path: None,
+    };
+    test.run().expect("ecosystem test failed");
+}
+
+/// Some - Web3 Social Layer
+/// https://github.com/interest-protocol/some
+#[test]
+#[ignore = "requires ecosystem-test-repos clone"]
+fn ecosystem_some() {
+    let test = EcosystemTest {
+        name: "some",
+        repo_path: "../ecosystem-test-repos/some",
+        lint_path: None,
+    };
+    test.run().expect("ecosystem test failed");
+}

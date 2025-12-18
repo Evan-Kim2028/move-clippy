@@ -1,0 +1,9 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+unbounded_iteration_over_param_vector:sources/unbounded_iteration_over_param_vector.move:19: 9: warning: Loop in `positive` is bounded by `vector::length` of an entry parameter. Add an explicit maximum length check to prevent resource-exhaustion DoS.
+unbounded_iteration_over_param_vector:sources/unbounded_iteration_over_param_vector.move:34: 9: warning: Loop in `suppressed` is bounded by `vector::length` of an entry parameter. Add an explicit maximum length check to prevent resource-exhaustion DoS.
+unnecessary_public_entry:sources/unbounded_iteration_over_param_vector.move:17: 12: warning: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
+unnecessary_public_entry:sources/unbounded_iteration_over_param_vector.move:24: 12: warning: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
+unnecessary_public_entry:sources/unbounded_iteration_over_param_vector.move:32: 12: warning: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.

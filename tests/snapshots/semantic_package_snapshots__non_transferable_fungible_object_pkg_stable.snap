@@ -1,0 +1,7 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+non_transferable_fungible_object:sources/non_transferable_fungible_object.move:16: 19: warning: Struct `WeirdCopy` is `key` without `store` but has `copy` and/or `drop`. A `key`-without-`store` type is a legitimate non-transferable (soulbound) object pattern, but adding `copy`/`drop` makes it duplicable/discardable while still non-transferable. Remove `copy`/`drop` or redesign the type.
+non_transferable_fungible_object:sources/non_transferable_fungible_object.move:21: 19: warning: Struct `WeirdDrop` is `key` without `store` but has `copy` and/or `drop`. A `key`-without-`store` type is a legitimate non-transferable (soulbound) object pattern, but adding `copy`/`drop` makes it duplicable/discardable while still non-transferable. Remove `copy`/`drop` or redesign the type.
+non_transferable_fungible_object:sources/non_transferable_fungible_object.move:26: 19: warning: Struct `WeirdCopyDrop` is `key` without `store` but has `copy` and/or `drop`. A `key`-without-`store` type is a legitimate non-transferable (soulbound) object pattern, but adding `copy`/`drop` makes it duplicable/discardable while still non-transferable. Remove `copy`/`drop` or redesign the type.

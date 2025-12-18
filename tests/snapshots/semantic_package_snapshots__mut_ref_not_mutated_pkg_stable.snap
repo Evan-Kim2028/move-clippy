@@ -1,0 +1,15 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+droppable_hot_potato_v2:sources/mut_ref.move:23: 19: warning: Struct `Counter` has only `drop` ability (no copy/key/store). If this is a hot potato, remove `drop` to enforce consumption. If this is a witness, ensure it has no fields. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/
+droppable_hot_potato_v2:sources/mut_ref.move:27: 19: warning: Struct `Config` has only `drop` ability (no copy/key/store). If this is a hot potato, remove `drop` to enforce consumption. If this is a witness, ensure it has no fields. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/
+mut_ref_not_mutated:sources/mut_ref.move:38: 34: warning: Parameter `counter` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.
+mut_ref_not_mutated:sources/mut_ref.move:44: 34: warning: Parameter `_ctx` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.
+mut_ref_not_mutated:sources/mut_ref.move:50: 33: warning: Parameter `counter` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.
+mut_ref_not_mutated:sources/mut_ref.move:50: 56: warning: Parameter `config` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.
+mut_ref_not_mutated:sources/mut_ref.move:60: 38: warning: Parameter `counter` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.
+mut_ref_not_mutated:sources/mut_ref.move:73: 34: warning: Parameter `counter` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.
+mut_ref_not_mutated:sources/mut_ref.move:78: 37: warning: Parameter `config` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.
+mut_ref_not_mutated:sources/mut_ref.move:83: 34: warning: Parameter `counter` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.
+mut_ref_not_mutated:sources/mut_ref.move:93: 34: warning: Parameter `counter` is declared as `&mut` but is never mutated in the function body. Consider using `&` instead.

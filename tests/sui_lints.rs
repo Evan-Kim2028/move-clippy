@@ -74,8 +74,13 @@ fn run_fixture(name: &str) -> ClippyResult<String> {
         modernize_fixture(package_dir.path())?;
         write_manifest(package_dir.path(), "2024")?;
 
-        let diagnostics =
-            semantic::lint_package(package_dir.path(), &LintSettings::default(), false)?;
+        let mut diagnostics =
+            semantic::lint_package(package_dir.path(), &LintSettings::default(), false, false)?;
+
+        // These fixtures come from the upstream Move compiler's Sui linter suite. Keep the
+        // snapshots focused on delegated Sui lints (not move-clippy's additional semantic lints).
+        diagnostics.retain(|d| d.lint.description.starts_with("[Sui Linter]"));
+
         Ok(format_diagnostics(package_dir.path(), diagnostics))
     })
 }
