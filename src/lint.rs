@@ -1,6 +1,6 @@
-use crate::diagnostics::{Diagnostic, Span};
+use crate::annotations;
+use crate::diagnostics::{Diagnostic, Span, Suggestion};
 use crate::level::LintLevel;
-use crate::suppression;
 use anyhow::{Result, anyhow};
 use std::collections::{HashMap, HashSet};
 use tree_sitter::Node;
@@ -18,7 +18,7 @@ use tree_sitter::Node;
 /// 1. Stable - Production-ready, zero/near-zero false positives
 /// 2. Preview - Good detection but may have edge case FPs
 /// 3. Experimental - High FP risk, requires explicit opt-in
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
 pub enum RuleGroup {
     /// Battle-tested rules with minimal false positives.
     /// Enabled by default based on category.
@@ -75,7 +75,7 @@ impl RuleGroup {
 /// - `TypeBased` lints use the Move compiler's type checker
 /// - `TypeBasedCFG` lints use abstract interpretation (control flow)
 /// - `CrossModule` lints analyze call graphs across module boundaries
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
 pub enum AnalysisKind {
     /// Tree-sitter pattern matching (fast, no type info).
     /// Runs in `--mode fast` (default).
@@ -88,7 +88,7 @@ pub enum AnalysisKind {
     /// Requires `--mode full --preview`.
     TypeBasedCFG,
     /// Cross-module call graph analysis.
-    /// Requires `--mode full --preview`.
+    /// Requires `--mode full` and is typically gated by `--experimental` due to cost.
     CrossModule,
 }
 
@@ -109,7 +109,7 @@ impl AnalysisKind {
 
     /// Returns true if this analysis kind requires `--preview`.
     pub fn requires_preview(&self) -> bool {
-        matches!(self, AnalysisKind::TypeBasedCFG | AnalysisKind::CrossModule)
+        matches!(self, AnalysisKind::TypeBasedCFG)
     }
 }
 
@@ -187,7 +187,7 @@ impl FixDescriptor {
 // ============================================================================
 
 /// High-level categories used to group lints.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LintCategory {
     Style,
     Modernization,
@@ -251,6 +251,10 @@ pub enum TypeSystemGap {
     TemporalOrdering,
     /// Numeric operations without validation (e.g., division by zero)
     ArithmeticSafety,
+    /// DoS risks via unbounded execution or resource blowups
+    ResourceExhaustion,
+    /// Generic/type parameter misuse enabling type confusion
+    TypeConfusion,
     /// Style/convention issues (no security impact)
     StyleConvention,
 }
@@ -265,6 +269,8 @@ impl TypeSystemGap {
             TypeSystemGap::ApiMisuse => "api_misuse",
             TypeSystemGap::TemporalOrdering => "temporal_ordering",
             TypeSystemGap::ArithmeticSafety => "arithmetic_safety",
+            TypeSystemGap::ResourceExhaustion => "resource_exhaustion",
+            TypeSystemGap::TypeConfusion => "type_confusion",
             TypeSystemGap::StyleConvention => "style_convention",
         }
     }
@@ -278,6 +284,8 @@ impl TypeSystemGap {
             TypeSystemGap::ApiMisuse => "Incorrect stdlib function usage",
             TypeSystemGap::TemporalOrdering => "Operations in wrong sequence",
             TypeSystemGap::ArithmeticSafety => "Numeric operations without validation",
+            TypeSystemGap::ResourceExhaustion => "Unbounded execution / resource exhaustion",
+            TypeSystemGap::TypeConfusion => "Generic/type misuse (type confusion)",
             TypeSystemGap::StyleConvention => "Style/convention issues",
         }
     }
@@ -482,19 +490,144 @@ impl LintSettings {
     }
 }
 
+pub(crate) fn effective_level_for_scopes(
+    settings: &LintSettings,
+    lint: &'static LintDescriptor,
+    module_scope: &annotations::SuppressionScope,
+    item_scope: &annotations::SuppressionScope,
+) -> LintLevel {
+    let mut level = settings.level_for(lint.name);
+    let category = lint.category.as_str();
+
+    // Apply module directives (outer scope).
+    if module_scope.is_suppressed(lint.name) || module_scope.is_suppressed(category) {
+        level = LintLevel::Allow;
+    }
+    if module_scope.is_denied(lint.name) || module_scope.is_denied(category) {
+        level = LintLevel::Error;
+    }
+
+    // Apply item directives (inner scope; overrides module).
+    if item_scope.is_suppressed(lint.name) || item_scope.is_suppressed(category) {
+        level = LintLevel::Allow;
+    }
+    if item_scope.is_denied(lint.name) || item_scope.is_denied(category) {
+        level = LintLevel::Error;
+    }
+
+    // `expect` is a testing invariant: don't silently drop expected lints.
+    if level == LintLevel::Allow
+        && (module_scope.is_expected(lint.name)
+            || module_scope.is_expected(category)
+            || item_scope.is_expected(lint.name)
+            || item_scope.is_expected(category))
+    {
+        level = LintLevel::Warn;
+    }
+
+    level
+}
+
 /// Mutable context passed to lint rules while traversing a file.
 pub struct LintContext<'src> {
     source: &'src str,
     settings: LintSettings,
     diagnostics: Vec<Diagnostic>,
+    module_scope: annotations::SuppressionScope,
+    module_expected_unfired: HashSet<String>,
+    item_scope_cache: HashMap<usize, annotations::SuppressionScope>,
+    item_expected_unfired: HashMap<usize, HashSet<String>>,
 }
 
 impl<'src> LintContext<'src> {
     pub fn new(source: &'src str, settings: LintSettings) -> Self {
+        let module_scope = annotations::module_scope(source);
+        let module_expected_unfired = module_scope
+            .unfired_expectations()
+            .cloned()
+            .collect::<HashSet<_>>();
+
         Self {
             source,
             settings,
             diagnostics: Vec::new(),
+            module_scope,
+            module_expected_unfired,
+            item_scope_cache: HashMap::new(),
+            item_expected_unfired: HashMap::new(),
+        }
+    }
+
+    /// Precollect per-item directive scopes (notably `#[expect(...)]`) so they can be enforced
+    /// even when a scope produces zero diagnostics.
+    pub(crate) fn precollect_item_directives(&mut self, root: Node) {
+        let mut seen: HashSet<usize> = HashSet::new();
+        self.precollect_item_directives_rec(root, &mut seen);
+    }
+
+    fn precollect_item_directives_rec(&mut self, node: Node, seen: &mut HashSet<usize>) {
+        if is_directive_item_kind(node.kind()) {
+            let start = node.start_byte();
+            if seen.insert(start) {
+                self.ensure_item_scope_cached(start);
+            }
+        }
+
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            self.precollect_item_directives_rec(child, seen);
+        }
+    }
+
+    fn ensure_item_scope_cached(&mut self, anchor_start_byte: usize) {
+        if self.item_scope_cache.contains_key(&anchor_start_byte) {
+            return;
+        }
+
+        let scope = annotations::item_scope(self.source, anchor_start_byte);
+        let expected_unfired = scope
+            .unfired_expectations()
+            .cloned()
+            .collect::<HashSet<_>>();
+        if !expected_unfired.is_empty() {
+            self.item_expected_unfired
+                .insert(anchor_start_byte, expected_unfired);
+        }
+
+        self.item_scope_cache.insert(anchor_start_byte, scope);
+    }
+
+    fn effective_level_for_anchor(
+        &mut self,
+        lint: &'static LintDescriptor,
+        anchor_start_byte: usize,
+    ) -> LintLevel {
+        self.ensure_item_scope_cached(anchor_start_byte);
+        let item_scope = self
+            .item_scope_cache
+            .get(&anchor_start_byte)
+            .expect("item scope should be cached");
+
+        effective_level_for_scopes(&self.settings, lint, &self.module_scope, item_scope)
+    }
+
+    fn mark_expected_fired(&mut self, anchor_start_byte: usize, lint: &'static LintDescriptor) {
+        let lint_name = lint.name;
+        let category = lint.category.as_str();
+
+        if self.module_scope.is_expected(lint_name) {
+            self.module_expected_unfired.remove(lint_name);
+        }
+        if self.module_scope.is_expected(category) {
+            self.module_expected_unfired.remove(category);
+        }
+
+        if let Some(unfired) = self.item_expected_unfired.get_mut(&anchor_start_byte) {
+            unfired.remove(lint_name);
+            unfired.remove(category);
+            if unfired.is_empty() {
+                self.item_expected_unfired.remove(&anchor_start_byte);
+            }
         }
     }
 
@@ -504,7 +637,17 @@ impl<'src> LintContext<'src> {
         span: Span,
         message: impl Into<String>,
     ) {
-        let level = self.settings.level_for(lint.name);
+        let mut level = self.settings.level_for(lint.name);
+        if self.module_scope.is_suppressed(lint.name)
+            || self.module_scope.is_suppressed(lint.category.as_str())
+        {
+            level = LintLevel::Allow;
+        }
+        if self.module_scope.is_denied(lint.name)
+            || self.module_scope.is_denied(lint.category.as_str())
+        {
+            level = LintLevel::Error;
+        }
         if level == LintLevel::Allow {
             return;
         }
@@ -526,13 +669,9 @@ impl<'src> LintContext<'src> {
         node: Node,
         message: impl Into<String>,
     ) {
-        let level = self.settings.level_for(lint.name);
+        let anchor_start_byte = crate::suppression::anchor_item_start_byte(node);
+        let level = self.effective_level_for_anchor(lint, anchor_start_byte);
         if level == LintLevel::Allow {
-            return;
-        }
-
-        let anchor_start = suppression::anchor_item_start_byte(node);
-        if suppression::is_suppressed_at(self.source, anchor_start, lint.name) {
             return;
         }
 
@@ -545,11 +684,35 @@ impl<'src> LintContext<'src> {
             help: None,
             suggestion: None,
         });
+
+        self.mark_expected_fired(anchor_start_byte, lint);
     }
 
-    /// Report a diagnostic directly (for cases that need custom suggestions).
+    /// Report a diagnostic directly.
+    ///
+    /// Note: This does NOT apply suppression logic because it has no node/span
+    /// anchoring information. Prefer `report_node`, `report_node_diagnostic`, or
+    /// `report_diagnostic_for_node` for tree-sitter based lints.
     pub fn report_diagnostic(&mut self, diagnostic: Diagnostic) {
         self.diagnostics.push(diagnostic);
+    }
+
+    /// Report an already-constructed diagnostic, enforcing allow/suppression using `node`.
+    ///
+    /// This is intended for lints that build `Diagnostic` objects to include
+    /// suggestions and other fields, but still need to respect `#[allow]` and
+    /// `#![allow]` directives.
+    pub fn report_diagnostic_for_node(&mut self, node: Node, mut diagnostic: Diagnostic) {
+        let anchor_start_byte = crate::suppression::anchor_item_start_byte(node);
+        let level = self.effective_level_for_anchor(diagnostic.lint, anchor_start_byte);
+        if level == LintLevel::Allow {
+            return;
+        }
+
+        let lint_descriptor = diagnostic.lint;
+        diagnostic.level = level;
+        self.diagnostics.push(diagnostic);
+        self.mark_expected_fired(anchor_start_byte, lint_descriptor);
     }
 
     pub fn report_span_with_anchor(
@@ -559,12 +722,8 @@ impl<'src> LintContext<'src> {
         span: Span,
         message: impl Into<String>,
     ) {
-        let level = self.settings.level_for(lint.name);
+        let level = self.effective_level_for_anchor(lint, anchor_start_byte);
         if level == LintLevel::Allow {
-            return;
-        }
-
-        if suppression::is_suppressed_at(self.source, anchor_start_byte, lint.name) {
             return;
         }
 
@@ -577,6 +736,35 @@ impl<'src> LintContext<'src> {
             help: None,
             suggestion: None,
         });
+
+        self.mark_expected_fired(anchor_start_byte, lint);
+    }
+
+    pub fn report_span_diagnostic_with_anchor(
+        &mut self,
+        lint: &'static LintDescriptor,
+        anchor_start_byte: usize,
+        span: Span,
+        message: impl Into<String>,
+        help: Option<String>,
+        suggestion: Option<Suggestion>,
+    ) {
+        let level = self.effective_level_for_anchor(lint, anchor_start_byte);
+        if level == LintLevel::Allow {
+            return;
+        }
+
+        self.diagnostics.push(Diagnostic {
+            lint,
+            level,
+            file: None,
+            span,
+            message: message.into(),
+            help,
+            suggestion,
+        });
+
+        self.mark_expected_fired(anchor_start_byte, lint);
     }
 
     pub fn source(&self) -> &'src str {
@@ -587,89 +775,73 @@ impl<'src> LintContext<'src> {
         &self.settings
     }
 
-    pub fn into_diagnostics(self) -> Vec<Diagnostic> {
+    pub fn into_diagnostics(mut self) -> Vec<Diagnostic> {
+        self.append_unfulfilled_expectation_diagnostics();
         self.diagnostics
+    }
+
+    fn append_unfulfilled_expectation_diagnostics(&mut self) {
+        let mut module_unfired: Vec<String> = self.module_expected_unfired.drain().collect();
+        module_unfired.sort();
+        for lint_name in module_unfired {
+            self.diagnostics.push(Diagnostic {
+                lint: &UNFULFILLED_EXPECTATION,
+                level: LintLevel::Error,
+                file: None,
+                span: Span {
+                    start: crate::diagnostics::Position { row: 1, column: 1 },
+                    end: crate::diagnostics::Position { row: 1, column: 1 },
+                },
+                message: format!(
+                    "Expected `lint::{}` to produce a diagnostic in this file, but it did not",
+                    lint_name
+                ),
+                help: Some(
+                    "Remove the `#![expect(...)]` directive or adjust the code/lint so it triggers."
+                        .to_string(),
+                ),
+                suggestion: None,
+            });
+        }
+
+        let mut anchors: Vec<usize> = self.item_expected_unfired.keys().copied().collect();
+        anchors.sort();
+        for anchor in anchors {
+            let Some(mut unfired) = self.item_expected_unfired.remove(&anchor) else {
+                continue;
+            };
+
+            let mut lint_names: Vec<String> = unfired.drain().collect();
+            lint_names.sort();
+
+            let pos = position_from_byte_offset(self.source, anchor);
+            let span = Span {
+                start: pos,
+                end: pos,
+            };
+
+            for lint_name in lint_names {
+                self.diagnostics.push(Diagnostic {
+                    lint: &UNFULFILLED_EXPECTATION,
+                    level: LintLevel::Error,
+                    file: None,
+                    span,
+                    message: format!(
+                        "Expected `lint::{}` to produce a diagnostic in this scope, but it did not",
+                        lint_name
+                    ),
+                    help: Some(
+                        "Remove the `#[expect(...)]` directive or adjust the code/lint so it triggers."
+                            .to_string(),
+                    ),
+                    suggestion: None,
+                });
+            }
+        }
     }
 }
 
-/// Names of all built-in syntax-only lints.
-pub const FAST_LINT_NAMES: &[&str] = &[
-    // Existing lints
-    "modern_module_syntax",
-    "redundant_self_import",
-    "prefer_to_string",
-    "prefer_vector_methods",
-    "modern_method_syntax",
-    "merge_test_attributes",
-    "constant_naming",
-    "unneeded_return",
-    "unnecessary_public_entry",
-    "public_mut_tx_context",
-    "while_true_to_loop",
-    // P0 lints (Zero FP)
-    "abilities_order",
-    "doc_comment_style",
-    "explicit_self_assignments",
-    "test_abort_code",
-    "redundant_test_prefix",
-    // P1 lints (Near-zero FP)
-    "equality_in_assert",
-    "admin_cap_position",
-    "manual_option_check",
-    "manual_loop_iteration",
-    // Additional stable lints
-    "event_suffix",
-    "empty_vector_literal",
-    "typed_abort_code",
-    // Security lints (audit-backed, see docs/SECURITY_LINTS.md)
-    "stale_oracle_price",
-    "single_step_ownership_transfer",
-    "missing_witness_drop",
-    "public_random_access",
-    "suspicious_overflow_check", // Promoted to stable
-    "ignored_boolean_return",    // Typus hack pattern
-    // Experimental lints (require --experimental flag)
-    "unchecked_coin_split", // Name-based, high FP
-    "capability_leak",      // Name-based, needs type-based rewrite
-    "unchecked_withdrawal", // Name-based, needs CFG-based rewrite
-    "pure_function_transfer",
-    "unsafe_arithmetic",
-];
-
 const FULL_MODE_SUPERSEDED_LINTS: &[&str] = &["public_mut_tx_context", "unnecessary_public_entry"];
-
-/// Names of all built-in semantic lints.
-pub const SEMANTIC_LINT_NAMES: &[&str] = &[
-    "capability_naming",
-    "event_naming",
-    "getter_naming",
-    "share_owned",
-    "self_transfer",
-    "custom_state_change",
-    "coin_field",
-    "freeze_wrapped",
-    "collection_equality",
-    "public_random",
-    "missing_key",
-    "freezing_capability",
-    // Security semantic lints (audit-backed, see docs/SECURITY_LINTS.md)
-    "unfrozen_coin_metadata",
-    "unused_capability_param",
-    "unchecked_division",
-    "oracle_zero_price",
-    "unused_return_value",
-    "missing_access_control",
-    // Phase II (AbsInt) lints (require --mode full --preview)
-    "phantom_capability",
-    "unchecked_division_v2",
-    // Phase III (cross-module) lints (require --mode full --preview)
-    "transitive_capability_leak",
-    "flashloan_without_repay",
-];
-
-pub fn is_semantic_lint(name: &str) -> bool {
-    SEMANTIC_LINT_NAMES.contains(&name)
-}
 
 // ============================================================================
 // Lint Name Aliases (Backward Compatibility)
@@ -716,10 +888,9 @@ pub fn all_known_lints_with_aliases() -> HashSet<&'static str> {
 }
 
 pub fn all_known_lints() -> HashSet<&'static str> {
-    FAST_LINT_NAMES
-        .iter()
-        .copied()
-        .chain(SEMANTIC_LINT_NAMES.iter().copied())
+    crate::unified::unified_registry()
+        .descriptors()
+        .map(|d| d.name)
         .collect()
 }
 
@@ -757,53 +928,7 @@ impl LintRegistry {
     }
 
     pub fn default_rules() -> Self {
-        Self::new()
-            // Existing lints
-            .with_rule(crate::rules::ModernModuleSyntaxLint)
-            .with_rule(crate::rules::RedundantSelfImportLint)
-            .with_rule(crate::rules::PreferToStringLint)
-            .with_rule(crate::rules::PreferVectorMethodsLint)
-            .with_rule(crate::rules::ModernMethodSyntaxLint)
-            .with_rule(crate::rules::MergeTestAttributesLint)
-            .with_rule(crate::rules::ConstantNamingLint)
-            .with_rule(crate::rules::UnneededReturnLint)
-            .with_rule(crate::rules::UnnecessaryPublicEntryLint)
-            .with_rule(crate::rules::PublicMutTxContextLint)
-            .with_rule(crate::rules::WhileTrueToLoopLint)
-            // P0 lints
-            .with_rule(crate::rules::AbilitiesOrderLint)
-            .with_rule(crate::rules::DocCommentStyleLint)
-            .with_rule(crate::rules::ExplicitSelfAssignmentsLint)
-            .with_rule(crate::rules::TestAbortCodeLint)
-            .with_rule(crate::rules::RedundantTestPrefixLint)
-            // P1 lints
-            .with_rule(crate::rules::EqualityInAssertLint)
-            .with_rule(crate::rules::AdminCapPositionLint)
-            .with_rule(crate::rules::ManualOptionCheckLint)
-            .with_rule(crate::rules::ManualLoopIterationLint)
-            // Additional stable lints
-            .with_rule(crate::rules::EventSuffixLint)
-            .with_rule(crate::rules::EmptyVectorLiteralLint)
-            .with_rule(crate::rules::TypedAbortCodeLint)
-            // Security lints (audit-backed)
-            .with_rule(crate::rules::StaleOraclePriceLint)
-            .with_rule(crate::rules::SingleStepOwnershipTransferLint)
-            .with_rule(crate::rules::MissingWitnessDropLint)
-            .with_rule(crate::rules::PublicRandomAccessLint)
-            .with_rule(crate::rules::SuspiciousOverflowCheckLint) // Promoted to stable
-            .with_rule(crate::rules::IgnoredBooleanReturnLint) // Typus hack pattern
-            .with_rule(crate::rules::DivideByZeroLiteralLint) // NEW: Type system gap lint
-            // Preview lints (only included when preview mode enabled)
-            .with_rule(crate::rules::PureFunctionTransferLint)
-            .with_rule(crate::rules::UnsafeArithmeticLint)
-            .with_rule(crate::rules::UncheckedCoinSplitLint)
-            .with_rule(crate::rules::UncheckedWithdrawalLint) // NEW: Thala hack pattern
-            .with_rule(crate::rules::CapabilityLeakLint) // NEW: MoveScanner pattern
-            // NEW: Type system gap lints (preview)
-            .with_rule(crate::rules::DestroyZeroUncheckedLint)
-            .with_rule(crate::rules::OtwPatternViolationLint)
-            .with_rule(crate::rules::DigestAsRandomnessLint)
-            .with_rule(crate::rules::FreshAddressReuseLint)
+        crate::unified::build_syntactic_registry()
     }
 
     pub fn default_rules_filtered(
@@ -813,7 +938,6 @@ impl LintRegistry {
         full_mode: bool,
         preview: bool,
     ) -> Result<Self> {
-        // Note: experimental flag implies preview
         Self::default_rules_filtered_with_experimental(
             only, skip, disabled, full_mode, preview, false,
         )
@@ -828,7 +952,7 @@ impl LintRegistry {
         preview: bool,
         experimental: bool,
     ) -> Result<Self> {
-        // Experimental implies preview
+        // Note: experimental flag implies preview
         let effective_preview = preview || experimental;
         // Use the extended set that includes aliases for validation
         let known = all_known_lints_with_aliases();
@@ -854,8 +978,12 @@ impl LintRegistry {
         let disabled_set: HashSet<&str> = disabled_resolved.into_iter().collect();
 
         let mut reg = Self::new();
-        for name in FAST_LINT_NAMES {
-            if full_mode && FULL_MODE_SUPERSEDED_LINTS.iter().any(|l| l == name) {
+        let all = Self::default_rules();
+        for rule in all.rules {
+            let descriptor = rule.descriptor();
+            let name = descriptor.name;
+
+            if full_mode && FULL_MODE_SUPERSEDED_LINTS.iter().any(|l| *l == name) {
                 continue;
             }
             if let Some(ref only) = only_set
@@ -867,199 +995,55 @@ impl LintRegistry {
                 continue;
             }
 
-            // Get the rule's group and filter based on tier flags
-            let group = get_lint_group(name);
-            match group {
+            match descriptor.group {
                 RuleGroup::Preview if !effective_preview => continue,
                 RuleGroup::Experimental if !experimental => continue,
                 _ => {}
             }
 
-            match *name {
-                "modern_module_syntax" => {
-                    reg = reg.with_rule(crate::rules::ModernModuleSyntaxLint);
-                }
-                "redundant_self_import" => {
-                    reg = reg.with_rule(crate::rules::RedundantSelfImportLint);
-                }
-                "prefer_to_string" => {
-                    reg = reg.with_rule(crate::rules::PreferToStringLint);
-                }
-                "prefer_vector_methods" => {
-                    reg = reg.with_rule(crate::rules::PreferVectorMethodsLint);
-                }
-                "modern_method_syntax" => {
-                    reg = reg.with_rule(crate::rules::ModernMethodSyntaxLint);
-                }
-                "merge_test_attributes" => {
-                    reg = reg.with_rule(crate::rules::MergeTestAttributesLint);
-                }
-                "constant_naming" => {
-                    reg = reg.with_rule(crate::rules::ConstantNamingLint);
-                }
-                "unneeded_return" => {
-                    reg = reg.with_rule(crate::rules::UnneededReturnLint);
-                }
-                "unnecessary_public_entry" => {
-                    reg = reg.with_rule(crate::rules::UnnecessaryPublicEntryLint);
-                }
-                "public_mut_tx_context" => {
-                    reg = reg.with_rule(crate::rules::PublicMutTxContextLint);
-                }
-                "while_true_to_loop" => {
-                    reg = reg.with_rule(crate::rules::WhileTrueToLoopLint);
-                }
-                // P0 lints
-                "abilities_order" => {
-                    reg = reg.with_rule(crate::rules::AbilitiesOrderLint);
-                }
-                "doc_comment_style" => {
-                    reg = reg.with_rule(crate::rules::DocCommentStyleLint);
-                }
-                "explicit_self_assignments" => {
-                    reg = reg.with_rule(crate::rules::ExplicitSelfAssignmentsLint);
-                }
-                "test_abort_code" => {
-                    reg = reg.with_rule(crate::rules::TestAbortCodeLint);
-                }
-                "redundant_test_prefix" => {
-                    reg = reg.with_rule(crate::rules::RedundantTestPrefixLint);
-                }
-                // P1 lints
-                "equality_in_assert" => {
-                    reg = reg.with_rule(crate::rules::EqualityInAssertLint);
-                }
-                "admin_cap_position" => {
-                    reg = reg.with_rule(crate::rules::AdminCapPositionLint);
-                }
-                "manual_option_check" => {
-                    reg = reg.with_rule(crate::rules::ManualOptionCheckLint);
-                }
-                "manual_loop_iteration" => {
-                    reg = reg.with_rule(crate::rules::ManualLoopIterationLint);
-                }
-                // Additional stable lints
-                "event_suffix" => {
-                    reg = reg.with_rule(crate::rules::EventSuffixLint);
-                }
-                "empty_vector_literal" => {
-                    reg = reg.with_rule(crate::rules::EmptyVectorLiteralLint);
-                }
-                "typed_abort_code" => {
-                    reg = reg.with_rule(crate::rules::TypedAbortCodeLint);
-                }
-                // Security lints (audit-backed)
-                "stale_oracle_price" => {
-                    reg = reg.with_rule(crate::rules::StaleOraclePriceLint);
-                }
-                "single_step_ownership_transfer" => {
-                    reg = reg.with_rule(crate::rules::SingleStepOwnershipTransferLint);
-                }
-                "missing_witness_drop" => {
-                    reg = reg.with_rule(crate::rules::MissingWitnessDropLint);
-                }
-                "public_random_access" => {
-                    reg = reg.with_rule(crate::rules::PublicRandomAccessLint);
-                }
-                "suspicious_overflow_check" => {
-                    reg = reg.with_rule(crate::rules::SuspiciousOverflowCheckLint);
-                }
-                "ignored_boolean_return" => {
-                    reg = reg.with_rule(crate::rules::IgnoredBooleanReturnLint);
-                }
-                // Experimental lints
-                "pure_function_transfer" => {
-                    reg = reg.with_rule(crate::rules::PureFunctionTransferLint);
-                }
-                "unsafe_arithmetic" => {
-                    reg = reg.with_rule(crate::rules::UnsafeArithmeticLint);
-                }
-                "unchecked_withdrawal" => {
-                    reg = reg.with_rule(crate::rules::UncheckedWithdrawalLint);
-                }
-                "capability_leak" => {
-                    reg = reg.with_rule(crate::rules::CapabilityLeakLint);
-                }
-                "unchecked_coin_split" => {
-                    reg = reg.with_rule(crate::rules::UncheckedCoinSplitLint);
-                }
-                // NEW: Type system gap lints
-                "divide_by_zero_literal" => {
-                    reg = reg.with_rule(crate::rules::DivideByZeroLiteralLint);
-                }
-                "destroy_zero_unchecked" => {
-                    reg = reg.with_rule(crate::rules::DestroyZeroUncheckedLint);
-                }
-                "otw_pattern_violation" => {
-                    reg = reg.with_rule(crate::rules::OtwPatternViolationLint);
-                }
-                "digest_as_randomness" => {
-                    reg = reg.with_rule(crate::rules::DigestAsRandomnessLint);
-                }
-                "fresh_address_reuse" => {
-                    reg = reg.with_rule(crate::rules::FreshAddressReuseLint);
-                }
-                other => unreachable!("unexpected fast lint name: {other}"),
-            }
+            reg.rules.push(rule);
         }
 
         Ok(reg)
     }
 }
 
-/// Get the RuleGroup for a lint by name.
-/// This is used during filtering to determine if a lint should be enabled.
-fn get_lint_group(name: &str) -> RuleGroup {
-    // All P0 and P1 lints are stable
-    match name {
-        "modern_module_syntax"
-        | "redundant_self_import"
-        | "prefer_to_string"
-        | "prefer_vector_methods"
-        | "modern_method_syntax"
-        | "merge_test_attributes"
-        | "constant_naming"
-        | "unneeded_return"
-        | "unnecessary_public_entry"
-        | "public_mut_tx_context"
-        | "while_true_to_loop"
-        // P0 lints
-        | "abilities_order"
-        | "doc_comment_style"
-        | "explicit_self_assignments"
-        | "test_abort_code"
-        | "redundant_test_prefix"
-        // P1 lints
-        | "equality_in_assert"
-        | "admin_cap_position"
-        | "manual_option_check"
-        | "manual_loop_iteration"
-        // Additional stable lints
-        | "event_suffix"
-        | "empty_vector_literal"
-        | "typed_abort_code"
-        // Security lints (audit-backed, stable)
-        | "stale_oracle_price"
-        | "single_step_ownership_transfer"
-        | "missing_witness_drop"
-        | "public_random_access"
-        | "suspicious_overflow_check"     // Promoted to stable
-        | "ignored_boolean_return"        // Typus hack pattern
-        | "divide_by_zero_literal" => RuleGroup::Stable,  // NEW: Type system gap lint
+/// Descriptor for an unfulfilled expectation diagnostic.
+pub(crate) static UNFULFILLED_EXPECTATION: LintDescriptor = LintDescriptor {
+    name: "unfulfilled_expectation",
+    category: LintCategory::TestQuality,
+    description: "An #[expect(lint::...)] directive did not match any emitted diagnostics",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
+};
 
-        // Experimental lints (high FP risk, require --experimental flag)
-        "unchecked_coin_split"      // Name-based, high FP
-        | "capability_leak"           // Name-based, needs type-based rewrite
-        | "unchecked_withdrawal"      // Name-based, needs CFG-based rewrite
-        | "pure_function_transfer"
-        | "unsafe_arithmetic"
-        // Type system gap lints (heuristic-based, need CFG for low FP)
-        | "destroy_zero_unchecked"    // Needs dataflow to track zero-checks
-        | "otw_pattern_violation"     // Needs better module name handling
-        | "digest_as_randomness"      // Keyword-based, needs taint analysis
-        | "fresh_address_reuse" => RuleGroup::Experimental,  // Needs usage tracking
-
-        // Default to stable for unknown lints
-        _ => RuleGroup::Stable,
+pub(crate) fn is_directive_item_kind(kind: &str) -> bool {
+    if kind == "module_definition" || kind == "use_declaration" {
+        return true;
     }
+
+    // Be resilient to grammar naming differences.
+    kind.contains("function")
+        || kind.contains("struct")
+        || kind.contains("enum")
+        || kind.contains("constant")
+}
+
+fn position_from_byte_offset(source: &str, byte_offset: usize) -> crate::diagnostics::Position {
+    let mut row = 1usize;
+    let mut col = 1usize;
+
+    let end = byte_offset.min(source.len());
+    for b in source.as_bytes().iter().take(end) {
+        if *b == b'\n' {
+            row += 1;
+            col = 1;
+        } else {
+            col += 1;
+        }
+    }
+
+    crate::diagnostics::Position { row, column: col }
 }

@@ -84,6 +84,8 @@ impl LintEngine {
         let mut ctx = LintContext::new(source, self.settings.clone());
         let root = tree.root_node();
 
+        ctx.precollect_item_directives(root);
+
         for rule in self.registry.rules() {
             rule.check(root, source, &mut ctx);
         }

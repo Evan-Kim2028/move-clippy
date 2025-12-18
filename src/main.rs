@@ -6,14 +6,13 @@ use move_clippy::cli::{
 use move_clippy::config;
 use move_clippy::fixer;
 use move_clippy::level::LintLevel;
-use move_clippy::lint::{LintRegistry, LintSettings, is_semantic_lint};
+use move_clippy::lint::{LintRegistry, LintSettings, resolve_lint_alias};
 use move_clippy::semantic;
 use move_clippy::triage::{
     Finding, FindingFilter, ReportFormat, Severity, TriageDatabase, TriageStatus,
     generate_json_report, generate_markdown_report, generate_text_report,
 };
-#[cfg(feature = "full")]
-use move_clippy::{absint_lints, cross_module_lints};
+use move_clippy::unified::{self, LintPhase};
 use serde::Serialize;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -49,14 +48,8 @@ fn run() -> anyhow::Result<ExitCode> {
 }
 
 fn list_rules() {
-    let registry = LintRegistry::default_rules();
+    let registry = unified::unified_registry();
     let mut rules: Vec<_> = registry.descriptors().collect();
-    rules.extend(semantic::descriptors());
-    #[cfg(feature = "full")]
-    {
-        rules.extend(absint_lints::descriptors());
-        rules.extend(cross_module_lints::descriptors());
-    }
     rules.sort_by_key(|d| d.name);
 
     for d in rules {
@@ -77,13 +70,11 @@ fn list_rules() {
 }
 
 fn explain_rule(rule: &str) -> anyhow::Result<()> {
-    let registry = LintRegistry::default_rules();
-    let d = registry
-        .find_descriptor(rule)
-        .or_else(|| semantic::find_descriptor(rule));
-    let Some(d) = d else {
+    let canonical = resolve_lint_alias(rule);
+    let Some(lint) = unified::unified_registry().get(canonical) else {
         anyhow::bail!("unknown lint: {rule}");
     };
+    let d = lint.descriptor;
 
     println!("name: {}", d.name);
     println!("category: {}", d.category.as_str());
@@ -121,17 +112,17 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
         None => (Vec::new(), LintSettings::default(), args.preview),
     };
 
-    if matches!(args.mode, LintMode::Fast) && args.only.iter().any(|n| is_semantic_lint(n.as_str()))
-    {
+    let only_requires_full = args.only.iter().any(|n| {
+        unified::lint_phase(resolve_lint_alias(n.as_str()))
+            .is_some_and(|phase| phase != LintPhase::Syntactic)
+    });
+
+    if matches!(args.mode, LintMode::Fast) && only_requires_full {
         anyhow::bail!("semantic lints require --mode full");
     }
 
     let semantic_diags = if matches!(args.mode, LintMode::Full) {
-        let semantic_selected = if args.only.is_empty() {
-            true
-        } else {
-            args.only.iter().any(|n| is_semantic_lint(n.as_str()))
-        };
+        let semantic_selected = args.only.is_empty() || only_requires_full;
 
         if !semantic_selected {
             Vec::new()
@@ -144,7 +135,8 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
                 anyhow::bail!("--mode full requires either --package or at least one PATH");
             };
 
-            let mut diags = semantic::lint_package(pkg_hint, &settings, preview)?;
+            let mut diags =
+                semantic::lint_package(pkg_hint, &settings, preview, args.experimental)?;
 
             if !args.only.is_empty() {
                 let only_set: std::collections::HashSet<&str> =

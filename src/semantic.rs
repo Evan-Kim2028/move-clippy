@@ -188,6 +188,30 @@ pub static UNUSED_RETURN_VALUE: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::ApiMisuse),
 };
 
+/// Detects entry functions that return non-unit values.
+///
+/// In Sui Move, entry function return values are discarded by the runtime.
+pub static ENTRY_FUNCTION_RETURNS_VALUE: LintDescriptor = LintDescriptor {
+    name: "entry_function_returns_value",
+    category: LintCategory::Suspicious,
+    description: "Entry function returns a value that will be discarded by the runtime (type-based)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ValueFlow),
+};
+
+/// Detects entry functions that are private (unreachable from transactions).
+pub static PRIVATE_ENTRY_FUNCTION: LintDescriptor = LintDescriptor {
+    name: "private_entry_function",
+    category: LintCategory::Suspicious,
+    description: "Private entry function is unreachable - remove `entry` or make it public (type-based)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: None,
+};
+
 /// Detects emitting non-event-like types via `event::emit<T>(...)`.
 ///
 /// Event types should be `copy + drop` and should not have `key`.
@@ -223,7 +247,7 @@ pub static EVENT_EMIT_TYPE_SANITY: LintDescriptor = LintDescriptor {
 /// # False Positives
 ///
 /// This lint may fire on intentional shared state patterns (Kiosk, Pool objects).
-/// Use `#[allow(lint(share_owned_authority))]` to suppress for intentional cases.
+/// Use `#[ext(move_clippy(allow(share_owned_authority)))]` to suppress for intentional cases.
 ///
 /// # Example (Dangerous)
 ///
@@ -244,7 +268,7 @@ pub static EVENT_EMIT_TYPE_SANITY: LintDescriptor = LintDescriptor {
 /// }
 ///
 /// // Or intentional sharing with suppression
-/// #[allow(lint(share_owned_authority))]
+/// #[ext(move_clippy(allow(share_owned_authority)))]
 /// public fun init(ctx: &mut TxContext) {
 ///     let kiosk = Kiosk { id: object::new(ctx) };
 ///     transfer::share_object(kiosk);  // Intentional for marketplace
@@ -258,6 +282,73 @@ pub static SHARE_OWNED_AUTHORITY: LintDescriptor = LintDescriptor {
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::OwnershipViolation),
+};
+
+/// Detects sharing of capability-like objects.
+///
+/// This lint is intentionally conservative and currently tiered as Preview because
+/// ability patterns alone may over-approximate what developers consider a "capability".
+pub static SHARED_CAPABILITY_OBJECT: LintDescriptor = LintDescriptor {
+    name: "shared_capability_object",
+    category: LintCategory::Security,
+    description: "Capability-like object is shared - potential authorization leak (type-based, preview)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::CapabilityEscape),
+};
+
+/// Detects capability-like transfers to literal addresses.
+///
+/// Narrow by design: only flags literal recipients to keep false positives low.
+pub static CAPABILITY_TRANSFER_LITERAL_ADDRESS: LintDescriptor = LintDescriptor {
+    name: "capability_transfer_literal_address",
+    category: LintCategory::Security,
+    description: "Capability-like object transferred to a literal address - likely authorization leak (type-based, preview)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::CapabilityEscape),
+};
+
+/// Detects public entry functions that take `&mut` key objects without any explicit authority parameter.
+///
+/// This is a heuristic lint (Preview): the authority may be implicit (owned objects) or enforced via
+/// internal checks, so this is best used as an audit signal.
+pub static MUT_KEY_PARAM_MISSING_AUTHORITY: LintDescriptor = LintDescriptor {
+    name: "mut_key_param_missing_authority",
+    category: LintCategory::Security,
+    description: "Public entry takes &mut key object without explicit authority param (type-based, preview)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::CapabilityEscape),
+};
+
+/// Detects unbounded loops over a vector parameter.
+///
+/// In entry functions, vector parameters are attacker-controlled and can cause DoS via large loops.
+pub static UNBOUNDED_ITERATION_OVER_PARAM_VECTOR: LintDescriptor = LintDescriptor {
+    name: "unbounded_iteration_over_param_vector",
+    category: LintCategory::Security,
+    description: "Loop bound depends on vector parameter length - add explicit bound (type-based, preview)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ResourceExhaustion),
+};
+
+/// Detects generic functions that accept a `type_name::TypeName` witness but never use it.
+///
+/// If a witness parameter is unused, the function may be missing a type validation check.
+pub static GENERIC_TYPE_WITNESS_UNUSED: LintDescriptor = LintDescriptor {
+    name: "generic_type_witness_unused",
+    category: LintCategory::Security,
+    description: "Generic function takes TypeName witness but never uses it (type-based, experimental)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::TypeConfusion),
 };
 
 /// Detects structs that should be hot potatoes but have the `drop` ability.
@@ -317,6 +408,50 @@ pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::ApiMisuse),
 };
 
+/// Detects structs that are transferable (`key + store`) but also copyable.
+///
+/// A `key + store + copy` type is almost always a severe bug:
+/// - If it represents an asset, copyability defeats scarcity/accounting.
+/// - If it represents authority, copyability defeats uniqueness of privileges.
+pub static COPYABLE_CAPABILITY: LintDescriptor = LintDescriptor {
+    name: "copyable_capability",
+    category: LintCategory::Security,
+    description: "Struct is key+store+copy - transferable authority/asset can be duplicated (type-based, zero FP)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
+};
+
+/// Detects structs that are transferable (`key + store`) but also droppable.
+///
+/// A `key + store + drop` type can be silently discarded, which often breaks invariants:
+/// - capabilities can be destroyed to bypass obligations
+/// - assets can be dropped to evade repayment/accounting
+pub static DROPPABLE_CAPABILITY: LintDescriptor = LintDescriptor {
+    name: "droppable_capability",
+    category: LintCategory::Security,
+    description: "Struct is key+store+drop (and not copy) - transferable authority/asset can be silently discarded (type-based, zero FP)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
+};
+
+/// Detects objects that are non-transferable (`key` but not `store`) but behave like fungible values.
+///
+/// A `key` type without `store` is a legitimate “soulbound object” pattern. Adding `copy` or `drop`
+/// makes it incoherent: it becomes duplicable/discardable but still non-transferable.
+pub static NON_TRANSFERABLE_FUNGIBLE_OBJECT: LintDescriptor = LintDescriptor {
+    name: "non_transferable_fungible_object",
+    category: LintCategory::Security,
+    description: "Struct is key without store but has copy/drop - incoherent non-transferable fungible object (type-based, zero FP)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
+};
+
 /// Detects capability transfers to non-sender addresses.
 ///
 /// # Type System Grounding
@@ -369,6 +504,18 @@ pub static CAPABILITY_TRANSFER_V2: LintDescriptor = LintDescriptor {
 // Lint Registry
 // ============================================================================
 
+/// ## Extension Point: Adding a semantic (type-based) lint
+///
+/// Semantic lints run in `--mode full` and rely on Move compiler typing information.
+///
+/// To add a new semantic lint:
+/// 1. Define a `static LintDescriptor` in this module (pick `group` and `analysis` carefully).
+/// 2. Add the descriptor to `DESCRIPTORS` so it shows up in `list-rules` and generated docs.
+/// 3. Implement the check in the `full` module and call it from `full::lint_package` in the
+///    appropriate gating block (`Stable`, `Preview` behind `preview`, `Experimental` behind
+///    `experimental`).
+/// 4. Add a minimal fixture package under `tests/fixtures/` and a snapshot entry in
+///    `tests/semantic_package_snapshots.rs` (plus an allow/deny/expect test if directives matter).
 static DESCRIPTORS: &[&LintDescriptor] = &[
     // Naming (type-based)
     // Sui-delegated (production, type-based)
@@ -383,11 +530,21 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &FREEZING_CAPABILITY,
     // Security (stable, type-grounded)
     &EVENT_EMIT_TYPE_SANITY,
+    &ENTRY_FUNCTION_RETURNS_VALUE,
+    &PRIVATE_ENTRY_FUNCTION,
     &SHARE_OWNED_AUTHORITY,
+    &COPYABLE_CAPABILITY,
+    &DROPPABLE_CAPABILITY,
+    &NON_TRANSFERABLE_FUNGIBLE_OBJECT,
     // Security (preview, type-based)
+    &SHARED_CAPABILITY_OBJECT,
     &UNUSED_RETURN_VALUE,
     &DROPPABLE_HOT_POTATO_V2,
+    &CAPABILITY_TRANSFER_LITERAL_ADDRESS,
+    &MUT_KEY_PARAM_MISSING_AUTHORITY,
+    &UNBOUNDED_ITERATION_OVER_PARAM_VECTOR,
     &CAPABILITY_TRANSFER_V2,
+    &GENERIC_TYPE_WITNESS_UNUSED,
     // NOTE: phantom_capability is in absint_lints.rs (CFG-aware)
     // NOTE: unused_hot_potato requires dataflow analysis (future work)
 ];
@@ -428,8 +585,6 @@ mod full {
     fn descriptor_for_absint_diag(
         info: &move_compiler::diagnostics::codes::DiagnosticInfo,
     ) -> Option<&'static LintDescriptor> {
-        use crate::absint_lints::{PHANTOM_CAPABILITY, UNCHECKED_DIVISION_V2};
-
         // Only treat warnings emitted by our Phase II visitors as Phase II lints.
         //
         // AbsInt lints emit `custom("Lint", ..., category=50, code=...)` (see `absint_lints.rs`),
@@ -440,11 +595,7 @@ mod full {
             return None;
         }
 
-        match info.code() {
-            1 => Some(&PHANTOM_CAPABILITY),
-            2 => Some(&UNCHECKED_DIVISION_V2),
-            _ => None,
-        }
+        crate::absint_lints::descriptor_for_diag_code(info.code())
     }
 
     /// Run all semantic lints against the package rooted at `package_path`.
@@ -452,12 +603,17 @@ mod full {
         package_path: &Path,
         settings: &LintSettings,
         preview: bool,
+        experimental: bool,
     ) -> ClippyResult<Vec<Diagnostic>> {
         instrument_block!("semantic::lint_package", {
             let package_root = std::fs::canonicalize(package_path)?;
             let mut writer = Vec::<u8>::new();
             let mut build_config = BuildConfig::default();
             build_config.default_flavor = Some(Flavor::Sui);
+            // Isolate build artifacts per invocation so tests (and parallel runs) don't race by
+            // writing into the fixture/package directory.
+            let install_dir = tempfile::tempdir()?;
+            build_config.install_dir = Some(install_dir.path().to_path_buf());
             let resolved_graph =
                 build_config.resolution_graph_for_package(&package_root, None, &mut writer)?;
             let build_plan = BuildPlan::create(&resolved_graph)?;
@@ -465,10 +621,11 @@ mod full {
             let hook = SaveHook::new([SaveFlag::Typing, SaveFlag::TypingInfo]);
 
             // Get Phase II visitors (SimpleAbsInt-based lints)
-            let phase2_visitors: Vec<Visitor> = absint_lints::create_visitors(preview)
-                .into_iter()
-                .map(Visitor::AbsIntVisitor)
-                .collect();
+            let phase2_visitors: Vec<Visitor> =
+                absint_lints::create_visitors(preview, experimental)
+                    .into_iter()
+                    .map(Visitor::AbsIntVisitor)
+                    .collect();
 
             // IMPORTANT: avoid `compile_no_exit` here; it prints compiler diagnostics to stdout,
             // which corrupts `--format json` output for ecosystem validation. Instead, capture
@@ -529,15 +686,42 @@ mod full {
             // Type-based security lints
             lint_unchecked_division(&mut out, settings, &file_map, &typing_ast)?;
             lint_unused_return_value(&mut out, settings, &file_map, &typing_ast)?;
+            lint_entry_function_returns_value(&mut out, settings, &file_map, &typing_ast)?;
+            lint_private_entry_function(&mut out, settings, &file_map, &typing_ast)?;
             lint_event_emit_type_sanity(&mut out, settings, &file_map, &typing_ast)?;
             lint_share_owned_authority(&mut out, settings, &file_map, &typing_ast)?;
             lint_droppable_hot_potato_v2(&mut out, settings, &file_map, &typing_info)?;
+            lint_copyable_capability(&mut out, settings, &file_map, &typing_info)?;
+            lint_droppable_capability(&mut out, settings, &file_map, &typing_info)?;
+            lint_non_transferable_fungible_object(&mut out, settings, &file_map, &typing_info)?;
             // Phase 4 security lints (type-based, preview)
-            lint_capability_transfer_v2(&mut out, settings, &file_map, &typing_ast)?;
+            if preview {
+                lint_shared_capability_object(&mut out, settings, &file_map, &typing_ast)?;
+                lint_capability_transfer_literal_address(
+                    &mut out,
+                    settings,
+                    &file_map,
+                    &typing_ast,
+                )?;
+                lint_mut_key_param_missing_authority(&mut out, settings, &file_map, &typing_ast)?;
+                lint_unbounded_iteration_over_param_vector(
+                    &mut out,
+                    settings,
+                    &file_map,
+                    &typing_ast,
+                )?;
+            }
+            // Phase 4 security lints (type-based, experimental)
+            if experimental {
+                lint_capability_transfer_v2(&mut out, settings, &file_map, &typing_ast)?;
+                lint_generic_type_witness_unused(&mut out, settings, &file_map, &typing_ast)?;
+            }
             // Note: phantom_capability is implemented in absint_lints.rs (CFG-aware)
 
             // Phase III: Cross-module analysis lints (type-based)
-            lint_cross_module_lints(&mut out, settings, &file_map, &typing_ast, &typing_info)?;
+            if experimental {
+                lint_cross_module_lints(&mut out, settings, &file_map, &typing_ast, &typing_info)?;
+            }
 
             // Sui-delegated lints (type-based, production)
             lint_sui_visitors(&mut out, settings, &build_plan, &package_root)?;
@@ -546,6 +730,13 @@ mod full {
             if !preview {
                 out.retain(|d| d.lint.group != RuleGroup::Preview);
             }
+
+            // Filter Experimental-group diagnostics when experimental is disabled
+            if !experimental {
+                out.retain(|d| d.lint.group != RuleGroup::Experimental);
+            }
+
+            append_unfulfilled_expectations(&mut out, &typing_ast, &file_map);
 
             Ok(out)
         })
@@ -652,11 +843,11 @@ mod full {
         anchor_start: usize,
         message: String,
     ) {
-        let level = settings.level_for(lint.name);
+        let module_scope = crate::annotations::module_scope(source);
+        let item_scope = crate::annotations::item_scope(source, anchor_start);
+        let level =
+            crate::lint::effective_level_for_scopes(settings, lint, &module_scope, &item_scope);
         if level == LintLevel::Allow {
-            return;
-        }
-        if suppression::is_suppressed_at(source, anchor_start, lint.name) {
             return;
         }
 
@@ -669,6 +860,147 @@ mod full {
             help: None,
             suggestion: None,
         });
+    }
+
+    fn position_from_byte_offset(source: &str, byte_offset: usize) -> crate::diagnostics::Position {
+        let mut row = 1usize;
+        let mut col = 1usize;
+        let end = byte_offset.min(source.len());
+        for b in source.as_bytes().iter().take(end) {
+            if *b == b'\n' {
+                row += 1;
+                col = 1;
+            } else {
+                col += 1;
+            }
+        }
+        crate::diagnostics::Position { row, column: col }
+    }
+
+    fn append_unfulfilled_expectations(
+        out: &mut Vec<Diagnostic>,
+        prog: &T::Program,
+        file_map: &MappedFiles,
+    ) {
+        use std::collections::{BTreeMap, BTreeSet};
+
+        let mut fired: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+        for d in out.iter() {
+            let Some(file) = d.file.as_deref() else {
+                continue;
+            };
+            let entry = fired.entry(file.to_string()).or_default();
+            entry.insert(d.lint.name.to_string());
+            entry.insert(d.lint.category.as_str().to_string());
+        }
+
+        let mut module_expected: BTreeMap<String, (std::sync::Arc<str>, BTreeSet<String>)> =
+            BTreeMap::new();
+        let mut item_expected: BTreeMap<String, BTreeMap<usize, BTreeSet<String>>> =
+            BTreeMap::new();
+
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            // Collect module-level expectations once per file.
+            let loc = mdef.loc;
+            let Some((fname, contents)) = file_map.get(&loc.file_hash()) else {
+                continue;
+            };
+            let file = fname.as_str().to_string();
+            module_expected.entry(file.clone()).or_insert_with(|| {
+                let scope = crate::annotations::module_scope(contents.as_ref());
+                let expected: BTreeSet<String> = scope
+                    .unfired_expectations()
+                    .cloned()
+                    .collect::<BTreeSet<_>>();
+                (contents.clone(), expected)
+            });
+
+            // Collect item-level expectations for each function anchor.
+            for (_fname, fdef) in mdef.functions.key_cloned_iter() {
+                let anchor = fdef.loc.start() as usize;
+                let scope = crate::annotations::item_scope(contents.as_ref(), anchor);
+                let expected: BTreeSet<String> = scope
+                    .unfired_expectations()
+                    .cloned()
+                    .collect::<BTreeSet<_>>();
+                if expected.is_empty() {
+                    continue;
+                }
+                item_expected
+                    .entry(file.clone())
+                    .or_default()
+                    .entry(anchor)
+                    .or_default()
+                    .extend(expected);
+            }
+        }
+
+        // Module-level unfulfilled expectations: require any matching lint or category in file.
+        for (file, (contents, expected)) in module_expected {
+            let fired_set = fired.get(&file);
+            for name in expected {
+                let fired_any = fired_set.is_some_and(|s| s.contains(&name));
+                if fired_any {
+                    continue;
+                }
+
+                out.push(Diagnostic {
+                    lint: &crate::lint::UNFULFILLED_EXPECTATION,
+                    level: LintLevel::Error,
+                    file: Some(file.clone()),
+                    span: Span {
+                        start: crate::diagnostics::Position { row: 1, column: 1 },
+                        end: crate::diagnostics::Position { row: 1, column: 1 },
+                    },
+                    message: format!(
+                        "Expected `lint::{}` to produce a diagnostic in this file, but it did not",
+                        name
+                    ),
+                    help: Some(
+                        "Remove the `#![expect(...)]` directive or adjust the code/lint so it triggers."
+                            .to_string(),
+                    ),
+                    suggestion: None,
+                });
+            }
+
+            // Item-level unfulfilled expectations: approximate by file-level fired set.
+            if let Some(anchors) = item_expected.get(&file) {
+                let fired_set = fired.get(&file);
+                for (&anchor, names) in anchors {
+                    for name in names {
+                        let fired_any = fired_set.is_some_and(|s| s.contains(name));
+                        if fired_any {
+                            continue;
+                        }
+
+                        let pos = position_from_byte_offset(contents.as_ref(), anchor);
+                        out.push(Diagnostic {
+                            lint: &crate::lint::UNFULFILLED_EXPECTATION,
+                            level: LintLevel::Error,
+                            file: Some(file.clone()),
+                            span: Span { start: pos, end: pos },
+                            message: format!(
+                                "Expected `lint::{}` to produce a diagnostic in this scope, but it did not",
+                                name
+                            ),
+                            help: Some(
+                                "Remove the `#[expect(...)]` directive or adjust the code/lint so it triggers."
+                                    .to_string(),
+                            ),
+                            suggestion: None,
+                        });
+                    }
+                }
+            }
+        }
     }
 
     // =========================================================================
@@ -750,6 +1082,1083 @@ mod full {
                          See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/"
                     ),
                 );
+            }
+        }
+
+        Ok(())
+    }
+
+    // =========================================================================
+    // Ability Mistake Lints (type-based, zero FP)
+    // =========================================================================
+
+    fn lint_copyable_capability(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        info: &TypingProgramInfo,
+    ) -> Result<()> {
+        use crate::type_classifier::{has_copy_ability, has_key_ability, has_store_ability};
+
+        for (_mident, minfo) in info.modules.key_cloned_iter() {
+            match minfo.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (sname, sdef) in minfo.structs.key_cloned_iter() {
+                let abilities = &sdef.abilities;
+                let is_copyable_transferable = has_key_ability(abilities)
+                    && has_store_ability(abilities)
+                    && has_copy_ability(abilities);
+                if !is_copyable_transferable {
+                    continue;
+                }
+
+                let sym = sname.value();
+                let name_str = sym.as_str();
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &COPYABLE_CAPABILITY,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Struct `{name_str}` is `key + store + copy`. This creates a transferable, copyable authority/asset, \
+                         which is almost always a severe security bug (privileges or value can be duplicated). Remove `copy`."
+                    ),
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    fn lint_droppable_capability(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        info: &TypingProgramInfo,
+    ) -> Result<()> {
+        use crate::type_classifier::{
+            has_copy_ability, has_drop_ability, has_key_ability, has_store_ability,
+        };
+
+        for (_mident, minfo) in info.modules.key_cloned_iter() {
+            match minfo.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (sname, sdef) in minfo.structs.key_cloned_iter() {
+                let abilities = &sdef.abilities;
+                let is_droppable_transferable = has_key_ability(abilities)
+                    && has_store_ability(abilities)
+                    && has_drop_ability(abilities)
+                    && !has_copy_ability(abilities);
+                if !is_droppable_transferable {
+                    continue;
+                }
+
+                let sym = sname.value();
+                let name_str = sym.as_str();
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &DROPPABLE_CAPABILITY,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Struct `{name_str}` is `key + store + drop` (and not `copy`). This allows a transferable authority/asset to be silently discarded, \
+                         which commonly breaks invariants (e.g., obligations can be bypassed). Remove `drop` or redesign the type."
+                    ),
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    fn lint_non_transferable_fungible_object(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        info: &TypingProgramInfo,
+    ) -> Result<()> {
+        use crate::type_classifier::{
+            has_copy_ability, has_drop_ability, has_key_ability, has_store_ability,
+        };
+
+        for (_mident, minfo) in info.modules.key_cloned_iter() {
+            match minfo.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (sname, sdef) in minfo.structs.key_cloned_iter() {
+                let abilities = &sdef.abilities;
+                let is_non_transferable =
+                    has_key_ability(abilities) && !has_store_ability(abilities);
+                let is_copy_or_drop = has_copy_ability(abilities) || has_drop_ability(abilities);
+                if !(is_non_transferable && is_copy_or_drop) {
+                    continue;
+                }
+
+                let sym = sname.value();
+                let name_str = sym.as_str();
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &NON_TRANSFERABLE_FUNGIBLE_OBJECT,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Struct `{name_str}` is `key` without `store` but has `copy` and/or `drop`. \
+                         A `key`-without-`store` type is a legitimate non-transferable (soulbound) object pattern, \
+                         but adding `copy`/`drop` makes it duplicable/discardable while still non-transferable. \
+                         Remove `copy`/`drop` or redesign the type."
+                    ),
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    // =========================================================================
+    // Phase 4 Preview Lints (type-based)
+    // =========================================================================
+
+    fn exp_list_nth_single(args: &T::Exp, idx: usize) -> Option<&T::Exp> {
+        match &args.exp.value {
+            T::UnannotatedExp_::ExpList(items) => items.get(idx).and_then(|item| match item {
+                T::ExpListItem::Single(e, _) => Some(e),
+                _ => None,
+            }),
+            _ if idx == 0 => Some(args),
+            _ => None,
+        }
+    }
+
+    fn looks_like_address_literal(exp: &T::Exp) -> bool {
+        match &exp.exp.value {
+            T::UnannotatedExp_::Value(val) => {
+                matches!(val.value, move_compiler::expansion::ast::Value_::Address(_))
+            }
+            _ => false,
+        }
+    }
+
+    /// Detects sharing of capability-like objects via `transfer::share_object`.
+    fn lint_shared_capability_object(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        const SHARE_FUNCTIONS: &[(&str, &str)] = &[
+            ("transfer", "share_object"),
+            ("transfer", "public_share_object"),
+        ];
+
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
+                    continue;
+                };
+
+                for item in seq_items.iter() {
+                    check_shared_capability_in_seq_item(
+                        item,
+                        SHARE_FUNCTIONS,
+                        out,
+                        settings,
+                        file_map,
+                        fname.value().as_str(),
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn check_shared_capability_in_seq_item(
+        item: &T::SequenceItem,
+        share_fns: &[(&str, &str)],
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        match &item.value {
+            T::SequenceItem_::Seq(exp) => {
+                check_shared_capability_in_exp(exp, share_fns, out, settings, file_map, func_name);
+            }
+            T::SequenceItem_::Bind(_, _, exp) => {
+                check_shared_capability_in_exp(exp, share_fns, out, settings, file_map, func_name);
+            }
+            _ => {}
+        }
+    }
+
+    fn check_shared_capability_in_exp(
+        exp: &T::Exp,
+        share_fns: &[(&str, &str)],
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        use crate::type_classifier::is_capability_type_from_ty;
+
+        if let T::UnannotatedExp_::ModuleCall(call) = &exp.exp.value {
+            let module_sym = call.module.value.module.value();
+            let module_name = module_sym.as_str();
+            let call_sym = call.name.value();
+            let call_name = call_sym.as_str();
+
+            let is_share_call = share_fns
+                .iter()
+                .any(|(mod_pat, fn_pat)| module_name == *mod_pat && call_name == *fn_pat);
+
+            if is_share_call
+                && let Some(type_arg) = call.type_arguments.first()
+                && !is_coin_type(&type_arg.value)
+                && is_capability_type_from_ty(&type_arg.value)
+            {
+                let loc = exp.exp.loc;
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    return;
+                };
+                let anchor = loc.start() as usize;
+                let type_name = format_type(&type_arg.value);
+
+                push_diag(
+                    out,
+                    settings,
+                    &SHARED_CAPABILITY_OBJECT,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Sharing capability-like object `{type_name}` in `{func_name}` makes it publicly accessible. \
+                         Ensure this cannot be used to bypass authorization, or suppress if intentional."
+                    ),
+                );
+            }
+        }
+
+        match &exp.exp.value {
+            T::UnannotatedExp_::ModuleCall(call) => {
+                check_shared_capability_in_exp(
+                    &call.arguments,
+                    share_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            T::UnannotatedExp_::Block((_, seq_items)) => {
+                for item in seq_items.iter() {
+                    check_shared_capability_in_seq_item(
+                        item, share_fns, out, settings, file_map, func_name,
+                    );
+                }
+            }
+            T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
+                check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
+                check_shared_capability_in_exp(
+                    if_body, share_fns, out, settings, file_map, func_name,
+                );
+                if let Some(else_e) = else_body {
+                    check_shared_capability_in_exp(
+                        else_e, share_fns, out, settings, file_map, func_name,
+                    );
+                }
+            }
+            T::UnannotatedExp_::While(_, cond, body) => {
+                check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
+                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
+            }
+            T::UnannotatedExp_::Loop { body, .. } => {
+                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
+            }
+            _ => {}
+        }
+    }
+
+    /// Detects capability-like transfers to literal addresses.
+    fn lint_capability_transfer_literal_address(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        const TRANSFER_FUNCTIONS: &[(&str, &str)] =
+            &[("transfer", "transfer"), ("transfer", "public_transfer")];
+
+        for (mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
+                    continue;
+                };
+
+                for item in seq_items.iter() {
+                    check_capability_transfer_literal_in_seq_item(
+                        item,
+                        TRANSFER_FUNCTIONS,
+                        out,
+                        settings,
+                        file_map,
+                        fname.value().as_str(),
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn check_capability_transfer_literal_in_seq_item(
+        item: &T::SequenceItem,
+        transfer_fns: &[(&str, &str)],
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        match &item.value {
+            T::SequenceItem_::Seq(exp) => {
+                check_capability_transfer_literal_in_exp(
+                    exp,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            T::SequenceItem_::Bind(_, _, exp) => {
+                check_capability_transfer_literal_in_exp(
+                    exp,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            _ => {}
+        }
+    }
+
+    fn check_capability_transfer_literal_in_exp(
+        exp: &T::Exp,
+        transfer_fns: &[(&str, &str)],
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        use crate::type_classifier::is_capability_type_from_ty;
+
+        if let T::UnannotatedExp_::ModuleCall(call) = &exp.exp.value {
+            let module_sym = call.module.value.module.value();
+            let module_name = module_sym.as_str();
+            let call_sym = call.name.value();
+            let call_name = call_sym.as_str();
+
+            let is_transfer_call = transfer_fns
+                .iter()
+                .any(|(mod_pat, fn_pat)| module_name == *mod_pat && call_name == *fn_pat);
+
+            if is_transfer_call
+                && let Some(type_arg) = call.type_arguments.first()
+                && !is_coin_type(&type_arg.value)
+                && is_capability_type_from_ty(&type_arg.value)
+                && let Some(recipient) = exp_list_nth_single(&call.arguments, 1)
+                && looks_like_address_literal(recipient)
+            {
+                let loc = exp.exp.loc;
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    return;
+                };
+                let anchor = loc.start() as usize;
+                let type_name = format_type(&type_arg.value);
+
+                push_diag(
+                    out,
+                    settings,
+                    &CAPABILITY_TRANSFER_LITERAL_ADDRESS,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Capability-like object `{type_name}` transferred to a literal address in `{func_name}`. \
+                         Prefer transferring to tx_context::sender(ctx) or otherwise prove recipient authorization."
+                    ),
+                );
+            }
+        }
+
+        match &exp.exp.value {
+            T::UnannotatedExp_::ModuleCall(call) => {
+                check_capability_transfer_literal_in_exp(
+                    &call.arguments,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            T::UnannotatedExp_::Block((_, seq_items)) => {
+                for item in seq_items.iter() {
+                    check_capability_transfer_literal_in_seq_item(
+                        item,
+                        transfer_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
+                }
+            }
+            T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
+                check_capability_transfer_literal_in_exp(
+                    cond,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                check_capability_transfer_literal_in_exp(
+                    if_body,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                if let Some(else_e) = else_body {
+                    check_capability_transfer_literal_in_exp(
+                        else_e,
+                        transfer_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
+                }
+            }
+            T::UnannotatedExp_::While(_, cond, body) => {
+                check_capability_transfer_literal_in_exp(
+                    cond,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                check_capability_transfer_literal_in_exp(
+                    body,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            T::UnannotatedExp_::Loop { body, .. } => {
+                check_capability_transfer_literal_in_exp(
+                    body,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            _ => {}
+        }
+    }
+
+    fn is_public_entry_function(fdef: &T::Function) -> bool {
+        fdef.entry.is_some()
+            && matches!(
+                fdef.visibility,
+                move_compiler::expansion::ast::Visibility::Public(_)
+            )
+    }
+
+    fn strip_refs(ty: &N::Type_) -> &N::Type_ {
+        match ty {
+            N::Type_::Ref(_, inner) => strip_refs(&inner.value),
+            other => other,
+        }
+    }
+
+    fn is_signer_type(ty: &N::Type_) -> bool {
+        match strip_refs(ty) {
+            N::Type_::Apply(_, tname, _) => matches!(
+                &tname.value,
+                N::TypeName_::Builtin(b) if matches!(b.value, N::BuiltinTypeName_::Signer)
+            ),
+            _ => false,
+        }
+    }
+
+    fn is_vector_type(ty: &N::Type_) -> bool {
+        match strip_refs(ty) {
+            N::Type_::Apply(_, tname, _) => matches!(
+                &tname.value,
+                N::TypeName_::Builtin(b) if matches!(b.value, N::BuiltinTypeName_::Vector)
+            ),
+            _ => false,
+        }
+    }
+
+    fn is_mut_ref_to_key_type(ty: &N::Type_) -> bool {
+        let N::Type_::Ref(is_mut, inner) = ty else {
+            return false;
+        };
+        if !*is_mut {
+            return false;
+        }
+        type_classifier::abilities_of_type(&inner.value)
+            .is_some_and(|a| type_classifier::has_key_ability(&a))
+    }
+
+    fn is_capability_like_type(ty: &N::Type_) -> bool {
+        let inner = strip_refs(ty);
+        !is_coin_type(inner) && type_classifier::is_capability_type_from_ty(inner)
+    }
+
+    /// Detects public entry functions that take `&mut` key objects without any explicit authority parameter.
+    fn lint_mut_key_param_missing_authority(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                if !is_public_entry_function(fdef) {
+                    continue;
+                }
+
+                let mut mut_key_param_ids: std::collections::BTreeSet<u16> =
+                    std::collections::BTreeSet::new();
+                let mut first_mut_key_type: Option<String> = None;
+
+                for (_mut_, var, ty) in &fdef.signature.parameters {
+                    if is_mut_ref_to_key_type(&ty.value) {
+                        mut_key_param_ids.insert(var.value.id);
+                        if first_mut_key_type.is_none() {
+                            let inner = match &ty.value {
+                                N::Type_::Ref(_, inner) => &inner.value,
+                                other => other,
+                            };
+                            first_mut_key_type = Some(format_type(inner));
+                        }
+                    }
+                }
+
+                if mut_key_param_ids.is_empty() {
+                    continue;
+                }
+
+                let has_explicit_authority = fdef.signature.parameters.iter().any(|(_m, v, t)| {
+                    if mut_key_param_ids.contains(&v.value.id) {
+                        return false;
+                    }
+                    is_signer_type(&t.value) || is_capability_like_type(&t.value)
+                });
+
+                if has_explicit_authority {
+                    continue;
+                }
+
+                let loc = fdef.loc;
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+                let key_ty = first_mut_key_type.unwrap_or_else(|| "<key object>".to_string());
+                let fn_name_sym = fname.value();
+                let fn_name = fn_name_sym.as_str();
+
+                push_diag(
+                    out,
+                    settings,
+                    &MUT_KEY_PARAM_MISSING_AUTHORITY,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Public entry `{fn_name}` mutates `{key_ty}` by `&mut` but takes no explicit authority parameter. \
+                         If this object can be passed as shared input, add an explicit capability check or sender validation."
+                    ),
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    fn extract_local_var_id(exp: &T::Exp) -> Option<u16> {
+        match &exp.exp.value {
+            T::UnannotatedExp_::Use(v) => Some(v.value.id),
+            T::UnannotatedExp_::Copy { var, .. } => Some(var.value.id),
+            T::UnannotatedExp_::Move { var, .. } => Some(var.value.id),
+            T::UnannotatedExp_::BorrowLocal(_, v) => Some(v.value.id),
+            T::UnannotatedExp_::TempBorrow(_, inner) => extract_local_var_id(inner),
+            T::UnannotatedExp_::Dereference(inner) => extract_local_var_id(inner),
+            T::UnannotatedExp_::Cast(inner, _) => extract_local_var_id(inner),
+            T::UnannotatedExp_::Annotate(inner, _) => extract_local_var_id(inner),
+            T::UnannotatedExp_::Borrow(_, base, _) => extract_local_var_id(base),
+            _ => None,
+        }
+    }
+
+    fn vector_length_param_id(
+        exp: &T::Exp,
+        vector_param_ids: &std::collections::BTreeSet<u16>,
+    ) -> Option<u16> {
+        let T::UnannotatedExp_::ModuleCall(call) = &exp.exp.value else {
+            return None;
+        };
+        let module_sym = call.module.value.module.value();
+        let module_name = module_sym.as_str();
+        let call_sym = call.name.value();
+        let call_name = call_sym.as_str();
+
+        if module_name != "vector" || call_name != "length" {
+            return None;
+        }
+
+        let arg0 = exp_list_nth_single(&call.arguments, 0)?;
+        let var_id = extract_local_var_id(arg0)?;
+        if vector_param_ids.contains(&var_id) {
+            Some(var_id)
+        } else {
+            None
+        }
+    }
+
+    fn is_vector_length_bound(
+        cond: &T::Exp,
+        vector_param_ids: &std::collections::BTreeSet<u16>,
+    ) -> bool {
+        let T::UnannotatedExp_::BinopExp(left, op, _ty, right) = &cond.exp.value else {
+            return false;
+        };
+        let op_str = format!("{:?}", op);
+        let is_cmp = op_str.contains("Lt")
+            || op_str.contains("Le")
+            || op_str.contains("Gt")
+            || op_str.contains("Ge");
+        if !is_cmp {
+            return false;
+        }
+
+        vector_length_param_id(right, vector_param_ids).is_some()
+            || vector_length_param_id(left, vector_param_ids).is_some()
+    }
+
+    fn check_unbounded_iter_in_seq_item(
+        item: &T::SequenceItem,
+        vector_param_ids: &std::collections::BTreeSet<u16>,
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        match &item.value {
+            T::SequenceItem_::Seq(exp) => {
+                check_unbounded_iter_in_exp(
+                    exp,
+                    vector_param_ids,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            T::SequenceItem_::Bind(_, _, exp) => {
+                check_unbounded_iter_in_exp(
+                    exp,
+                    vector_param_ids,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            _ => {}
+        }
+    }
+
+    fn check_unbounded_iter_in_exp(
+        exp: &T::Exp,
+        vector_param_ids: &std::collections::BTreeSet<u16>,
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        func_name: &str,
+    ) {
+        if let T::UnannotatedExp_::While(_, cond, body) = &exp.exp.value {
+            if is_vector_length_bound(cond, vector_param_ids) {
+                let loc = exp.exp.loc;
+                if let Some((file, span, contents)) = diag_from_loc(file_map, &loc) {
+                    let anchor = loc.start() as usize;
+                    push_diag(
+                        out,
+                        settings,
+                        &UNBOUNDED_ITERATION_OVER_PARAM_VECTOR,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Loop in `{func_name}` is bounded by `vector::length` of an entry parameter. \
+                             Add an explicit maximum length check to prevent resource-exhaustion DoS."
+                        ),
+                    );
+                }
+            }
+            check_unbounded_iter_in_exp(cond, vector_param_ids, out, settings, file_map, func_name);
+            check_unbounded_iter_in_exp(body, vector_param_ids, out, settings, file_map, func_name);
+            return;
+        }
+
+        match &exp.exp.value {
+            T::UnannotatedExp_::ModuleCall(call) => {
+                check_unbounded_iter_in_exp(
+                    &call.arguments,
+                    vector_param_ids,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            T::UnannotatedExp_::Block((_, seq_items)) => {
+                for item in seq_items.iter() {
+                    check_unbounded_iter_in_seq_item(
+                        item,
+                        vector_param_ids,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
+                }
+            }
+            T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
+                check_unbounded_iter_in_exp(
+                    cond,
+                    vector_param_ids,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                check_unbounded_iter_in_exp(
+                    if_body,
+                    vector_param_ids,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                if let Some(else_e) = else_body {
+                    check_unbounded_iter_in_exp(
+                        else_e,
+                        vector_param_ids,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
+                }
+            }
+            T::UnannotatedExp_::Loop { body, .. } => {
+                check_unbounded_iter_in_exp(
+                    body,
+                    vector_param_ids,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+            }
+            _ => {}
+        }
+    }
+
+    /// Detects unbounded loops over a vector parameter in public entry functions.
+    fn lint_unbounded_iteration_over_param_vector(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                if !is_public_entry_function(fdef) {
+                    continue;
+                }
+
+                let vector_param_ids: std::collections::BTreeSet<u16> = fdef
+                    .signature
+                    .parameters
+                    .iter()
+                    .filter_map(|(_m, v, t)| is_vector_type(&t.value).then_some(v.value.id))
+                    .collect();
+                if vector_param_ids.is_empty() {
+                    continue;
+                }
+
+                let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
+                    continue;
+                };
+                let fn_name_sym = fname.value();
+                let fn_name = fn_name_sym.as_str();
+                for item in seq_items.iter() {
+                    check_unbounded_iter_in_seq_item(
+                        item,
+                        &vector_param_ids,
+                        out,
+                        settings,
+                        file_map,
+                        fn_name,
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn is_type_name_witness_type(ty: &N::Type_) -> bool {
+        match strip_refs(ty) {
+            N::Type_::Apply(_, tname, _) => match &tname.value {
+                N::TypeName_::ModuleType(mident, sname) => {
+                    mident.value.module.value().as_str() == "type_name"
+                        && sname.value().as_str() == "TypeName"
+                }
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+
+    fn exp_uses_var(exp: &T::Exp, target: u16) -> bool {
+        match &exp.exp.value {
+            T::UnannotatedExp_::Use(v) => v.value.id == target,
+            T::UnannotatedExp_::Copy { var, .. } => var.value.id == target,
+            T::UnannotatedExp_::Move { var, .. } => var.value.id == target,
+            T::UnannotatedExp_::BorrowLocal(_, v) => v.value.id == target,
+            T::UnannotatedExp_::TempBorrow(_, inner) => exp_uses_var(inner, target),
+            T::UnannotatedExp_::Dereference(inner) => exp_uses_var(inner, target),
+            T::UnannotatedExp_::Borrow(_, base, _) => exp_uses_var(base, target),
+            T::UnannotatedExp_::UnaryExp(_, inner) => exp_uses_var(inner, target),
+            T::UnannotatedExp_::Cast(inner, _) => exp_uses_var(inner, target),
+            T::UnannotatedExp_::Annotate(inner, _) => exp_uses_var(inner, target),
+            T::UnannotatedExp_::Return(inner) => exp_uses_var(inner, target),
+            T::UnannotatedExp_::Abort(inner) => exp_uses_var(inner, target),
+            T::UnannotatedExp_::Give(_, inner) => exp_uses_var(inner, target),
+            T::UnannotatedExp_::BinopExp(left, _op, _ty, right) => {
+                exp_uses_var(left, target) || exp_uses_var(right, target)
+            }
+            T::UnannotatedExp_::Mutate(left, right) => {
+                exp_uses_var(left, target) || exp_uses_var(right, target)
+            }
+            T::UnannotatedExp_::Assign(_lvalues, _expected_types, rhs) => exp_uses_var(rhs, target),
+            T::UnannotatedExp_::ModuleCall(call) => exp_uses_var(&call.arguments, target),
+            T::UnannotatedExp_::Builtin(_b, args) => exp_uses_var(args, target),
+            T::UnannotatedExp_::Vector(_loc, _n, _ty, args) => exp_uses_var(args, target),
+            T::UnannotatedExp_::ExpList(items) => items.iter().any(|item| match item {
+                T::ExpListItem::Single(e, _) => exp_uses_var(e, target),
+                T::ExpListItem::Splat(_, e, _) => exp_uses_var(e, target),
+            }),
+            T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
+                exp_uses_var(cond, target)
+                    || exp_uses_var(if_body, target)
+                    || else_body
+                        .as_deref()
+                        .is_some_and(|e| exp_uses_var(e, target))
+            }
+            T::UnannotatedExp_::While(_, cond, body) => {
+                exp_uses_var(cond, target) || exp_uses_var(body, target)
+            }
+            T::UnannotatedExp_::Loop { body, .. } => exp_uses_var(body, target),
+            T::UnannotatedExp_::Block((_, seq_items))
+            | T::UnannotatedExp_::NamedBlock(_, (_, seq_items)) => {
+                seq_items.iter().any(|item| match &item.value {
+                    T::SequenceItem_::Seq(e) => exp_uses_var(e, target),
+                    T::SequenceItem_::Bind(_, _, e) => exp_uses_var(e, target),
+                    _ => false,
+                })
+            }
+            T::UnannotatedExp_::Match(scrut, arms) => {
+                exp_uses_var(scrut, target)
+                    || arms.value.iter().any(|arm| {
+                        arm.value
+                            .guard
+                            .as_deref()
+                            .is_some_and(|g| exp_uses_var(g, target))
+                            || exp_uses_var(&arm.value.rhs, target)
+                    })
+            }
+            T::UnannotatedExp_::VariantMatch(scrut, _t, arms) => {
+                exp_uses_var(scrut, target)
+                    || arms.iter().any(|(_vname, e)| exp_uses_var(e, target))
+            }
+            T::UnannotatedExp_::Pack(_, _, _tys, fields) => fields
+                .iter()
+                .any(|(_f, _idx, (_bt, (_ty, e)))| exp_uses_var(e, target)),
+            T::UnannotatedExp_::PackVariant(_, _, _, _tys, fields) => fields
+                .iter()
+                .any(|(_f, _idx, (_bt, (_ty, e)))| exp_uses_var(e, target)),
+            _ => false,
+        }
+    }
+
+    /// Detects generic functions that accept a `type_name::TypeName` witness but never use it.
+    fn lint_generic_type_witness_unused(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                if fdef.signature.type_parameters.is_empty() {
+                    continue;
+                }
+
+                let witness_params: Vec<(u16, String)> = fdef
+                    .signature
+                    .parameters
+                    .iter()
+                    .filter(|(_m, _v, t)| is_type_name_witness_type(&t.value))
+                    .map(|(_m, v, t)| (v.value.id, format_type(strip_refs(&t.value))))
+                    .collect();
+
+                if witness_params.is_empty() {
+                    continue;
+                }
+
+                let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
+                    continue;
+                };
+
+                for (witness_id, witness_ty) in witness_params {
+                    let used = seq_items.iter().any(|item| match &item.value {
+                        T::SequenceItem_::Seq(e) => exp_uses_var(e, witness_id),
+                        T::SequenceItem_::Bind(_, _, e) => exp_uses_var(e, witness_id),
+                        _ => false,
+                    });
+
+                    if used {
+                        continue;
+                    }
+
+                    let loc = fdef.loc;
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        continue;
+                    };
+                    let anchor = loc.start() as usize;
+                    let fn_name_sym = fname.value();
+                    let fn_name = fn_name_sym.as_str();
+
+                    push_diag(
+                        out,
+                        settings,
+                        &GENERIC_TYPE_WITNESS_UNUSED,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Generic function `{fn_name}` takes a `{witness_ty}` witness but never uses it. \
+                             Either remove the witness parameter or use it to validate the generic type argument."
+                        ),
+                    );
+                }
             }
         }
 
@@ -856,39 +2265,31 @@ mod full {
                 .iter()
                 .any(|(mod_pat, fn_pat)| module_name == *mod_pat && call_name == *fn_pat);
 
-            if is_transfer_call {
-                // Check if type argument is a capability type
-                if let Some(type_arg) = call.type_arguments.first() {
-                    // Skip Coin types - they have capability-like abilities (key+store, no copy/drop)
-                    // but are value tokens, not access control capabilities
-                    if is_coin_type(&type_arg.value) {
-                        // Not a capability - it's a coin transfer, skip
-                    } else if is_capability_type_from_ty(&type_arg.value) {
-                        // This is transferring a non-coin capability - check if recipient is sender
-                        // For now, we flag all capability transfers as preview-level warnings
-                        let loc = exp.exp.loc;
-                        let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                            return;
-                        };
-                        let anchor = loc.start() as usize;
+            if is_transfer_call
+                && let Some(type_arg) = call.type_arguments.first()
+                && !is_coin_type(&type_arg.value)
+                && is_capability_type_from_ty(&type_arg.value)
+            {
+                let loc = exp.exp.loc;
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    return;
+                };
+                let anchor = loc.start() as usize;
+                let type_name = format_type(&type_arg.value);
 
-                        let type_name = format_type(&type_arg.value);
-
-                        push_diag(
-                            out,
-                            settings,
-                            &CAPABILITY_TRANSFER_V2,
-                            file,
-                            span,
-                            contents.as_ref(),
-                            anchor,
-                            format!(
-                                "Non-coin capability `{type_name}` transferred in `{func_name}`. \
-                                 Ensure the recipient is authorized (e.g., tx_context::sender(ctx))."
-                            ),
-                        );
-                    }
-                }
+                push_diag(
+                    out,
+                    settings,
+                    &CAPABILITY_TRANSFER_V2,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Capability-like object `{type_name}` transferred in `{func_name}`. \
+                         Ensure the recipient is authorized (e.g., tx_context::sender(ctx))."
+                    ),
+                );
             }
         }
 
@@ -981,6 +2382,112 @@ mod full {
     //
     // NOTE: phantom_capability is implemented in absint_lints.rs (CFG-aware)
     // =========================================================================
+
+    fn lint_entry_function_returns_value(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                if fdef.entry.is_none() {
+                    continue;
+                }
+
+                if matches!(fdef.signature.return_type.value, N::Type_::Unit) {
+                    continue;
+                }
+
+                let loc = fdef.loc;
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                let fn_name_sym = fname.value();
+                let fn_name = fn_name_sym.as_str();
+                let ret_ty = format_type(&fdef.signature.return_type.value);
+
+                push_diag(
+                    out,
+                    settings,
+                    &ENTRY_FUNCTION_RETURNS_VALUE,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Entry function `{fn_name}` returns `{ret_ty}`, but entry function return values are discarded by the runtime. \
+                         Return unit `()` and write values into objects instead."
+                    ),
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    fn lint_private_entry_function(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        prog: &T::Program,
+    ) -> Result<()> {
+        for (_mident, mdef) in prog.modules.key_cloned_iter() {
+            match mdef.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                if fdef.entry.is_none() {
+                    continue;
+                }
+
+                if !matches!(
+                    fdef.visibility,
+                    move_compiler::expansion::ast::Visibility::Internal
+                ) {
+                    continue;
+                }
+
+                let loc = fdef.loc;
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                let fn_name_sym = fname.value();
+                let fn_name = fn_name_sym.as_str();
+
+                push_diag(
+                    out,
+                    settings,
+                    &PRIVATE_ENTRY_FUNCTION,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Private entry function `{fn_name}` is unreachable from transactions. \
+                         Remove the `entry` modifier or make it `public entry` / `public(package) entry`."
+                    ),
+                );
+            }
+        }
+
+        Ok(())
+    }
 
     /// Lint for division operations without zero-divisor checks.
     ///
@@ -1563,7 +3070,7 @@ mod full {
                     format!(
                         "Sharing `{type_name}` (has key+store) in `{func_name}` makes it publicly accessible. \
                          This is dangerous for authority objects (capabilities). \
-                         If this is intentional shared state, suppress with #[allow(lint(share_owned_authority))]."
+                         If this is intentional shared state, suppress with #[ext(move_clippy(allow(share_owned_authority)))]."
                     ),
                 );
             }
@@ -1868,6 +3375,16 @@ mod full {
             }
         })?;
 
+        let mut seen: std::collections::BTreeSet<(
+            &'static str,
+            String,
+            usize,
+            usize,
+            usize,
+            usize,
+            String,
+        )> = std::collections::BTreeSet::new();
+
         for (file_map, warnings) in collected.into_inner() {
             for diag in warnings.into_vec() {
                 if diag.info().category() != LinterDiagnosticCategory::Sui as u8 {
@@ -1896,6 +3413,18 @@ mod full {
                 }
 
                 let message = compose_sui_message(&diag);
+                let key = (
+                    descriptor.name,
+                    file.clone(),
+                    span.start.row,
+                    span.start.column,
+                    span.end.row,
+                    span.end.column,
+                    message.clone(),
+                );
+                if !seen.insert(key) {
+                    continue;
+                }
                 out.push(Diagnostic {
                     lint: descriptor,
                     level,
@@ -1992,6 +3521,7 @@ pub fn lint_package(
     _package_path: &Path,
     _settings: &LintSettings,
     _preview: bool,
+    _experimental: bool,
 ) -> ClippyResult<Vec<Diagnostic>> {
     Err(MoveClippyError::semantic(
         "full mode requires building with --features full",

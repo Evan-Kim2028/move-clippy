@@ -11,8 +11,19 @@
 //! - Unified diagnostic output across all lint phases
 //! - Single point of registration for all lint types
 
-use crate::lint::{AnalysisKind, LintCategory, LintDescriptor, RuleGroup};
+use crate::lint::{AnalysisKind, LintCategory, LintDescriptor, LintRegistry, RuleGroup};
 use std::collections::HashMap;
+use std::sync::OnceLock;
+
+static UNIFIED_REGISTRY: OnceLock<UnifiedLintRegistry> = OnceLock::new();
+
+pub fn unified_registry() -> &'static UnifiedLintRegistry {
+    UNIFIED_REGISTRY.get_or_init(build_unified_registry)
+}
+
+pub fn lint_phase(name: &str) -> Option<LintPhase> {
+    unified_registry().get(name).map(|l| l.phase)
+}
 
 /// Unified lint entry that wraps lint metadata from any phase.
 #[derive(Debug, Clone)]
@@ -24,7 +35,7 @@ pub struct UnifiedLint {
 }
 
 /// Classification of which lint phase a lint belongs to.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LintPhase {
     /// Phase I: Tree-sitter syntactic lints (fast, no type info)
     Syntactic,
@@ -189,6 +200,71 @@ impl UnifiedLintRegistry {
     }
 }
 
+/// ## Extension Point: Adding a fast (syntactic) lint
+///
+/// Fast-mode lints are tree-sitter based `LintRule` implementations under `src/rules/`.
+/// To add a new fast lint:
+///
+/// 1. Define a `static LintDescriptor` (name/category/group/analysis).
+/// 2. Implement `LintRule` and report findings via `ctx.report_node(...)` (or
+///    `ctx.report_node_diagnostic(...)` if you need suggestions), so directives always apply.
+/// 3. Export the lint type from `src/rules.rs`.
+/// 4. Register it here by adding `.with_rule(crate::rules::YourLintType)`.
+/// 5. Add executable documentation:
+///    - a minimal positive and negative fixture, and
+///    - a directive coverage fixture (see `tests/fixtures/README.md`).
+///
+/// The unified registry (`build_unified_registry`) automatically picks up these descriptors
+/// for CLI output (`list-rules`, `explain`) and for generated docs.
+pub(crate) fn build_syntactic_registry() -> LintRegistry {
+    LintRegistry::new()
+        // Existing lints
+        .with_rule(crate::rules::ModernModuleSyntaxLint)
+        .with_rule(crate::rules::RedundantSelfImportLint)
+        .with_rule(crate::rules::PreferToStringLint)
+        .with_rule(crate::rules::PreferVectorMethodsLint)
+        .with_rule(crate::rules::ModernMethodSyntaxLint)
+        .with_rule(crate::rules::MergeTestAttributesLint)
+        .with_rule(crate::rules::ConstantNamingLint)
+        .with_rule(crate::rules::UnneededReturnLint)
+        .with_rule(crate::rules::UnnecessaryPublicEntryLint)
+        .with_rule(crate::rules::PublicMutTxContextLint)
+        .with_rule(crate::rules::WhileTrueToLoopLint)
+        // P0 lints
+        .with_rule(crate::rules::AbilitiesOrderLint)
+        .with_rule(crate::rules::DocCommentStyleLint)
+        .with_rule(crate::rules::ExplicitSelfAssignmentsLint)
+        .with_rule(crate::rules::TestAbortCodeLint)
+        .with_rule(crate::rules::RedundantTestPrefixLint)
+        // P1 lints
+        .with_rule(crate::rules::EqualityInAssertLint)
+        .with_rule(crate::rules::AdminCapPositionLint)
+        .with_rule(crate::rules::ManualOptionCheckLint)
+        .with_rule(crate::rules::ManualLoopIterationLint)
+        // Additional stable lints
+        .with_rule(crate::rules::EventSuffixLint)
+        .with_rule(crate::rules::EmptyVectorLiteralLint)
+        .with_rule(crate::rules::TypedAbortCodeLint)
+        // Security lints (audit-backed)
+        .with_rule(crate::rules::StaleOraclePriceLint)
+        .with_rule(crate::rules::SingleStepOwnershipTransferLint)
+        .with_rule(crate::rules::MissingWitnessDropLint)
+        .with_rule(crate::rules::PublicRandomAccessLint)
+        .with_rule(crate::rules::SuspiciousOverflowCheckLint)
+        .with_rule(crate::rules::IgnoredBooleanReturnLint)
+        .with_rule(crate::rules::DivideByZeroLiteralLint)
+        // Preview/experimental lints
+        .with_rule(crate::rules::PureFunctionTransferLint)
+        .with_rule(crate::rules::UnsafeArithmeticLint)
+        .with_rule(crate::rules::UncheckedCoinSplitLint)
+        .with_rule(crate::rules::UncheckedWithdrawalLint)
+        .with_rule(crate::rules::CapabilityLeakLint)
+        .with_rule(crate::rules::DestroyZeroUncheckedLint)
+        .with_rule(crate::rules::OtwPatternViolationLint)
+        .with_rule(crate::rules::DigestAsRandomnessLint)
+        .with_rule(crate::rules::FreshAddressReuseLint)
+}
+
 /// Build a unified registry from all lint phases.
 ///
 /// This collects lints from:
@@ -196,11 +272,23 @@ impl UnifiedLintRegistry {
 /// - semantic.rs descriptors (Phase II)
 /// - absint_lints.rs descriptors (Phase III, feature-gated)
 /// - cross_module_lints.rs descriptors (Phase IV, feature-gated)
+/// ## Extension Point: Lint inventory and CLI surface
+///
+/// This function defines the authoritative lint inventory for:
+/// - `move-clippy list-rules`
+/// - `move-clippy explain <lint>`
+/// - generated docs (`docs/LINT_REFERENCE.md`, `docs/LINT_CATALOG_SUMMARY.md`)
+///
+/// Each phase has exactly one “register here” path:
+/// - Phase I (fast): `build_syntactic_registry()` above.
+/// - Phase II (semantic): `src/semantic.rs:DESCRIPTORS`.
+/// - Phase III (AbsInt): `src/absint_lints.rs:DESCRIPTORS` (feature-gated).
+/// - Phase IV (cross-module): `src/cross_module_lints.rs:DESCRIPTORS` (feature-gated).
 pub fn build_unified_registry() -> UnifiedLintRegistry {
     let mut registry = UnifiedLintRegistry::new();
 
-    // Phase I: Syntactic lints from LintRegistry
-    let lint_registry = crate::lint::LintRegistry::default_rules();
+    // Phase I: Syntactic lints
+    let lint_registry = build_syntactic_registry();
     for descriptor in lint_registry.descriptors() {
         registry.register(descriptor, LintPhase::Syntactic);
     }
