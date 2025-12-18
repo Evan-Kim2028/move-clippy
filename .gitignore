@@ -54,6 +54,7 @@ cleanup-internal-files.sh
 .cleanup-plan.txt
 
 # Internal docs (keep local only)
+docs/notes/
 docs/AST_INVESTIGATION.md
 docs/DEPRECATED_LINT_REMOVAL.md
 docs/GOLDEN_TESTS.md
