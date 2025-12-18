@@ -2,11 +2,14 @@
 
 Move Clippy includes security lints based on real audit findings and published security research. These lints detect vulnerabilities that the Move compiler does not catch because they are semantic/intent issues rather than syntax errors.
 
+**Status:** Design note / workflow (may drift). For the authoritative list of security lints in this build, use `docs/LINT_REFERENCE.md` (filter by category) or `move-clippy list-rules`.
+
 ## Overview
 
 | Lint | Category | Detection Method | Source | Status |
 |------|----------|-----------------|--------|--------|
 | `droppable_hot_potato` | Security | Fast (tree-sitter) | Trail of Bits 2025, Mirage Audits 2025 | **Stable** |
+| `droppable_hot_potato_v2` | Security | Semantic (--mode full) | Type-based detection | **Stable** |
 | `excessive_token_abilities` | Security | Fast (tree-sitter) | Mirage Audits 2025, MoveBit 2023 | **⚠️ Deprecated** |
 | `shared_capability` | Security | Fast (tree-sitter) | OtterSec 2024, MoveBit 2023 | **Stable** |
 | `stale_oracle_price` | Security | Fast (tree-sitter) | Bluefin Audit 2024 | **Stable** |
@@ -23,6 +26,10 @@ Move Clippy includes security lints based on real audit findings and published s
 | `oracle_zero_price` | Security | Semantic (--mode full) | Bluefin Audit 2024 | **Preview** |
 | `unused_return_value` | Security | Semantic (--mode full) | Move Best Practices | **Preview** |
 | `missing_access_control` | Security | Semantic (--mode full) | SlowMist 2024 | **Preview** |
+| `public_package_single_module` | Correctness | Semantic (--mode full) | Best Practices | **Stable** |
+| `store_capability` | Security | Semantic (--mode full --preview) | Capability Leakage | **Preview** |
+| `copyable_capability` | Security | Semantic (--mode full --preview) | Capability Duplication | **Preview** |
+| `shared_with_balance` | Security | Semantic (--mode full --preview) | Fund Protection | **Preview** |
 
 ---
 
@@ -584,14 +591,37 @@ This lint is **heuristic-based** and may have false positives for:
 
 ## Suppression
 
-All security lints can be suppressed using the standard suppression mechanisms:
+All security lints can be suppressed using move-clippy directives or configuration.
+
+### Fast mode directives (tree-sitter)
 
 ```move
-// File-level suppression in Move 2024
-#[allow(lint(droppable_hot_potato))]
-module my_module;
+// File/module-level (parsed by move-clippy; may not compile under the Move compiler)
+#![allow(lint::droppable_hot_potato)]
 
-// Or via config file (move-clippy.toml)
+module my_module {
+    // Item-level
+    #[allow(lint::droppable_hot_potato)]
+    public fun f() {
+        // ...
+    }
+}
+```
+
+### Full mode directives (compiler-valid)
+
+```move
+module my_module {
+    #[ext(move_clippy(allow(droppable_hot_potato)))]
+    public entry fun f(ctx: &mut TxContext) {
+        // ...
+    }
+}
+```
+
+### Config file
+
+```toml
 [lints]
 droppable_hot_potato = "allow"
 ```
@@ -635,6 +665,7 @@ droppable_hot_potato = "allow"
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.5.0 | 2025-12-18 | Added 4 new semantic lints: `public_package_single_module` (Tier 1 Stable), `store_capability`, `copyable_capability`, `shared_with_balance` (Tier 2 Preview). Removed `mut_ref_not_mutated` due to high FP rate on idiomatic Sui code. Fixed capability name heuristic to use `ends_with("Cap")` instead of `contains("Cap")`. |
 | 0.4.0 | 2025-12-13 | **BREAKING**: Deprecated `excessive_token_abilities` (100% FP rate). Refined `droppable_hot_potato` with witness filtering. Added `unchecked_coin_split`, `missing_witness_drop`, `public_random_access`, `unbounded_vector_growth`, `hardcoded_address`. |
 | 0.3.0 | 2025-12-13 | Added security lints: `shared_capability`, `stale_oracle_price`, `single_step_ownership_transfer`, `suspicious_overflow_check` (preview) |
 | 0.2.0 | 2025-12-13 | Added security lints: `droppable_hot_potato`, `excessive_token_abilities`, `unfrozen_coin_metadata`, `unused_capability_param` |
@@ -645,3 +676,202 @@ If you find a new security pattern that should be detected, please:
 1. Provide a published audit report or security research as the source
 2. Include a minimal reproducing example
 3. Open an issue or PR at the move-clippy repository
+
+---
+
+## New Lints (v0.5.0)
+
+### `public_package_single_module`
+
+**Severity:** Warning  
+**Stability:** Stable  
+**Category:** Correctness  
+**Requires:** `--mode full`
+
+Detects `public(package)` visibility in single-module packages where it provides no restriction.
+
+#### Why This Matters
+
+`public(package)` restricts function access to other modules within the same package. In a single-module package, there are no other modules to call it, making the visibility semantically equivalent to `public` but suggesting internal-only use.
+
+#### Vulnerable Pattern
+
+```move
+// Single-module package with public(package) - misleading
+module my_pkg::only_module {
+    public(package) fun internal_helper(): u64 {
+        42
+    }
+}
+```
+
+#### Correct Pattern
+
+```move
+// Use public if external access is intended
+module my_pkg::only_module {
+    public fun external_api(): u64 {
+        42
+    }
+    
+    // Or make it private if truly internal
+    fun internal_helper(): u64 {
+        42
+    }
+}
+```
+
+---
+
+### `store_capability`
+
+**Severity:** Warning  
+**Stability:** Preview  
+**Category:** Security  
+**Requires:** `--mode full --preview`
+
+Detects capability-like structs with `store` ability that could leak authorization.
+
+#### Why This Matters
+
+Capabilities with `store` can be placed in dynamic fields or other objects, potentially leaking authorization to unintended recipients.
+
+#### Detection Heuristic
+
+Flags structs where:
+- Name ends with "Cap", or contains "Capability", "Admin", "Auth", or ends with "Witness"
+- Has `store` ability
+
+> **Note:** The heuristic uses `ends_with("Cap")` rather than `contains("Cap")` to avoid false positives on words like "Capacity" and "Captain".
+
+#### Vulnerable Pattern
+
+```move
+// AdminCap with store can be hidden in dynamic fields
+public struct AdminCap has key, store {
+    id: UID,
+}
+
+// Attacker can embed capability in their object
+public fun hide_cap(cap: AdminCap, obj: &mut MyObject) {
+    dynamic_field::add(&mut obj.id, b"hidden", cap);
+}
+```
+
+#### Correct Pattern
+
+```move
+// AdminCap without store - can only be transferred, not embedded
+public struct AdminCap has key {
+    id: UID,
+}
+```
+
+---
+
+### `copyable_capability`
+
+**Severity:** Warning  
+**Stability:** Preview  
+**Category:** Security  
+**Requires:** `--mode full --preview`
+
+Detects capability-like structs with `copy` ability that allows unlimited duplication.
+
+#### Why This Matters
+
+Capabilities represent unique authorization. If copyable, an attacker who obtains one copy can create unlimited copies, defeating access control.
+
+#### Detection Heuristic
+
+Flags structs where:
+- Name ends with "Cap", or contains "Capability", "Admin", "Auth", or ends with "Witness"
+- Has `copy` ability
+
+> **Note:** The heuristic uses `ends_with("Cap")` rather than `contains("Cap")` to avoid false positives on words like "Capacity" and "Captain".
+
+#### Vulnerable Pattern
+
+```move
+// AdminCap with copy can be duplicated infinitely
+public struct AdminCap has copy, drop {
+    level: u8,
+}
+
+public fun exploit(cap: AdminCap) {
+    let copy1 = cap;  // Original still valid
+    let copy2 = cap;  // Unlimited copies!
+}
+```
+
+#### Correct Pattern
+
+```move
+// AdminCap without copy - unique authorization
+public struct AdminCap has drop {
+    level: u8,
+}
+```
+
+---
+
+### `shared_with_balance`
+
+**Severity:** Warning  
+**Stability:** Preview  
+**Category:** Security  
+**Requires:** `--mode full --preview`
+
+Detects shared objects containing `Balance<T>` fields that need access control.
+
+#### Why This Matters
+
+Shared objects are publicly accessible by any transaction. If they contain funds (Balance), proper access control must be implemented to prevent theft.
+
+#### Detection Method
+
+1. Identifies structs with `Balance<T>` fields
+2. Finds `transfer::share_object()` or `transfer::public_share_object()` calls
+3. Checks if the shared type contains Balance
+
+#### Vulnerable Pattern
+
+```move
+public struct Pool has key {
+    id: UID,
+    reserves: Balance<SUI>,  // Contains funds
+}
+
+public fun init(ctx: &mut TxContext) {
+    let pool = Pool {
+        id: object::new(ctx),
+        reserves: balance::zero<SUI>(),
+    };
+    // WARNING: Pool is now publicly accessible!
+    transfer::share_object(pool);
+}
+
+// Anyone can call this on the shared pool
+public fun withdraw(pool: &mut Pool): Coin<SUI> {
+    // NO ACCESS CONTROL - funds can be stolen!
+    coin::from_balance(balance::withdraw_all(&mut pool.reserves), ctx)
+}
+```
+
+#### Correct Pattern
+
+```move
+public struct Pool has key {
+    id: UID,
+    reserves: Balance<SUI>,
+    admin: address,  // Track authorized admin
+}
+
+public fun withdraw(pool: &mut Pool, ctx: &TxContext): Coin<SUI> {
+    // Access control check
+    assert!(tx_context::sender(ctx) == pool.admin, EUnauthorized);
+    coin::from_balance(balance::withdraw_all(&mut pool.reserves), ctx)
+}
+```
+
+> **Note:** This lint fires on any shared Balance-containing object. Use `#[ext(move_clippy(allow(shared_with_balance)))]` if you've implemented proper access control.

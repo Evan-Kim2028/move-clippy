@@ -6,7 +6,7 @@ Move Clippy runs in two modes:
 - **Fast**: tree-sitter (syntactic) analysis over `.move` sources.
 - **Full**: Move compiler typing + delegated Sui lints (requires building with `--features full`).
 
-> **Complete Reference:** See [docs/LINT_REFERENCE.md](docs/LINT_REFERENCE.md) for all 59 lints with tiers, analysis types, and FP risk
+> **Complete Reference:** See [docs/LINT_REFERENCE.md](docs/LINT_REFERENCE.md) for per-lint details. For the authoritative set in your build, run `move-clippy list-rules`.
 
 > Full lint inventory: `docs/LINT_INVENTORY.md`
 
@@ -46,22 +46,23 @@ move-clippy lint --fix --unsafe-fixes path/to/sources
 
 Move Clippy uses a three-tier stability system inspired by [Ruff](https://docs.astral.sh/ruff/):
 
-**Quick Stats:**
-- **59 total lints**: 51 Stable | 3 Preview | 12 Experimental | 3 Deprecated
-- **FP Rates**: Stable <1% | Preview <1% | Experimental 5-20%
+The set of available lints depends on how move-clippy is built (notably whether `--features full` is enabled).
+
+For the current build, use:
+
+```bash
+move-clippy list-rules
+```
 
 ### Stable (Default)
 
 - **Enabled by default** - Zero configuration needed
-- **Low false-positive rate** (<1%) - Minimal noise
+- **Low false-positive rate** - Minimal noise
 - **Production-ready** - Safe for CI/CD pipelines
 - **Battle-tested** - Validated across multiple Move projects
 
 **Breakdown:**
-- 28 syntactic style lints (fast mode)
-- 6 syntactic security lints (fast mode)
-- 13 type-based semantic lints (full mode)
-- 4 Sui monorepo pass-through lints (full mode)
+The stable tier includes both syntactic and semantic rules depending on your build and chosen mode. Use `move-clippy list-rules` to see the current breakdown.
 
 Example stable lints:
 - `abilities_order` - Enforce canonical ability ordering
@@ -73,26 +74,22 @@ Example stable lints:
 ### Preview
 
 - **Require `--preview` flag** - Explicit opt-in needed
-- **Near-zero FP rate** (<1%) - CFG-based analysis
+- **High precision** - Intended to be low-noise, but still gathering validation
 - **May change** - Gathering feedback on performance and ergonomics
-- **All use TypeBasedCFG** - Requires `--mode full`
+- **Requires `--mode full`** - Uses compiler typing and/or CFG analysis
 
 ```bash
 move-clippy lint --mode full --preview path/to/package
 ```
 
-**Current Preview lints (3):**
-- `unchecked_division_v2` - Division without zero-check (CFG-aware)
-- `destroy_zero_unchecked_v2` - `destroy_zero` without verifying zero value (CFG-aware)
-- `fresh_address_reuse_v2` - `fresh_object_address` result reused (CFG-aware)
+Preview rules are only available when building with `--features full`.
 
-**Why Preview?** These lints use precise dataflow analysis with excellent accuracy, but we're gathering feedback on performance impact and edge cases before promoting to Stable.
+**Why Preview?** Some lints are dataflow-aware (CFG), others are conservative type-based checks. Both classes aim for low false positives, but we keep them opt-in while we validate them across more real packages.
 
 ### Experimental
 
 - **Require `--experimental` flag** - Double opt-in (implies --preview)
-- **Medium-high FP rate** (5-20%) - Many false positives expected
-- **Research/audit use only** - NOT for CI/CD
+- **Higher false-positive risk** - Research/audit use only
 - **Heuristic detection** - Pattern-based or name-based without precise tracking
 
 ```bash
@@ -106,21 +103,10 @@ move-clippy lint --experimental src/
 - ❌ CI/CD pipelines (will produce too much noise)
 - ❌ Daily development workflow
 
-**Current Experimental lints (12):**
-- 8 heuristic-based syntactic lints (medium FP)
-- 4 complex analysis lints with edge cases (medium FP)
-
-**Tip:** Many experimental lints have CFG-based `_v2` versions in Preview tier with near-zero FP.
-
-Example experimental lints:
-- `destroy_zero_unchecked` - Syntactic version (use `_v2` for CFG)
-- `otw_pattern_violation` - Module naming edge cases
-- `digest_as_randomness` - Keyword-based detection
-- `phantom_capability` - Privileged sink heuristics
+**Tip:** Prefer semantic/CFG-based lints for higher precision when available.
 
 **Tier Promotion:**
 Lints are promoted from Experimental → Preview → Stable based on:
-- False positive rate reduction (measured on ecosystem repos)
 - Ecosystem validation (deepbookv3, openzeppelin-sui, etc.)
 - Community feedback
 - Detection strategy improvements (e.g., syntactic → CFG upgrade)
@@ -135,10 +121,10 @@ Move Clippy uses different analysis techniques with trade-offs between speed and
 
 | Analysis Type | Speed | Accuracy | Mode | Description |
 |--------------|-------|----------|------|-------------|
-| **Syntactic** | ⚡ Fast (10-100ms) | Pattern-based | `--mode fast` (default) | Tree-sitter parsing, no compilation |
-| **TypeBased** | 🐢 Slower (1-5s) | Type-aware | `--mode full` | Uses Move compiler's type checker |
-| **TypeBasedCFG** | 🐌 Slowest (5-15s) | Dataflow-aware | `--mode full --preview` | Control-flow + dataflow analysis |
-| **CrossModule** | 🐌 Slowest (10-30s) | Call-graph | `--mode full --preview` | Analyzes across module boundaries |
+| **Syntactic** | Fast | Pattern-based | `--mode fast` (default) | Tree-sitter parsing, no compilation |
+| **TypeBased** | Slower | Type-aware | `--mode full` | Uses Move compiler's type checker |
+| **TypeBasedCFG** | Slowest | Dataflow-aware | `--mode full --preview` | Control-flow + dataflow analysis |
+| **CrossModule** | Slowest | Call-graph | `--mode full --experimental` | Analyzes across module boundaries |
 
 ### Why CFG Analysis Matters
 
@@ -160,17 +146,39 @@ if (condition) {
 }
 ```
 
-**Result:** CFG lints have **near-zero false positives** but require compilation. This is why Preview lints (all CFG-based) have <1% FP despite being newer.
+**Result:** CFG lints have **near-zero false positives** but require compilation. This is why we gate them behind `--mode full` and typically place them in Preview while validating performance.
 
-### Analysis Type Distribution
+### Analysis Type Inventory
 
-| Tier | Syntactic | TypeBased | TypeBasedCFG | CrossModule |
-|------|-----------|-----------|--------------|-------------|
-| **Stable** | 34 | 17 | 0 | 0 |
-| **Preview** | 0 | 0 | 3 | 0 |
-| **Experimental** | 8 | 2 | 1 | 2 |
+For a complete list (including tier + analysis kind per lint), use `move-clippy list-rules` or see `docs/LINT_REFERENCE.md`.
 
-**Insight:** All current Preview lints use CFG analysis, explaining their low FP rate despite being "preview" tier.
+---
+
+## Directives (allow/deny/expect)
+
+move-clippy supports allow/deny/expect directives for both exact lint names and lint categories.
+
+### Fast mode (tree-sitter)
+
+- **Allow (suppress):** `#[allow(lint::<name|category>)]` or `#![allow(lint::<name|category>)]`
+- **Deny (promote):** `#[deny(lint::<name|category>)]` or `#![deny(lint::<name|category>)]`
+- **Expect (test invariant):** `#[expect(lint::<name|category>)]` or `#![expect(lint::<name|category>)]`
+
+These forms are intended for move-clippy parsing and may not compile under the Move compiler.
+
+### Full mode (compiler-valid)
+
+Use `ext` attributes so packages still compile:
+
+- **Allow:** `#[ext(move_clippy(allow(<name|category>)))]`
+- **Deny:** `#[ext(move_clippy(deny(<name|category>)))]`
+- **Expect:** `#[ext(move_clippy(expect(<name|category>)))]`
+
+If an `expect` directive does not match any emitted diagnostics in its scope, move-clippy emits an `unfulfilled_expectation` error diagnostic.
+
+Category names are the `LintCategory::as_str()` values:
+
+- `style`, `modernization`, `naming`, `test_quality`, `suspicious`, `security`
 
 ---
 
@@ -180,16 +188,16 @@ Move Clippy classifies lints by the type system gaps they address. This helps sy
 
 **The 8 Gap Types:**
 
-| Gap | Lints | Description |
-|-----|-------|-------------|
-| **AbilityMismatch** | 3 | Wrong ability combinations (e.g., hot potato with `drop`) |
-| **OwnershipViolation** | 6 | Incorrect object ownership transitions |
-| **CapabilityEscape** | 3 | Capabilities leaking intended scope |
-| **ValueFlow** | 5 | Values going to wrong destinations |
-| **ApiMisuse** | 8 | Incorrect stdlib/Sui function usage |
-| **TemporalOrdering** | 3 | Operations in wrong sequence |
-| **ArithmeticSafety** | 4 | Numeric operations without validation |
-| **StyleConvention** | 27 | Style and convention issues |
+| Gap | Description |
+|-----|-------------|
+| **AbilityMismatch** | Wrong ability combinations (e.g., hot potato with `drop`) |
+| **OwnershipViolation** | Incorrect object ownership transitions |
+| **CapabilityEscape** | Capabilities leaking intended scope |
+| **ValueFlow** | Values going to wrong destinations |
+| **ApiMisuse** | Incorrect stdlib/Sui function usage |
+| **TemporalOrdering** | Operations in wrong sequence |
+| **ArithmeticSafety** | Numeric operations without validation |
+| **StyleConvention** | Style and convention issues |
 
 **For Developers:** See [docs/TYPE_SYSTEM_GAPS.md](docs/TYPE_SYSTEM_GAPS.md) for detailed gap taxonomy and how to use it for lint discovery.
 
@@ -209,7 +217,7 @@ Move Clippy organizes rules by **analysis kind** and **stability group**.
 - **Syntactic**: tree-sitter pattern matching (runs in `--mode fast`).
 - **TypeBased**: Move compiler typing info (runs in `--mode full`).
 - **TypeBasedCFG**: CFG-aware analysis via abstract interpretation (runs in `--mode full --preview`).
-- **CrossModule**: call-graph / inter-module checks (runs in `--mode full --preview`).
+- **CrossModule**: call-graph / inter-module checks (runs in `--mode full --experimental`).
 
 ### What’s available (at a glance)
 
@@ -248,3 +256,8 @@ Use `move-clippy list-rules` to discover lint names; use `move-clippy explain <l
 ## Development
 
 See `docs/DEVELOPMENT.md` for contributor workflow and `docs/LINT_DEVELOPMENT_GUIDE.md` for adding new lints.
+
+Related:
+- `docs/FP_PREVENTION.md` (how we keep Stable lints low-noise)
+- `docs/STABILITY.md` (tier policy and promotion criteria)
+- `tests/fixtures/README.md` (fixtures as executable documentation)

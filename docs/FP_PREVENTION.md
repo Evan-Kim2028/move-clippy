@@ -2,6 +2,8 @@
 
 This document describes the strategies and infrastructure used to prevent false positives in move-clippy.
 
+**Status:** Developer workflow / methodology (kept current)
+
 ## Overview
 
 False positives (FPs) undermine trust in linting tools. A single FP can cause developers to:
