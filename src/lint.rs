@@ -481,6 +481,18 @@ impl LintSettings {
         self
     }
 
+    /// Get the lint level for a validated [`LintName`].
+    ///
+    /// This is the preferred method when you have a pre-validated `LintName`.
+    #[must_use]
+    pub fn level_for_name(&self, lint: &LintName) -> LintLevel {
+        self.levels.get(lint.as_str()).copied().unwrap_or_default()
+    }
+
+    /// Get the lint level for a lint by string name.
+    ///
+    /// This method resolves aliases and is useful for user input.
+    /// Prefer [`level_for_name()`] when you have a validated [`LintName`].
     pub fn level_for(&self, lint_name: &str) -> LintLevel {
         // First try canonical name, then check if input is an alias
         if let Some(&level) = self.levels.get(lint_name) {
@@ -895,6 +907,113 @@ pub fn all_known_lints() -> HashSet<&'static str> {
         .descriptors()
         .map(|d| d.name)
         .collect()
+}
+
+// ============================================================================
+// LintName Newtype
+// ============================================================================
+
+/// A validated lint name that is known to exist in the registry.
+///
+/// `LintName` provides type safety for lint names, ensuring that a name
+/// has been validated against the registry before being used. This prevents
+/// typos and invalid lint names from propagating through the codebase.
+///
+/// # Creating a LintName
+///
+/// Use [`LintName::new()`] to validate user input:
+///
+/// ```
+/// use move_clippy::lint::LintName;
+///
+/// // Valid lint name
+/// let name = LintName::new("abilities_order");
+/// assert!(name.is_some());
+///
+/// // Invalid lint name
+/// let invalid = LintName::new("not_a_real_lint");
+/// assert!(invalid.is_none());
+/// ```
+///
+/// Use [`LintName::from_descriptor()`] for names from lint descriptors
+/// (which are always valid by definition).
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LintName(String);
+
+impl LintName {
+    /// Create a new `LintName` from user input.
+    ///
+    /// Returns `None` if the lint name (or its alias) doesn't exist in the
+    /// unified registry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use move_clippy::lint::LintName;
+    ///
+    /// let name = LintName::new("abilities_order");
+    /// assert!(name.is_some());
+    ///
+    /// let invalid = LintName::new("not_a_real_lint");
+    /// assert!(invalid.is_none());
+    /// ```
+    #[must_use]
+    pub fn new(name: &str) -> Option<Self> {
+        let canonical = resolve_lint_alias(name);
+        if crate::unified::unified_registry().get(canonical).is_some() {
+            Some(Self(canonical.to_string()))
+        } else {
+            None
+        }
+    }
+
+    /// Create a `LintName` from a lint descriptor.
+    ///
+    /// This is always valid since descriptors come from the registry itself.
+    #[must_use]
+    pub fn from_descriptor(descriptor: &LintDescriptor) -> Self {
+        Self(descriptor.name.to_string())
+    }
+
+    /// Create a `LintName` from a static string without validation.
+    ///
+    /// This is for internal use where the lint name is known to be valid
+    /// (e.g., from a `&'static str` constant in a lint descriptor).
+    #[allow(dead_code)]
+    #[must_use]
+    pub(crate) fn from_static(name: &'static str) -> Self {
+        Self(name.to_string())
+    }
+
+    /// Get the lint name as a string slice.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// Convert to an owned `String`.
+    #[must_use]
+    pub fn into_string(self) -> String {
+        self.0
+    }
+}
+
+impl std::fmt::Display for LintName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<str> for LintName {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl std::borrow::Borrow<str> for LintName {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
 }
 
 /// Registry of syntax-only lint rules used by the fast-mode engine.
