@@ -121,7 +121,7 @@ impl AnalysisKind {
 ///
 /// - `Safe` fixes preserve runtime behavior exactly
 /// - `Unsafe` fixes may change runtime behavior and require explicit opt-in
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum FixSafety {
     /// Fix is guaranteed to preserve runtime behavior.
     /// Applied by default with `--fix`.
@@ -143,7 +143,7 @@ impl FixSafety {
 }
 
 /// Descriptor for an auto-fix associated with a lint rule.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FixDescriptor {
     /// Whether an auto-fix is available for this lint.
     pub available: bool,
@@ -455,7 +455,7 @@ pub trait LintRule: Send + Sync {
 }
 
 /// Per-lint configuration derived from `move-clippy.toml`.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LintSettings {
     levels: HashMap<String, LintLevel>,
 }
