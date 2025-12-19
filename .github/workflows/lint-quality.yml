@@ -51,46 +51,6 @@ jobs:
       - name: Run fixture snapshot tests
         run: cargo test --test fixtures_snapshots
         
-  # Ecosystem snapshot tests - validates against real-world Move code
-  ecosystem-snapshots:
-    name: Ecosystem Snapshot Tests
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-            
-      - name: Clone ecosystem repos
-        run: |
-          mkdir -p test-repos
-          cd test-repos
-          # Clone well-known Move repos for testing
-          git clone --depth 1 https://github.com/MystenLabs/sui.git || true
-          git clone --depth 1 https://github.com/OpenZeppelin/openzeppelin-sui.git || true
-          
-      - name: Build move-clippy
-        run: cargo build --release
-        
-      - name: Run ecosystem tests
-        run: |
-          # Run lints against ecosystem repos
-          # This will be expanded when ecosystem_snapshots.rs is implemented
-          cargo test --test ecosystem_snapshots 2>/dev/null || echo "Ecosystem tests not yet implemented"
-          
   # Security lint validation - extra scrutiny for security-related changes
   security-validation:
     name: Security Lint Validation
