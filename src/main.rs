@@ -1273,13 +1273,11 @@ fn collect_from_dir(dir: &Path, out: &mut Vec<PathBuf>, skip_tests: bool) -> any
                 continue;
             }
             // Skip tests/ directories if requested
-            if skip_tests {
-                if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
-                    if name == "tests" {
+            if skip_tests
+                && let Some(name) = path.file_name().and_then(|s| s.to_str())
+                    && name == "tests" {
                         continue;
                     }
-                }
-            }
             collect_from_dir(&path, out, skip_tests)?;
             continue;
         }
@@ -1311,19 +1309,18 @@ fn should_skip_dir(path: &Path) -> bool {
 /// - Filename ends with `_tests.move` or `_test.move`
 pub fn is_test_file(path: &Path) -> bool {
     let path_str = path.to_string_lossy();
-    
+
     // Check if path contains /tests/ directory
     if path_str.contains("/tests/") || path_str.contains("\\tests\\") {
         return true;
     }
-    
+
     // Check filename patterns
-    if let Some(file_name) = path.file_name().and_then(|s| s.to_str()) {
-        if file_name.ends_with("_tests.move") || file_name.ends_with("_test.move") {
+    if let Some(file_name) = path.file_name().and_then(|s| s.to_str())
+        && (file_name.ends_with("_tests.move") || file_name.ends_with("_test.move")) {
             return true;
         }
-    }
-    
+
     false
 }
 

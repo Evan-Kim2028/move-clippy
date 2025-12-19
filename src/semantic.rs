@@ -1450,56 +1450,27 @@ mod full {
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
                     check_shared_capability_in_seq_item(
-                        item,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        item, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
                 check_shared_capability_in_exp(
-                    if_body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
+                    if_body, share_fns, out, settings, file_map, func_name,
                 );
                 if let Some(else_e) = else_body {
                     check_shared_capability_in_exp(
-                        else_e,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        else_e, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
                 check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
-                check_shared_capability_in_exp(
-                    body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_shared_capability_in_exp(
-                    body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
             }
             _ => {}
         }
@@ -2939,14 +2910,7 @@ mod full {
                 check_unused_return_in_exp(body, important_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_unused_return_in_exp(
-                    body,
-                    important_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_unused_return_in_exp(body, important_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::BinopExp(l, _op, _ty, r) => {
                 check_unused_return_in_exp(l, important_fns, out, settings, file_map, func_name);
@@ -3187,12 +3151,7 @@ mod full {
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
                     check_share_owned_in_seq_item(
-                        item,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        item, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
@@ -3285,7 +3244,10 @@ mod full {
         if type_args.is_empty() {
             name
         } else {
-            let args: Vec<_> = type_args.iter().map(|t| format_type(strip_refs(&t.value))).collect();
+            let args: Vec<_> = type_args
+                .iter()
+                .map(|t| format_type(strip_refs(&t.value)))
+                .collect();
             format!("{}<{}>", name, args.join(", "))
         }
     }
@@ -3523,7 +3485,8 @@ mod full {
                     // The address should be the Sui framework address (0x2)
                     let is_sui_addr = match addr {
                         move_compiler::expansion::ast::Address::Numerical {
-                            value: addr_value, ..
+                            value: addr_value,
+                            ..
                         } => {
                             // Check if address bytes end with 0x02
                             let bytes = addr_value.value.into_bytes();
