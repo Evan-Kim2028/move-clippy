@@ -89,7 +89,7 @@ pub fn is_hot_potato_type_from_ty(ty: &N::Type_) -> bool {
 ///
 /// This is the broadest category for "valuable" types.
 ///
-/// Examples: Coin<T>, NFT, Pool, Vault
+/// Examples: `Coin<T>`, NFT, Pool, Vault
 pub fn is_resource_type(abilities: &AbilitySet) -> bool {
     abilities.has_ability_(Ability_::Key) && abilities.has_ability_(Ability_::Store)
 }

@@ -470,7 +470,7 @@ pub static CAPABILITY_TRANSFER_V2: LintDescriptor = LintDescriptor {
 /// # Security References
 ///
 /// - **Sui Documentation**: "Randomness"
-///   URL: https://docs.sui.io/guides/developer/advanced/randomness
+///   URL: <https://docs.sui.io/guides/developer/advanced/randomness>
 ///   Verified: 2024-12-13 (Random must be private)
 ///
 /// # Why This Matters

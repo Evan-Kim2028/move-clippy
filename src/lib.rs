@@ -2,6 +2,25 @@
 //!
 //! The crate exposes a tree-sitter based `LintEngine` for fast mode and
 //! optional semantic helpers when built with the `full` feature.
+//!
+//! # Quick Start
+//!
+//! ```
+//! use move_clippy::{LintEngine, create_default_engine};
+//!
+//! // Create engine with default stable lints
+//! let engine = create_default_engine();
+//!
+//! // Or use the builder for more control
+//! let engine = LintEngine::builder()
+//!     .preview(true)  // Enable preview lints
+//!     .build()
+//!     .expect("failed to build engine");
+//!
+//! // Lint some source code
+//! let diagnostics = engine.lint_source("module test::m {}")
+//!     .expect("failed to lint");
+//! ```
 
 // Allow patterns that are intentional in this codebase
 #![allow(clippy::type_complexity)] // Complex types are used intentionally for Move compiler integration
@@ -46,18 +65,66 @@ pub mod absint_lints;
 #[cfg(feature = "full")]
 pub mod cross_module_lints;
 
-use anyhow::Result;
+// ============================================================================
+// Public Re-exports
+// ============================================================================
+
+// Core types
+pub use crate::diagnostics::{Diagnostic, Position, Span, Suggestion};
+pub use crate::error::{Error, Result};
+pub use crate::level::LintLevel;
+pub use crate::lint::{
+    AnalysisKind, LintCategory, LintDescriptor, LintName, LintRegistry, LintRule, LintSettings,
+    RuleGroup,
+};
+
+// Unified registry
+pub use crate::unified::{LintPhase, UnifiedLint, UnifiedLintRegistry, unified_registry};
+
+// ============================================================================
+// LintEngine
+// ============================================================================
+
+use anyhow::Result as AnyhowResult;
+use std::fmt;
 use tree_sitter::Tree;
 
-use crate::diagnostics::Diagnostic;
-use crate::lint::{LintContext, LintRegistry, LintSettings};
+use crate::lint::LintContext;
 use crate::parser::parse_source;
 use crate::visitor::walk_tree;
 
 /// Engine orchestrates linting by parsing source and running registered rules.
+///
+/// # Creating an Engine
+///
+/// Use [`LintEngine::builder()`] for full control over configuration:
+///
+/// ```
+/// use move_clippy::LintEngine;
+///
+/// let engine = LintEngine::builder()
+///     .preview(true)
+///     .skip(["while_true_to_loop".to_string()])
+///     .build()
+///     .expect("failed to build engine");
+/// ```
+///
+/// Or use [`create_default_engine()`] for quick setup with stable lints only.
 pub struct LintEngine {
     registry: LintRegistry,
     settings: LintSettings,
+}
+
+impl fmt::Debug for LintEngine {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LintEngine")
+            .field(
+                "registry",
+                &format!("<{} rules>", self.registry.rules().count()),
+            )
+            .field("settings", &self.settings)
+            .finish()
+    }
 }
 
 impl LintEngine {
@@ -97,12 +164,12 @@ impl LintEngine {
 
     /// Lint a single in-memory source string and return diagnostics.
     #[must_use = "diagnostics should be processed or reported"]
-    pub fn lint_source(&self, source: &str) -> Result<Vec<Diagnostic>> {
+    pub fn lint_source(&self, source: &str) -> AnyhowResult<Vec<Diagnostic>> {
         let tree = parse_source(source)?;
         self.run_rules(source, &tree)
     }
 
-    fn run_rules(&self, source: &str, tree: &Tree) -> Result<Vec<Diagnostic>> {
+    fn run_rules(&self, source: &str, tree: &Tree) -> AnyhowResult<Vec<Diagnostic>> {
         let mut ctx = LintContext::new(source, self.settings.clone());
         let root = tree.root_node();
 
@@ -120,9 +187,22 @@ impl LintEngine {
     }
 }
 
+// ============================================================================
+// LintEngineBuilder
+// ============================================================================
+
 /// Builder for constructing a configured [`LintEngine`].
 ///
 /// Use [`LintEngine::builder()`] to create a new builder.
+///
+/// # Default
+///
+/// The builder implements [`Default`], which creates a builder with:
+/// - No custom registry (will build from default rules)
+/// - Default lint settings
+/// - No lint filtering (only, skip, disabled are empty)
+/// - Full mode disabled
+/// - Preview and experimental lints disabled
 ///
 /// # Examples
 ///
@@ -153,8 +233,25 @@ pub struct LintEngineBuilder {
     experimental: bool,
 }
 
+impl fmt::Debug for LintEngineBuilder {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LintEngineBuilder")
+            .field("registry", &self.registry.as_ref().map(|_| "<custom>"))
+            .field("settings", &self.settings)
+            .field("only", &self.only)
+            .field("skip", &self.skip)
+            .field("disabled", &self.disabled)
+            .field("full_mode", &self.full_mode)
+            .field("preview", &self.preview)
+            .field("experimental", &self.experimental)
+            .finish()
+    }
+}
+
 impl LintEngineBuilder {
     /// Create a new builder with default settings.
+    ///
+    /// This is equivalent to `LintEngineBuilder::default()`.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -241,7 +338,7 @@ impl LintEngineBuilder {
     ///
     /// Returns an error if any lint name in `only`, `skip`, or `disabled`
     /// is not a known lint name.
-    pub fn build(self) -> anyhow::Result<LintEngine> {
+    pub fn build(self) -> AnyhowResult<LintEngine> {
         let registry = match self.registry {
             Some(r) => r,
             None => LintRegistry::default_rules_filtered_with_experimental(
@@ -258,7 +355,18 @@ impl LintEngineBuilder {
     }
 }
 
+// ============================================================================
+// Convenience Functions
+// ============================================================================
+
 /// Construct a `LintEngine` with all built-in fast lints enabled.
+///
+/// This creates an engine with:
+/// - Only stable lints (no preview or experimental)
+/// - Default lint settings
+/// - Fast mode only (no semantic analysis)
+///
+/// For more control, use [`LintEngine::builder()`].
 #[must_use = "engine should be used for linting"]
 pub fn create_default_engine() -> LintEngine {
     // Use filtered registry to respect tier system (Stable only by default)
@@ -274,6 +382,10 @@ pub fn create_default_engine() -> LintEngine {
 
     LintEngine::new(registry)
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
 
 #[cfg(test)]
 mod tests {
@@ -316,5 +428,21 @@ mod tests {
             .expect("build failed");
         let result = engine.lint_source("module test::m {}");
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_engine_debug() {
+        let engine = create_default_engine();
+        let debug_str = format!("{:?}", engine);
+        assert!(debug_str.contains("LintEngine"));
+        assert!(debug_str.contains("rules"));
+    }
+
+    #[test]
+    fn test_builder_debug() {
+        let builder = LintEngineBuilder::new().preview(true);
+        let debug_str = format!("{:?}", builder);
+        assert!(debug_str.contains("LintEngineBuilder"));
+        assert!(debug_str.contains("preview: true"));
     }
 }

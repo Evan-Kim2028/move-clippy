@@ -492,7 +492,7 @@ impl LintSettings {
     /// Get the lint level for a lint by string name.
     ///
     /// This method resolves aliases and is useful for user input.
-    /// Prefer [`level_for_name()`] when you have a validated [`LintName`].
+    /// Prefer [`Self::level_for_name`] when you have a validated [`LintName`].
     pub fn level_for(&self, lint_name: &str) -> LintLevel {
         // First try canonical name, then check if input is an alias
         if let Some(&level) = self.levels.get(lint_name) {
