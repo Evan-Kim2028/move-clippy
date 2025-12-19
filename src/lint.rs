@@ -121,7 +121,7 @@ impl AnalysisKind {
 ///
 /// - `Safe` fixes preserve runtime behavior exactly
 /// - `Unsafe` fixes may change runtime behavior and require explicit opt-in
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum FixSafety {
     /// Fix is guaranteed to preserve runtime behavior.
     /// Applied by default with `--fix`.
@@ -143,7 +143,7 @@ impl FixSafety {
 }
 
 /// Descriptor for an auto-fix associated with a lint rule.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FixDescriptor {
     /// Whether an auto-fix is available for this lint.
     pub available: bool,
@@ -455,12 +455,13 @@ pub trait LintRule: Send + Sync {
 }
 
 /// Per-lint configuration derived from `move-clippy.toml`.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LintSettings {
     levels: HashMap<String, LintLevel>,
 }
 
 impl LintSettings {
+    #[must_use]
     pub fn with_config_levels(mut self, levels: HashMap<String, LintLevel>) -> Self {
         // Resolve aliases when storing levels
         for (name, level) in levels {
@@ -470,6 +471,7 @@ impl LintSettings {
         self
     }
 
+    #[must_use]
     pub fn disable(mut self, disabled: impl IntoIterator<Item = String>) -> Self {
         for name in disabled {
             // Resolve aliases when disabling
@@ -479,6 +481,18 @@ impl LintSettings {
         self
     }
 
+    /// Get the lint level for a validated [`LintName`].
+    ///
+    /// This is the preferred method when you have a pre-validated `LintName`.
+    #[must_use]
+    pub fn level_for_name(&self, lint: &LintName) -> LintLevel {
+        self.levels.get(lint.as_str()).copied().unwrap_or_default()
+    }
+
+    /// Get the lint level for a lint by string name.
+    ///
+    /// This method resolves aliases and is useful for user input.
+    /// Prefer [`Self::level_for_name`] when you have a validated [`LintName`].
     pub fn level_for(&self, lint_name: &str) -> LintLevel {
         // First try canonical name, then check if input is an alias
         if let Some(&level) = self.levels.get(lint_name) {
@@ -775,6 +789,7 @@ impl<'src> LintContext<'src> {
         &self.settings
     }
 
+    #[must_use]
     pub fn into_diagnostics(mut self) -> Vec<Diagnostic> {
         self.append_unfulfilled_expectation_diagnostics();
         self.diagnostics
@@ -894,6 +909,113 @@ pub fn all_known_lints() -> HashSet<&'static str> {
         .collect()
 }
 
+// ============================================================================
+// LintName Newtype
+// ============================================================================
+
+/// A validated lint name that is known to exist in the registry.
+///
+/// `LintName` provides type safety for lint names, ensuring that a name
+/// has been validated against the registry before being used. This prevents
+/// typos and invalid lint names from propagating through the codebase.
+///
+/// # Creating a LintName
+///
+/// Use [`LintName::new()`] to validate user input:
+///
+/// ```
+/// use move_clippy::lint::LintName;
+///
+/// // Valid lint name
+/// let name = LintName::new("abilities_order");
+/// assert!(name.is_some());
+///
+/// // Invalid lint name
+/// let invalid = LintName::new("not_a_real_lint");
+/// assert!(invalid.is_none());
+/// ```
+///
+/// Use [`LintName::from_descriptor()`] for names from lint descriptors
+/// (which are always valid by definition).
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LintName(String);
+
+impl LintName {
+    /// Create a new `LintName` from user input.
+    ///
+    /// Returns `None` if the lint name (or its alias) doesn't exist in the
+    /// unified registry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use move_clippy::lint::LintName;
+    ///
+    /// let name = LintName::new("abilities_order");
+    /// assert!(name.is_some());
+    ///
+    /// let invalid = LintName::new("not_a_real_lint");
+    /// assert!(invalid.is_none());
+    /// ```
+    #[must_use]
+    pub fn new(name: &str) -> Option<Self> {
+        let canonical = resolve_lint_alias(name);
+        if crate::unified::unified_registry().get(canonical).is_some() {
+            Some(Self(canonical.to_string()))
+        } else {
+            None
+        }
+    }
+
+    /// Create a `LintName` from a lint descriptor.
+    ///
+    /// This is always valid since descriptors come from the registry itself.
+    #[must_use]
+    pub fn from_descriptor(descriptor: &LintDescriptor) -> Self {
+        Self(descriptor.name.to_string())
+    }
+
+    /// Create a `LintName` from a static string without validation.
+    ///
+    /// This is for internal use where the lint name is known to be valid
+    /// (e.g., from a `&'static str` constant in a lint descriptor).
+    #[allow(dead_code)]
+    #[must_use]
+    pub(crate) fn from_static(name: &'static str) -> Self {
+        Self(name.to_string())
+    }
+
+    /// Get the lint name as a string slice.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// Convert to an owned `String`.
+    #[must_use]
+    pub fn into_string(self) -> String {
+        self.0
+    }
+}
+
+impl std::fmt::Display for LintName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<str> for LintName {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl std::borrow::Borrow<str> for LintName {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
 /// Registry of syntax-only lint rules used by the fast-mode engine.
 pub struct LintRegistry {
     rules: Vec<Box<dyn LintRule>>,
@@ -906,10 +1028,12 @@ impl Default for LintRegistry {
 }
 
 impl LintRegistry {
+    #[must_use]
     pub fn new() -> Self {
         Self { rules: Vec::new() }
     }
 
+    #[must_use]
     pub fn with_rule(mut self, rule: impl LintRule + 'static) -> Self {
         self.rules.push(Box::new(rule));
         self
@@ -927,10 +1051,12 @@ impl LintRegistry {
         self.descriptors().find(|d| d.name == name)
     }
 
+    #[must_use = "registry should be used to create an engine"]
     pub fn default_rules() -> Self {
         crate::unified::build_syntactic_registry()
     }
 
+    /// Returns error if any lint name in `only`, `skip`, or `disabled` is unknown.
     pub fn default_rules_filtered(
         only: &[String],
         skip: &[String],
@@ -944,6 +1070,10 @@ impl LintRegistry {
     }
 
     /// Filter rules with full tier support including experimental.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if any lint name in `only`, `skip`, or `disabled` is unknown.
     pub fn default_rules_filtered_with_experimental(
         only: &[String],
         skip: &[String],

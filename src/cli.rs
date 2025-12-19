@@ -249,7 +249,7 @@ pub struct LintArgs {
 
     /// Show lint tier in diagnostic output.
     ///
-    /// Displays [stable], [preview], [experimental], or [deprecated] prefix
+    /// Displays `[stable]`, `[preview]`, `[experimental]`, or `[deprecated]` prefix
     /// for each diagnostic to help identify rule maturity.
     #[arg(long)]
     pub show_tier: bool,

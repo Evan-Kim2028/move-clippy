@@ -17,6 +17,7 @@ use std::sync::OnceLock;
 
 static UNIFIED_REGISTRY: OnceLock<UnifiedLintRegistry> = OnceLock::new();
 
+#[must_use]
 pub fn unified_registry() -> &'static UnifiedLintRegistry {
     UNIFIED_REGISTRY.get_or_init(build_unified_registry)
 }
@@ -110,6 +111,7 @@ impl UnifiedLintRegistry {
     }
 
     /// Get a lint by name.
+    #[must_use]
     pub fn get(&self, name: &str) -> Option<&UnifiedLint> {
         self.lints.get(name)
     }
@@ -125,67 +127,70 @@ impl UnifiedLintRegistry {
     }
 
     /// Get lints by tier.
-    pub fn by_tier(&self, tier: RuleGroup) -> Vec<&UnifiedLint> {
+    pub fn by_tier(&self, tier: RuleGroup) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_tier
             .get(&tier)
-            .map(|names| names.iter().filter_map(|n| self.lints.get(n)).collect())
-            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .filter_map(move |n| self.lints.get(n))
     }
 
     /// Get lints by category.
-    pub fn by_category(&self, category: LintCategory) -> Vec<&UnifiedLint> {
+    pub fn by_category(&self, category: LintCategory) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_category
             .get(&category)
-            .map(|names| names.iter().filter_map(|n| self.lints.get(n)).collect())
-            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .filter_map(move |n| self.lints.get(n))
     }
 
     /// Get lints by phase.
-    pub fn by_phase(&self, phase: LintPhase) -> Vec<&UnifiedLint> {
+    pub fn by_phase(&self, phase: LintPhase) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_phase
             .get(&phase)
-            .map(|names| names.iter().filter_map(|n| self.lints.get(n)).collect())
-            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .filter_map(move |n| self.lints.get(n))
     }
 
     /// Get lints by analysis kind.
-    pub fn by_analysis(&self, analysis: AnalysisKind) -> Vec<&UnifiedLint> {
+    pub fn by_analysis(&self, analysis: AnalysisKind) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_analysis
             .get(&analysis)
-            .map(|names| names.iter().filter_map(|n| self.lints.get(n)).collect())
-            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .filter_map(move |n| self.lints.get(n))
     }
 
     /// Get all stable lints.
-    pub fn stable(&self) -> Vec<&UnifiedLint> {
+    pub fn stable(&self) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_tier(RuleGroup::Stable)
     }
 
     /// Get all preview lints.
-    pub fn preview(&self) -> Vec<&UnifiedLint> {
+    pub fn preview(&self) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_tier(RuleGroup::Preview)
     }
 
     /// Get all experimental lints.
-    pub fn experimental(&self) -> Vec<&UnifiedLint> {
+    pub fn experimental(&self) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_tier(RuleGroup::Experimental)
     }
 
     /// Get all security lints.
-    pub fn security(&self) -> Vec<&UnifiedLint> {
+    pub fn security(&self) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_category(LintCategory::Security)
     }
 
     /// Get all lints that require --mode full.
-    pub fn requiring_full_mode(&self) -> Vec<&UnifiedLint> {
+    pub fn requiring_full_mode(&self) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.lints
             .values()
             .filter(|l| l.descriptor.analysis.requires_full_mode())
-            .collect()
     }
 
     /// Get all lints available in fast mode (default).
-    pub fn fast_mode_lints(&self) -> Vec<&UnifiedLint> {
+    pub fn fast_mode_lints(&self) -> impl Iterator<Item = &UnifiedLint> + '_ {
         self.by_phase(LintPhase::Syntactic)
     }
 
@@ -321,15 +326,15 @@ pub fn print_lint_summary(registry: &UnifiedLintRegistry) {
     println!("By Tier:");
     println!(
         "  Stable:       {}",
-        registry.by_tier(RuleGroup::Stable).len()
+        registry.by_tier(RuleGroup::Stable).count()
     );
     println!(
         "  Preview:      {}",
-        registry.by_tier(RuleGroup::Preview).len()
+        registry.by_tier(RuleGroup::Preview).count()
     );
     println!(
         "  Experimental: {}",
-        registry.by_tier(RuleGroup::Experimental).len()
+        registry.by_tier(RuleGroup::Experimental).count()
     );
     println!();
 
@@ -337,19 +342,19 @@ pub fn print_lint_summary(registry: &UnifiedLintRegistry) {
     println!("By Phase:");
     println!(
         "  Syntactic:    {}",
-        registry.by_phase(LintPhase::Syntactic).len()
+        registry.by_phase(LintPhase::Syntactic).count()
     );
     println!(
         "  Semantic:     {}",
-        registry.by_phase(LintPhase::Semantic).len()
+        registry.by_phase(LintPhase::Semantic).count()
     );
     println!(
         "  AbsInt:       {}",
-        registry.by_phase(LintPhase::AbstractInterpretation).len()
+        registry.by_phase(LintPhase::AbstractInterpretation).count()
     );
     println!(
         "  CrossModule:  {}",
-        registry.by_phase(LintPhase::CrossModule).len()
+        registry.by_phase(LintPhase::CrossModule).count()
     );
     println!();
 
@@ -357,27 +362,27 @@ pub fn print_lint_summary(registry: &UnifiedLintRegistry) {
     println!("By Category:");
     println!(
         "  Style:        {}",
-        registry.by_category(LintCategory::Style).len()
+        registry.by_category(LintCategory::Style).count()
     );
     println!(
         "  Modernization:{}",
-        registry.by_category(LintCategory::Modernization).len()
+        registry.by_category(LintCategory::Modernization).count()
     );
     println!(
         "  Naming:       {}",
-        registry.by_category(LintCategory::Naming).len()
+        registry.by_category(LintCategory::Naming).count()
     );
     println!(
         "  Security:     {}",
-        registry.by_category(LintCategory::Security).len()
+        registry.by_category(LintCategory::Security).count()
     );
     println!(
         "  Suspicious:   {}",
-        registry.by_category(LintCategory::Suspicious).len()
+        registry.by_category(LintCategory::Suspicious).count()
     );
     println!(
         "  TestQuality:  {}",
-        registry.by_category(LintCategory::TestQuality).len()
+        registry.by_category(LintCategory::TestQuality).count()
     );
     println!();
 
@@ -411,10 +416,10 @@ mod tests {
     fn test_tier_filtering() {
         let registry = build_unified_registry();
 
-        let stable = registry.stable();
+        let stable: Vec<_> = registry.stable().collect();
         assert!(!stable.is_empty(), "Should have stable lints");
 
-        for lint in &stable {
+        for lint in stable {
             assert_eq!(
                 lint.descriptor.group,
                 RuleGroup::Stable,
@@ -427,10 +432,10 @@ mod tests {
     fn test_phase_filtering() {
         let registry = build_unified_registry();
 
-        let syntactic = registry.by_phase(LintPhase::Syntactic);
+        let syntactic: Vec<_> = registry.by_phase(LintPhase::Syntactic).collect();
         assert!(!syntactic.is_empty(), "Should have syntactic lints");
 
-        for lint in &syntactic {
+        for lint in syntactic {
             assert_eq!(
                 lint.phase,
                 LintPhase::Syntactic,
@@ -443,9 +448,9 @@ mod tests {
     fn test_security_lints() {
         let registry = build_unified_registry();
 
-        let security = registry.security();
+        let security: Vec<_> = registry.security().collect();
         // May be empty if no security lints are registered
-        for lint in &security {
+        for lint in security {
             assert_eq!(
                 lint.descriptor.category,
                 LintCategory::Security,
@@ -458,10 +463,10 @@ mod tests {
     fn test_fast_mode_lints() {
         let registry = build_unified_registry();
 
-        let fast = registry.fast_mode_lints();
+        let fast: Vec<_> = registry.fast_mode_lints().collect();
         assert!(!fast.is_empty(), "Should have fast mode lints");
 
-        for lint in &fast {
+        for lint in fast {
             assert!(
                 !lint.descriptor.analysis.requires_full_mode(),
                 "Fast mode lints should not require full mode"

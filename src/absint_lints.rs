@@ -19,7 +19,7 @@
 #![allow(unused)]
 
 use crate::diagnostics::Diagnostic;
-use crate::error::ClippyResult;
+use crate::error::Result as ClippyResult;
 use crate::lint::{
     AnalysisKind, FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup,
     TypeSystemGap,

@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 /// Per-lint severity level used by diagnostics and configuration.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, Default,
+)]
 #[serde(rename_all = "lowercase")]
-#[derive(Default)]
 pub enum LintLevel {
     Allow,
     #[default]

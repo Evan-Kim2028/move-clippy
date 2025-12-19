@@ -43,7 +43,7 @@ fn has_drop_ability(node: Node, source: &str) -> bool {
 /// # Security References
 ///
 /// - **Cetus $223M Hack (2025-05-22)**: Integer overflow in integer_mate library
-///   URL: https://x.com/paborji/status/1925573106270621989
+///   URL: <https://x.com/paborji/status/1925573106270621989>
 ///   Verified: 2025-12-13 (Analysis of vulnerable code vs fixed code)
 ///
 /// # Why This Matters
@@ -170,11 +170,11 @@ fn check_suspicious_overflow(node: Node, source: &str, ctx: &mut LintContext<'_>
 ///
 /// - **Bluefin MoveBit Audit (2024-05)**: "Dangerous Single-Step Ownership Transfer"
 ///   Finding: Protocol used `pyth::get_price_unsafe` which doesn't guarantee freshness
-///   URL: https://www.movebit.xyz/blog/post/Bluefin-vulnerabilities-explanation-1.html
+///   URL: <https://www.movebit.xyz/blog/post/Bluefin-vulnerabilities-explanation-1.html>
 ///   Verified: 2025-12-13
 ///
 /// - **Pyth Network Documentation**: Explicitly warns about `get_price_unsafe`
-///   URL: https://docs.pyth.network/
+///   URL: <https://docs.pyth.network/>
 ///
 /// # Why This Matters
 ///
@@ -263,7 +263,7 @@ fn check_stale_oracle_price(node: Node, source: &str, ctx: &mut LintContext<'_>)
 ///
 /// - **Bluefin MoveBit Audit (2024-05)**: "Dangerous Single-Step Ownership Transfer"
 ///   Finding: Admin transfer functions had no confirmation step
-///   URL: https://www.movebit.xyz/blog/post/Bluefin-vulnerabilities-explanation-1.html
+///   URL: <https://www.movebit.xyz/blog/post/Bluefin-vulnerabilities-explanation-1.html>
 ///   Verified: 2025-12-13
 ///
 /// - **OpenZeppelin (Ethereum)**: Two-step ownership transfer is best practice
@@ -399,11 +399,11 @@ fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'
 /// # Security References
 ///
 /// - **MoveBit (2023-07-07)**: "Sui Objects Security Principles and Best Practices"
-///   URL: https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html
+///   URL: <https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html>
 ///   Verified: 2024-12-13 (Balance validation best practices)
 ///
 /// - **Sui Standard Library**: coin::split panics if amount > balance
-///   URL: https://docs.sui.io/references/framework/sui/coin
+///   URL: <https://docs.sui.io/references/framework/sui/coin>
 ///
 /// # Why This Matters
 ///
@@ -460,11 +460,11 @@ impl LintRule for UncheckedCoinSplitLint {
 /// # Security References
 ///
 /// - **Sui Documentation**: "One-Time Witness"
-///   URL: https://docs.sui.io/concepts/sui-move-concepts/one-time-witness
+///   URL: <https://docs.sui.io/concepts/sui-move-concepts/one-time-witness>
 ///   Verified: 2024-12-13 (OTW must have drop)
 ///
 /// - **MoveBit (2023)**: "Sui Move Security Best Practices"
-///   URL: https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html
+///   URL: <https://movebit.xyz/blog/post/Sui-Objects-Security-Principles-and-Best-Practices.html>
 ///
 /// # Why This Matters
 ///
@@ -571,7 +571,7 @@ fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_
 /// # Security References
 ///
 /// - **Sui Documentation**: "Randomness"
-///   URL: https://docs.sui.io/guides/developer/advanced/randomness
+///   URL: <https://docs.sui.io/guides/developer/advanced/randomness>
 ///   Verified: 2024-12-13 (Random must be private)
 ///
 /// - **Sui Linter**: `public_random` built-in lint
@@ -679,7 +679,7 @@ fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_
 /// # Security References
 ///
 /// - **Typus Finance Hack (Oct 2025)**: $3.4M lost due to `vector::contains()` result ignored
-///   URL: https://slowmist.medium.com/is-the-move-language-secure-the-typus-permission-validation-vulnerability-755a5175f7c3
+///   URL: <https://slowmist.medium.com/is-the-move-language-secure-the-typus-permission-validation-vulnerability-755a5175f7c3>
 ///   Verified: 2025-12-13
 ///
 /// # Why This Matters
@@ -866,7 +866,7 @@ fn get_enclosing_function_name<'a>(node: Node<'a>, source: &'a str) -> &'a str {
 /// # Security References
 ///
 /// - **Thala Hack (Nov 2024)**: $25.5M lost due to unstake without balance check
-///   URL: https://www.halborn.com/blog/post/explained-the-thala-hack-november-2024
+///   URL: <https://www.halborn.com/blog/post/explained-the-thala-hack-november-2024>
 ///   Verified: 2025-12-13
 ///
 /// # Why This Matters

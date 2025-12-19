@@ -5,7 +5,7 @@
 #![allow(unreachable_patterns)]
 
 use crate::diagnostics::Diagnostic;
-use crate::error::{ClippyResult, MoveClippyError};
+use crate::error::{Error, Result as ClippyResult};
 use crate::lint::{
     AnalysisKind, FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup,
     TypeSystemGap,
@@ -470,7 +470,7 @@ pub static CAPABILITY_TRANSFER_V2: LintDescriptor = LintDescriptor {
 /// # Security References
 ///
 /// - **Sui Documentation**: "Randomness"
-///   URL: https://docs.sui.io/guides/developer/advanced/randomness
+///   URL: <https://docs.sui.io/guides/developer/advanced/randomness>
 ///   Verified: 2024-12-13 (Random must be private)
 ///
 /// # Why This Matters
@@ -699,11 +699,11 @@ mod full {
                         Err(errors) => {
                             let rendered =
                                 report_diagnostics_to_buffer_with_env_color(&files, errors);
-                            Err(MoveClippyError::semantic(format!(
+                            Err(Error::semantic(format!(
                                 "Move compilation failed while running Phase II visitors:\n{}",
                                 String::from_utf8_lossy(&rendered)
                             ))
-                            .into_anyhow())
+                            .into())
                         }
                     }
                 })?;
@@ -1476,7 +1476,7 @@ mod full {
         }
     }
 
-    /// Detects capability-like transfers to literal addresses.
+    /// Detects capability transfers to literal addresses.
     fn lint_capability_transfer_literal_address(
         out: &mut Vec<Diagnostic>,
         settings: &LintSettings,
@@ -1817,7 +1817,7 @@ mod full {
             T::UnannotatedExp_::Use(v) => Some(v.value.id),
             T::UnannotatedExp_::Copy { var, .. } => Some(var.value.id),
             T::UnannotatedExp_::Move { var, .. } => Some(var.value.id),
-            T::UnannotatedExp_::BorrowLocal(_, v) => Some(v.value.id),
+            T::UnannotatedExp_::BorrowLocal(_mut_, v) => Some(v.value.id),
             T::UnannotatedExp_::TempBorrow(_, inner) => extract_local_var_id(inner),
             T::UnannotatedExp_::Dereference(inner) => extract_local_var_id(inner),
             T::UnannotatedExp_::Cast(inner, _) => extract_local_var_id(inner),
@@ -1961,7 +1961,7 @@ mod full {
                     );
                 }
             }
-            T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
+            T::UnannotatedExp_::IfElse(cond, if_body, e_opt) => {
                 check_unbounded_iter_in_exp(
                     cond,
                     vector_param_ids,
@@ -1978,9 +1978,9 @@ mod full {
                     file_map,
                     func_name,
                 );
-                if let Some(else_e) = else_body {
+                if let Some(e) = e_opt {
                     check_unbounded_iter_in_exp(
-                        else_e,
+                        e,
                         vector_param_ids,
                         out,
                         settings,
@@ -2345,7 +2345,6 @@ mod full {
             }
         }
 
-        // Recurse into subexpressions
         match &exp.exp.value {
             T::UnannotatedExp_::ModuleCall(call) => {
                 check_capability_transfer_in_exp(
@@ -2743,10 +2742,10 @@ mod full {
                     );
                 }
             }
-            T::UnannotatedExp_::IfElse(cond, t, e_opt) => {
+            T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
-                check_division_in_exp(t, validated_vars, out, settings, file_map, func_name);
-                if let Some(else_e) = e_opt {
+                check_division_in_exp(if_body, validated_vars, out, settings, file_map, func_name);
+                if let Some(else_e) = else_body {
                     check_division_in_exp(
                         else_e,
                         validated_vars,
@@ -2756,6 +2755,13 @@ mod full {
                         func_name,
                     );
                 }
+            }
+            T::UnannotatedExp_::While(_, cond, body) => {
+                check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
+                check_division_in_exp(body, validated_vars, out, settings, file_map, func_name);
+            }
+            T::UnannotatedExp_::Loop { body, .. } => {
+                check_division_in_exp(body, validated_vars, out, settings, file_map, func_name);
             }
             _ => {}
         }
@@ -3738,11 +3744,11 @@ mod full {
                 }
                 Err(errors) => {
                     let rendered = report_diagnostics_to_buffer_with_env_color(&files, errors);
-                    Err(MoveClippyError::semantic(format!(
+                    Err(Error::semantic(format!(
                         "Move compilation failed while running Sui lints:\n{}",
                         String::from_utf8_lossy(&rendered)
                     ))
-                    .into_anyhow())
+                    .into())
                 }
             }
         })?;
@@ -3895,7 +3901,7 @@ pub fn lint_package(
     _preview: bool,
     _experimental: bool,
 ) -> ClippyResult<Vec<Diagnostic>> {
-    Err(MoveClippyError::semantic(
+    Err(Error::semantic(
         "full mode requires building with --features full",
     ))
 }
