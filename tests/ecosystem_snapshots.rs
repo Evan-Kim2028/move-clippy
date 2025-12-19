@@ -42,6 +42,7 @@ fn lint_source(source: &str) -> Vec<String> {
 }
 
 /// Run lints on a directory and return a sorted, deterministic summary
+#[allow(dead_code)]
 fn lint_directory(path: &Path) -> BTreeMap<String, Vec<String>> {
     let mut results: BTreeMap<String, Vec<String>> = BTreeMap::new();
 
@@ -94,6 +95,7 @@ fn lint_directory(path: &Path) -> BTreeMap<String, Vec<String>> {
 }
 
 /// Format results for snapshot comparison
+#[allow(dead_code)]
 fn format_snapshot(results: &BTreeMap<String, Vec<String>>) -> String {
     if results.is_empty() {
         return "No findings.".to_string();
