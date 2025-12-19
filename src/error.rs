@@ -195,4 +195,12 @@ mod tests {
         let err: Error = io_err.into();
         assert!(matches!(err, Error::Io(_)));
     }
+
+    #[test]
+    fn test_config_error() {
+        let err = Error::config("/path/to/config.toml", "invalid key");
+        let msg = err.to_string();
+        assert!(msg.contains("/path/to/config.toml"));
+        assert!(msg.contains("invalid key"));
+    }
 }

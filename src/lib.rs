@@ -338,7 +338,7 @@ impl LintEngineBuilder {
     ///
     /// Returns an error if any lint name in `only`, `skip`, or `disabled`
     /// is not a known lint name.
-    pub fn build(self) -> AnyhowResult<LintEngine> {
+    pub fn build(self) -> crate::error::Result<LintEngine> {
         let registry = match self.registry {
             Some(r) => r,
             None => LintRegistry::default_rules_filtered_with_experimental(
@@ -348,7 +348,8 @@ impl LintEngineBuilder {
                 self.full_mode,
                 self.preview,
                 self.experimental,
-            )?,
+            )
+            .map_err(|e| crate::error::Error::other(e.to_string()))?,
         };
 
         Ok(LintEngine::new_with_settings(registry, self.settings))
