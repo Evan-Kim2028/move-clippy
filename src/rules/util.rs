@@ -232,3 +232,71 @@ pub(crate) fn is_test_only_module(root: tree_sitter::Node, source: &str) -> bool
     }
     false
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_source(source: &str) -> tree_sitter::Tree {
+        let mut parser = tree_sitter::Parser::new();
+        parser
+            .set_language(tree_sitter_move::language())
+            .expect("Error loading Move grammar");
+        parser.parse(source, None).expect("Error parsing source")
+    }
+
+    #[test]
+    fn test_is_test_only_module_with_attribute() {
+        let source = r#"
+            #[test_only]
+            module test_pkg::my_module {
+                fun helper() {}
+            }
+        "#;
+        let tree = parse_source(source);
+        assert!(is_test_only_module(tree.root_node(), source));
+    }
+
+    #[test]
+    fn test_is_test_only_module_with_test_suffix() {
+        let source = r#"
+            module test_pkg::my_module_tests {
+                fun test_something() {}
+            }
+        "#;
+        let tree = parse_source(source);
+        assert!(is_test_only_module(tree.root_node(), source));
+
+        let source2 = r#"
+            module test_pkg::my_module_test {
+                fun test_something() {}
+            }
+        "#;
+        let tree2 = parse_source(source2);
+        assert!(is_test_only_module(tree2.root_node(), source2));
+    }
+
+    #[test]
+    fn test_is_test_only_module_regular_module() {
+        let source = r#"
+            module my_pkg::my_module {
+                public fun do_something(): u64 { 42 }
+            }
+        "#;
+        let tree = parse_source(source);
+        assert!(!is_test_only_module(tree.root_node(), source));
+    }
+
+    #[test]
+    fn test_is_test_only_module_contest_not_test() {
+        // "contest" contains "test" but shouldn't match
+        let source = r#"
+            module my_pkg::contest {
+                public fun participate() {}
+            }
+        "#;
+        let tree = parse_source(source);
+        // Note: current implementation uses contains("_test") so this correctly returns false
+        assert!(!is_test_only_module(tree.root_node(), source));
+    }
+}

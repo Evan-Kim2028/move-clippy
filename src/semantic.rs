@@ -3521,7 +3521,7 @@ mod full {
     ) -> Result<()> {
         use crate::type_classifier::has_drop_ability;
 
-        for (_mident, minfo) in info.modules.key_cloned_iter() {
+        for (mident, minfo) in info.modules.key_cloned_iter() {
             match minfo.target_kind {
                 TargetKind::Source {
                     is_root_package: true,
@@ -3529,7 +3529,7 @@ mod full {
                 _ => continue,
             }
 
-            let module_name = _mident.value.module.value();
+            let module_name = mident.value.module.value();
             let module_name_str = module_name.as_str();
             let expected_otw_name = module_name_str.to_uppercase();
 

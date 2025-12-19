@@ -1275,9 +1275,10 @@ fn collect_from_dir(dir: &Path, out: &mut Vec<PathBuf>, skip_tests: bool) -> any
             // Skip tests/ directories if requested
             if skip_tests
                 && let Some(name) = path.file_name().and_then(|s| s.to_str())
-                    && name == "tests" {
-                        continue;
-                    }
+                && name == "tests"
+            {
+                continue;
+            }
             collect_from_dir(&path, out, skip_tests)?;
             continue;
         }
@@ -1305,21 +1306,26 @@ fn should_skip_dir(path: &Path) -> bool {
 /// Check if a file is a test file based on path patterns.
 ///
 /// Returns true if:
-/// - Path contains `/tests/` directory
+/// - Path contains `/tests/` directory or starts with `tests/`
 /// - Filename ends with `_tests.move` or `_test.move`
 pub fn is_test_file(path: &Path) -> bool {
     let path_str = path.to_string_lossy();
 
-    // Check if path contains /tests/ directory
-    if path_str.contains("/tests/") || path_str.contains("\\tests\\") {
+    // Check if path contains /tests/ directory or starts with tests/
+    if path_str.contains("/tests/")
+        || path_str.contains("\\tests\\")
+        || path_str.starts_with("tests/")
+        || path_str.starts_with("tests\\")
+    {
         return true;
     }
 
     // Check filename patterns
     if let Some(file_name) = path.file_name().and_then(|s| s.to_str())
-        && (file_name.ends_with("_tests.move") || file_name.ends_with("_test.move")) {
-            return true;
-        }
+        && (file_name.ends_with("_tests.move") || file_name.ends_with("_test.move"))
+    {
+        return true;
+    }
 
     false
 }
@@ -1342,4 +1348,43 @@ fn infer_start_dir(args: &LintArgs) -> anyhow::Result<PathBuf> {
     };
 
     Ok(base)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_test_file_tests_directory() {
+        assert!(is_test_file(Path::new("/project/tests/my_test.move")));
+        assert!(is_test_file(Path::new("/project/src/tests/helper.move")));
+        assert!(is_test_file(Path::new("tests/unit.move")));
+    }
+
+    #[test]
+    fn test_is_test_file_test_suffix() {
+        assert!(is_test_file(Path::new("/project/src/my_tests.move")));
+        assert!(is_test_file(Path::new("/project/src/my_test.move")));
+        assert!(is_test_file(Path::new("module_tests.move")));
+        assert!(is_test_file(Path::new("module_test.move")));
+    }
+
+    #[test]
+    fn test_is_test_file_regular_files() {
+        assert!(!is_test_file(Path::new("/project/src/main.move")));
+        assert!(!is_test_file(Path::new("/project/sources/token.move")));
+        assert!(!is_test_file(Path::new("my_module.move")));
+        // "test" in path but not as directory or suffix
+        assert!(!is_test_file(Path::new("/project/testing/main.move")));
+        assert!(!is_test_file(Path::new("/project/src/contest.move")));
+    }
+
+    #[test]
+    fn test_should_skip_dir() {
+        assert!(should_skip_dir(Path::new(".git")));
+        assert!(should_skip_dir(Path::new("target")));
+        assert!(should_skip_dir(Path::new("build")));
+        assert!(!should_skip_dir(Path::new("src")));
+        assert!(!should_skip_dir(Path::new("sources")));
+    }
 }

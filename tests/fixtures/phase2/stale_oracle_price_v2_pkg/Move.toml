@@ -1,0 +1,9 @@
+[package]
+name = "stale_oracle_price_v2_pkg"
+edition = "2024"
+
+[addresses]
+stale_oracle_price_v2_pkg = "0x0"
+pyth = "0x1"
+switchboard = "0x2"
+supra = "0x3"
