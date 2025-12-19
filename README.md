@@ -112,6 +112,12 @@ Lints are promoted from Experimental → Preview → Stable based on:
 
 See [docs/STABILITY.md](docs/STABILITY.md) for detailed tier policies and promotion criteria.
 
+## Ecosystem Validation
+
+Ecosystem runs and baselines live in the local runner at
+`../ecosystem-test-repos` (manifest + baselines + runner). See
+`../ecosystem-test-repos/README.md` for usage.
+
 ---
 
 ## Understanding Analysis Types
