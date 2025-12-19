@@ -2,7 +2,7 @@
 
 use insta::assert_snapshot;
 use move_clippy::diagnostics::Diagnostic;
-use move_clippy::error::{ClippyResult, MoveClippyError};
+use move_clippy::error::{Error, Result};
 use move_clippy::instrument_block;
 use move_clippy::lint::LintSettings;
 use move_clippy::semantic;
@@ -58,7 +58,7 @@ sui_fixture_tests! {
     true_unnecessary_public_entry,
 }
 
-fn run_fixture(name: &str) -> ClippyResult<String> {
+fn run_fixture(name: &str) -> Result<String> {
     let manifest_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let source = manifest_root
         .join(FIXTURE_ROOT)
@@ -85,7 +85,7 @@ fn run_fixture(name: &str) -> ClippyResult<String> {
     })
 }
 
-fn write_manifest(dir: &Path, edition: &str) -> ClippyResult<()> {
+fn write_manifest(dir: &Path, edition: &str) -> Result<()> {
     let manifest = format!(
         r#"[package]
  name = "sui_lint_fixture"
@@ -117,7 +117,7 @@ random = "0x9"
     Ok(())
 }
 
-fn modernize_fixture(root: &Path) -> ClippyResult<()> {
+fn modernize_fixture(root: &Path) -> Result<()> {
     instrument_block!("tests::modernize_fixture", {
         run_migration(root)?;
         rewrite_lint_attributes(root)?;
@@ -126,7 +126,7 @@ fn modernize_fixture(root: &Path) -> ClippyResult<()> {
 }
 
 #[allow(clippy::field_reassign_with_default)] // Intentional for clarity
-fn run_migration(root: &Path) -> ClippyResult<()> {
+fn run_migration(root: &Path) -> Result<()> {
     let mut config = BuildConfig::default();
     config.dev_mode = true;
     config.test_mode = true;
@@ -144,7 +144,7 @@ fn run_migration(root: &Path) -> ClippyResult<()> {
     Ok(())
 }
 
-fn rewrite_lint_attributes(root: &Path) -> ClippyResult<()> {
+fn rewrite_lint_attributes(root: &Path) -> Result<()> {
     let path = root.join("sources/main.move");
     let contents = fs::read_to_string(&path)?;
     let converted = convert_lint_allow_attributes(&contents)?;
@@ -153,9 +153,9 @@ fn rewrite_lint_attributes(root: &Path) -> ClippyResult<()> {
     Ok(())
 }
 
-fn convert_lint_allow_attributes(source: &str) -> ClippyResult<String> {
+fn convert_lint_allow_attributes(source: &str) -> Result<String> {
     let regex = Regex::new(r"(?m)(?P<prefix>^\s*)#\[\s*lint_allow\s*\((?P<args>[^)]+)\)\s*]")
-        .map_err(|e| MoveClippyError::fixture(format!("invalid lint attribute pattern: {e}")))?;
+        .map_err(|e| Error::fixture(format!("invalid lint attribute pattern: {e}")))?;
     let result = regex.replace_all(source, |caps: &regex::Captures| {
         let converted = format_lint_invocations(&caps["args"]);
         format!("{}#[allow({converted})]", &caps["prefix"])
@@ -163,9 +163,9 @@ fn convert_lint_allow_attributes(source: &str) -> ClippyResult<String> {
     Ok(result.into_owned())
 }
 
-fn expand_multi_lint_invocations(source: &str) -> ClippyResult<String> {
+fn expand_multi_lint_invocations(source: &str) -> Result<String> {
     let regex = Regex::new(r"lint\s*\((?P<args>[^)]+,[^)]*)\)")
-        .map_err(|e| MoveClippyError::fixture(format!("invalid lint invocation pattern: {e}")))?;
+        .map_err(|e| Error::fixture(format!("invalid lint invocation pattern: {e}")))?;
     let result = regex.replace_all(source, |caps: &regex::Captures| {
         format_lint_invocations(&caps["args"])
     });
