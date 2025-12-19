@@ -58,8 +58,7 @@ move-clippy list-rules
 
 - **Enabled by default** - Zero configuration needed
 - **Low false-positive rate** - Minimal noise
-- **Production-ready** - Safe for CI/CD pipelines
-- **Battle-tested** - Validated across multiple Move projects
+- **Validated** - Tested across multiple Move projects
 
 **Breakdown:**
 The stable tier includes both syntactic and semantic rules depending on your build and chosen mode. Use `move-clippy list-rules` to see the current breakdown.
