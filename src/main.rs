@@ -179,7 +179,7 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
                 has_error |= file_has_error;
                 out.append(&mut diags);
             } else {
-                let files = collect_move_files(&args.paths)?;
+                let files = collect_move_files(&args.paths, args.skip_tests)?;
                 for path in files {
                     let (count, file_has_error, mut diags) = lint_file_json(&engine, &path)?;
                     total_diags += count;
@@ -230,7 +230,7 @@ fn lint_command(args: LintArgs) -> anyhow::Result<ExitCode> {
                 total_diags += count;
                 has_error |= file_has_error;
             } else {
-                let files = collect_move_files(&args.paths)?;
+                let files = collect_move_files(&args.paths, args.skip_tests)?;
                 for path in files {
                     let (count, file_has_error) = lint_file_text(
                         &engine,
@@ -346,7 +346,7 @@ fn fix_command(args: LintArgs) -> anyhow::Result<ExitCode> {
     )?;
     let engine = LintEngine::new_with_settings(registry, settings);
 
-    let files = collect_move_files(&args.paths)?;
+    let files = collect_move_files(&args.paths, args.skip_tests)?;
     let mut total_fixed = 0usize;
     let mut total_skipped = 0usize;
     let mut files_modified = 0usize;
@@ -1238,10 +1238,10 @@ fn github_escape(s: &str) -> String {
         .replace('\n', "%0A")
 }
 
-fn collect_move_files(paths: &[PathBuf]) -> anyhow::Result<Vec<PathBuf>> {
+fn collect_move_files(paths: &[PathBuf], skip_tests: bool) -> anyhow::Result<Vec<PathBuf>> {
     let mut out = Vec::new();
     for path in paths {
-        collect_from_path(path, &mut out)?;
+        collect_from_path(path, &mut out, skip_tests)?;
     }
 
     out.sort();
@@ -1249,17 +1249,21 @@ fn collect_move_files(paths: &[PathBuf]) -> anyhow::Result<Vec<PathBuf>> {
     Ok(out)
 }
 
-fn collect_from_path(path: &Path, out: &mut Vec<PathBuf>) -> anyhow::Result<()> {
+fn collect_from_path(path: &Path, out: &mut Vec<PathBuf>, skip_tests: bool) -> anyhow::Result<()> {
     let meta = std::fs::metadata(path)?;
     if meta.is_dir() {
-        collect_from_dir(path, out)
+        collect_from_dir(path, out, skip_tests)
     } else {
+        // Skip test files if requested
+        if skip_tests && is_test_file(path) {
+            return Ok(());
+        }
         out.push(path.to_path_buf());
         Ok(())
     }
 }
 
-fn collect_from_dir(dir: &Path, out: &mut Vec<PathBuf>) -> anyhow::Result<()> {
+fn collect_from_dir(dir: &Path, out: &mut Vec<PathBuf>, skip_tests: bool) -> anyhow::Result<()> {
     for entry in std::fs::read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
@@ -1268,11 +1272,22 @@ fn collect_from_dir(dir: &Path, out: &mut Vec<PathBuf>) -> anyhow::Result<()> {
             if should_skip_dir(&path) {
                 continue;
             }
-            collect_from_dir(&path, out)?;
+            // Skip tests/ directories if requested
+            if skip_tests
+                && let Some(name) = path.file_name().and_then(|s| s.to_str())
+                && name == "tests"
+            {
+                continue;
+            }
+            collect_from_dir(&path, out, skip_tests)?;
             continue;
         }
 
         if path.extension().and_then(|e| e.to_str()) == Some("move") {
+            // Skip test files if requested
+            if skip_tests && is_test_file(&path) {
+                continue;
+            }
             out.push(path);
         }
     }
@@ -1286,6 +1301,33 @@ fn should_skip_dir(path: &Path) -> bool {
     };
 
     matches!(name, ".git" | "target" | "build")
+}
+
+/// Check if a file is a test file based on path patterns.
+///
+/// Returns true if:
+/// - Path contains `/tests/` directory or starts with `tests/`
+/// - Filename ends with `_tests.move` or `_test.move`
+pub fn is_test_file(path: &Path) -> bool {
+    let path_str = path.to_string_lossy();
+
+    // Check if path contains /tests/ directory or starts with tests/
+    if path_str.contains("/tests/")
+        || path_str.contains("\\tests\\")
+        || path_str.starts_with("tests/")
+        || path_str.starts_with("tests\\")
+    {
+        return true;
+    }
+
+    // Check filename patterns
+    if let Some(file_name) = path.file_name().and_then(|s| s.to_str())
+        && (file_name.ends_with("_tests.move") || file_name.ends_with("_test.move"))
+    {
+        return true;
+    }
+
+    false
 }
 
 fn infer_start_dir(args: &LintArgs) -> anyhow::Result<PathBuf> {
@@ -1306,4 +1348,43 @@ fn infer_start_dir(args: &LintArgs) -> anyhow::Result<PathBuf> {
     };
 
     Ok(base)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_test_file_tests_directory() {
+        assert!(is_test_file(Path::new("/project/tests/my_test.move")));
+        assert!(is_test_file(Path::new("/project/src/tests/helper.move")));
+        assert!(is_test_file(Path::new("tests/unit.move")));
+    }
+
+    #[test]
+    fn test_is_test_file_test_suffix() {
+        assert!(is_test_file(Path::new("/project/src/my_tests.move")));
+        assert!(is_test_file(Path::new("/project/src/my_test.move")));
+        assert!(is_test_file(Path::new("module_tests.move")));
+        assert!(is_test_file(Path::new("module_test.move")));
+    }
+
+    #[test]
+    fn test_is_test_file_regular_files() {
+        assert!(!is_test_file(Path::new("/project/src/main.move")));
+        assert!(!is_test_file(Path::new("/project/sources/token.move")));
+        assert!(!is_test_file(Path::new("my_module.move")));
+        // "test" in path but not as directory or suffix
+        assert!(!is_test_file(Path::new("/project/testing/main.move")));
+        assert!(!is_test_file(Path::new("/project/src/contest.move")));
+    }
+
+    #[test]
+    fn test_should_skip_dir() {
+        assert!(should_skip_dir(Path::new(".git")));
+        assert!(should_skip_dir(Path::new("target")));
+        assert!(should_skip_dir(Path::new("build")));
+        assert!(!should_skip_dir(Path::new("src")));
+        assert!(!should_skip_dir(Path::new("sources")));
+    }
 }

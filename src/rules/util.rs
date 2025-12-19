@@ -199,3 +199,104 @@ pub(crate) fn generate_method_call_fix(
 pub(crate) fn is_simple_receiver(receiver: &str) -> bool {
     is_simple_ident(receiver)
 }
+
+/// Check if this is a test-only module based on attributes and naming conventions.
+///
+/// Returns true if:
+/// - Module has `#[test_only]` attribute
+/// - Module name contains `_tests` or `_test`
+pub(crate) fn is_test_only_module(root: tree_sitter::Node, source: &str) -> bool {
+    let mut cursor = root.walk();
+    for child in root.children(&mut cursor) {
+        // Check for #[test_only] attribute
+        if child.kind() == "attribute" {
+            let text = slice(source, child);
+            if text.contains("test_only") {
+                return true;
+            }
+        }
+        // Also check annotations (different grammar node type)
+        if child.kind() == "annotation" {
+            let text = slice(source, child);
+            if text.contains("test_only") {
+                return true;
+            }
+        }
+        // Check the module definition name for test naming patterns
+        if child.kind() == "module_definition" {
+            let name = slice(source, child);
+            if name.contains("_tests") || name.contains("_test") {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_source(source: &str) -> tree_sitter::Tree {
+        let mut parser = tree_sitter::Parser::new();
+        parser
+            .set_language(tree_sitter_move::language())
+            .expect("Error loading Move grammar");
+        parser.parse(source, None).expect("Error parsing source")
+    }
+
+    #[test]
+    fn test_is_test_only_module_with_attribute() {
+        let source = r#"
+            #[test_only]
+            module test_pkg::my_module {
+                fun helper() {}
+            }
+        "#;
+        let tree = parse_source(source);
+        assert!(is_test_only_module(tree.root_node(), source));
+    }
+
+    #[test]
+    fn test_is_test_only_module_with_test_suffix() {
+        let source = r#"
+            module test_pkg::my_module_tests {
+                fun test_something() {}
+            }
+        "#;
+        let tree = parse_source(source);
+        assert!(is_test_only_module(tree.root_node(), source));
+
+        let source2 = r#"
+            module test_pkg::my_module_test {
+                fun test_something() {}
+            }
+        "#;
+        let tree2 = parse_source(source2);
+        assert!(is_test_only_module(tree2.root_node(), source2));
+    }
+
+    #[test]
+    fn test_is_test_only_module_regular_module() {
+        let source = r#"
+            module my_pkg::my_module {
+                public fun do_something(): u64 { 42 }
+            }
+        "#;
+        let tree = parse_source(source);
+        assert!(!is_test_only_module(tree.root_node(), source));
+    }
+
+    #[test]
+    fn test_is_test_only_module_contest_not_test() {
+        // "contest" contains "test" but shouldn't match
+        let source = r#"
+            module my_pkg::contest {
+                public fun participate() {}
+            }
+        "#;
+        let tree = parse_source(source);
+        // Note: current implementation uses contains("_test") so this correctly returns false
+        assert!(!is_test_only_module(tree.root_node(), source));
+    }
+}

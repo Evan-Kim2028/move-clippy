@@ -1,0 +1,7 @@
+[package]
+name = "public_random_access_v2_pkg"
+edition = "2024"
+
+[addresses]
+public_random_access_v2_pkg = "0x0"
+sui = "0x2"

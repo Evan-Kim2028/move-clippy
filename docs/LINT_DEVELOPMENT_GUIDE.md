@@ -293,9 +293,11 @@ tests/
 ├── semantic_package_snapshots.rs     # compiler-based package snapshots (full mode)
 ├── *_spec.rs                         # spec-driven semantic invariants (full mode)
 ├── meta_invariants.rs                # meta-tests about the lint engine itself
-├── ecosystem_snapshots.rs            # real-world code snapshots
+├── ecosystem_snapshots.rs            # embedded fixtures + regression snapshots
 └── support/                          # shared helpers for integration tests
 ```
+
+Real-world ecosystem validation now lives in `../ecosystem-test-repos`.
 
 ### Running Tests
 

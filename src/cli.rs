@@ -226,6 +226,13 @@ pub struct LintArgs {
     #[arg(long)]
     pub deny_warnings: bool,
 
+    /// Skip files in test directories and test modules.
+    ///
+    /// Skips files in `/tests/` directories and files ending with `_tests.move` or `_test.move`.
+    /// This reduces false positives for security lints that flag test helper code.
+    #[arg(long)]
+    pub skip_tests: bool,
+
     /// Enable preview rules that are not yet stable.
     ///
     /// Preview rules may have higher false-positive rates or change behavior

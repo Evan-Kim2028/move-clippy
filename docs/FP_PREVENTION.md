@@ -82,24 +82,11 @@ fn all_lint_names_are_snake_case() {
 }
 ```
 
-### 3. Ecosystem Snapshot Tests
+### 3. Ecosystem Validation Runs
 
-Location: `tests/ecosystem_snapshots.rs` (planned)
-
-Run lints against real-world Move codebases and snapshot the results:
-
-```rust
-#[test]
-fn openzeppelin_sui_no_new_findings() {
-    // Compare current findings against approved baseline
-    insta::assert_snapshot!(lint_repo("openzeppelin-sui"));
-}
-```
-
-**Benefits:**
-- Catch regressions when lint behavior changes
-- Validate against production code patterns
-- Track FP history over time
+Real-world ecosystem baselines live in the external runner at
+`../ecosystem-test-repos` (manifest + baselines + runner). Use that for
+false-positive tracking across real packages.
 
 ### 4. CI Pipeline
 

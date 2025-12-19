@@ -45,9 +45,6 @@ jobs:
       - name: Run all tests (excluding sui_lints)
         run: cargo test --all-features --lib --bins --test fix_tests --test lints --test ecosystem_snapshots --test syntactic_snapshots
         
-      - name: Run ecosystem validation tests
-        run: cargo test --test ecosystem
-        
       - name: Run fixture snapshot tests
         run: cargo test --test fixtures_snapshots
         
