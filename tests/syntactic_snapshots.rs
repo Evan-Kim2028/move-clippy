@@ -1,7 +1,8 @@
-//! Semantic Lint Snapshot Tests
+//! Syntactic Snapshot Tests (tree-sitter)
 //!
-//! These tests validate the semantic security lints against fixture files
-//! to ensure they correctly identify bugs and don't fire false positives.
+//! These tests snapshot fast-mode, tree-sitter based diagnostics over fixture files.
+//! Despite some fixtures being named after semantic lints, this test binary does
+//! NOT compile a Move package and therefore does not exercise `semantic::lint_package`.
 
 use insta::assert_snapshot;
 use move_clippy::LintEngine;

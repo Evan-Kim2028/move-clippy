@@ -1,0 +1,9 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+mut_key_param_missing_authority:sources/mut_key_param_missing_authority.move:30: 5: warning: Public entry `positive_missing_authority` mutates `cases::State` by `&mut` but takes no explicit authority parameter. If this object can be passed as shared input, add an explicit capability check or sender validation.
+mut_key_param_missing_authority:sources/mut_key_param_missing_authority.move:34: 5: warning: Public entry `negative_with_cap` mutates `cases::State` by `&mut` but takes no explicit authority parameter. If this object can be passed as shared input, add an explicit capability check or sender validation.
+unnecessary_public_entry:sources/mut_key_param_missing_authority.move:30: 12: warning: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
+unnecessary_public_entry:sources/mut_key_param_missing_authority.move:34: 12: warning: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
+unnecessary_public_entry:sources/mut_key_param_missing_authority.move:39: 12: warning: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.

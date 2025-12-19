@@ -1,0 +1,7 @@
+[package]
+name = "public_package_single_module_pkg"
+edition = "2024"
+
+[addresses]
+public_package_single_module_pkg = "0x0"
+sui = "0x2"

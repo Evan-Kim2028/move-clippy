@@ -1,0 +1,6 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+droppable_hot_potato_v2:sources/copyable_cap.move:55: 19: warning: Struct `SafeAdminCap` has only `drop` ability (no copy/key/store). If this is a hot potato, remove `drop` to enforce consumption. If this is a witness, ensure it has no fields. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/
+droppable_hot_potato_v2:sources/copyable_cap.move:60: 19: warning: Struct `HotPotatoCapability` has only `drop` ability (no copy/key/store). If this is a hot potato, remove `drop` to enforce consumption. If this is a witness, ensure it has no fields. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/

@@ -2,6 +2,8 @@
 
 Internal notes for contributors working on the Move Clippy workspace.
 
+**Status:** Developer workflow (kept current)
+
 ## Workspace Overview
 
 - The crate is a single-member Cargo workspace. Build/test profiles, shared dependencies, and feature flags (e.g. `full`, `telemetry`) are defined once in `Cargo.toml`.
@@ -10,9 +12,9 @@ Internal notes for contributors working on the Move Clippy workspace.
 
 ## Error Handling & Results
 
-- Library APIs return `ClippyResult<T>` (alias for `Result<T, MoveClippyError>`). Avoid exposing `anyhow::Result` from crate internals so errors remain structured.
-- `MoveClippyError` provides helpers: `MoveClippyError::semantic`, `MoveClippyError::fixture`, and `clippy_bail!`. Prefer these over `anyhow::bail!`.
-- When interacting with external crates that still return `anyhow::Error`, convert at the boundary by calling `.into_anyhow()` (see `semantic::lint_sui_visitors`).
+- The crate contains both structured errors (`ClippyResult<T>` / `MoveClippyError` in `src/error.rs`) and `anyhow::Result`.
+- Today, the fast-mode engine and many helpers use `anyhow::Result` for ergonomic context chains; the semantic/fixture subsystems often prefer `MoveClippyError` for structured errors.
+- When adding new subsystems, prefer `MoveClippyError` where callers need stable error kinds (e.g. fixtures/semantic); otherwise use `anyhow` with good `.context(...)` messages.
 
 ## Telemetry & Instrumentation
 
@@ -27,11 +29,20 @@ Internal notes for contributors working on the Move Clippy workspace.
 
 ## Semantic Fixtures & Tests
 
-- Full mode tests rely on `tests/fixtures/semantic_pkg`, which now includes a minimal `sui::object::UID` stub to keep compilation self-contained.
+- Full mode tests rely on `tests/fixtures/semantic_pkg`, which includes a minimal `sui::object::UID` stub to keep compilation self-contained.
+- Integration tests that generate temporary packages (spec-style matrices) share helpers under `tests/support/`.
 - Always run:
-  - `cargo test --all-features` (covers fast + semantic + fixtures)
-  - `cargo test --features full --test sui_lints` (quick semantic regression loop)
+  - `cargo test` (fast-mode + unit tests)
+  - `cargo test --features full` (semantic mode; may require fetching git deps)
+  - `cargo test --features full --test semantic_package_snapshots` (compiler-based snapshots)
+  - `cargo test --test syntactic_snapshots` (tree-sitter snapshots)
+- Regenerate the lint reference with `cargo run --features full --bin gen_lint_reference > docs/LINT_REFERENCE.md`.
+- Regenerate the catalog summary with `cargo run --features full --bin gen_lint_catalog_summary > docs/LINT_CATALOG_SUMMARY.md`.
 - When modifying fixtures, keep them intentionally “almost-correct” so lints trigger while still compiling under Sui rules (e.g. valid `key` structs with naming violations).
+
+## Fixtures As Documentation
+
+- `tests/fixtures/README.md` describes fixture layout (including phase directories), WIP fixture expectations, and the recommended “lint contract” (positive, negative, and directive coverage).
 
 ## Repository Hygiene Checklist
 

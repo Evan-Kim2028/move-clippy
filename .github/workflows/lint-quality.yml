@@ -43,7 +43,7 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
         
       - name: Run all tests (excluding sui_lints)
-        run: cargo test --all-features --lib --bins --test fix_tests --test lints --test ecosystem_snapshots --test semantic_snapshots
+        run: cargo test --all-features --lib --bins --test fix_tests --test lints --test ecosystem_snapshots --test syntactic_snapshots
         
       - name: Run ecosystem validation tests
         run: cargo test --test ecosystem

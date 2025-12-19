@@ -59,6 +59,7 @@ tracing = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, optional = true }
 tree-sitter = { workspace = true }
 tree-sitter-move = { git = "https://github.com/tzakian/tree-sitter-move", rev = "640ee15e4a7b0d09a4bc95dcc71336c28d97999b" }
+tempfile = { workspace = true }
 
 # Triage system dependencies
 chrono = { version = "0.4", features = ["serde"] }

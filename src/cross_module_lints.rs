@@ -9,27 +9,23 @@
 // - CrossModuleAnalyzer: Coordinates analysis across the entire program
 // - Advanced lints: transitive_capability_leak, flashloan_without_repay
 
-#![allow(unused)]
+// Keep these lints warning-clean while still allowing WIP helpers to live nearby.
+#![allow(dead_code)]
+#![allow(unused_variables)]
 
-use crate::diagnostics::Diagnostic;
-use crate::error::ClippyResult;
 use crate::lint::{
-    AnalysisKind, FixDescriptor, LintCategory, LintDescriptor, LintSettings, RuleGroup,
-    TypeSystemGap,
+    AnalysisKind, FixDescriptor, LintCategory, LintDescriptor, RuleGroup, TypeSystemGap,
 };
 use move_compiler::{
     diag,
     diagnostics::{
-        Diagnostic as CompilerDiagnostic, Diagnostics as CompilerDiagnostics,
+        Diagnostic as CompilerDiagnostic,
         codes::{DiagnosticInfo, Severity, custom},
     },
     expansion::ast::{ModuleIdent, Visibility},
-    hlir::ast::{
-        BaseType, BaseType_, Exp, ModuleCall, SingleType, SingleType_, Type, Type_,
-        UnannotatedExp_, Var,
-    },
+    hlir::ast::{BaseType_, SingleType_, Type_},
     naming::ast as N,
-    parser::ast::{Ability_, DatatypeName, FunctionName, TargetKind},
+    parser::ast::{Ability_, FunctionName, TargetKind},
     shared::{Identifier, program_info::TypingProgramInfo},
     typing::ast as T,
 };
@@ -792,7 +788,22 @@ fn type_is_key_store_value(ty: &Type_) -> bool {
 // NOTE: PRICE_MANIPULATION_WINDOW removed - used name-based heuristics
 static DESCRIPTORS: &[&LintDescriptor] = &[&TRANSITIVE_CAPABILITY_LEAK, &FLASHLOAN_WITHOUT_REPAY];
 
-/// Return all Phase III lint descriptors
+/// ## Extension Point: Adding a cross-module lint
+///
+/// Cross-module lints analyze whole-program relationships (call graphs, transitive flows).
+/// They are typically expensive and are gated behind `--experimental`.
+///
+/// To add a new cross-module lint:
+/// 1. Define a `static LintDescriptor` and add it to `DESCRIPTORS`.
+/// 2. Implement your analysis and return compiler diagnostics (see existing lints for patterns).
+/// 3. Ensure it only runs when experimental is enabled (to avoid surprise cost in full mode).
+/// 4. Add a minimal fixture package that demonstrates both:
+///    - a true positive across module boundaries, and
+///    - a near-miss negative (no diagnostic).
+///
+/// See also:
+/// - `tests/phase2_phase3_integration.rs`
+/// - `tests/semantic_package_snapshots.rs`
 pub fn descriptors() -> &'static [&'static LintDescriptor] {
     DESCRIPTORS
 }

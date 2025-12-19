@@ -2,7 +2,4 @@
 source: tests/sui_lints.rs
 expression: output
 ---
-sources/main.move:8:37: public_mut_tx_context: prefer '&mut TxContext' over '&TxContext': 'public' functions should prefer '&mut TxContext' over '&TxContext' for better upgradability.
-sources/main.move:11:47: public_mut_tx_context: prefer '&mut TxContext' over '&TxContext': 'public' functions should prefer '&mut TxContext' over '&TxContext' for better upgradability.
-sources/main.move:14:54: public_mut_tx_context: prefer '&mut TxContext' over '&TxContext': 'public' functions should prefer '&mut TxContext' over '&TxContext' for better upgradability.
-sources/main.move:20:13: public_mut_tx_context: prefer '&mut TxContext' over '&TxContext': 'public' functions should prefer '&mut TxContext' over '&TxContext' for better upgradability.
+

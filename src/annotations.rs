@@ -79,8 +79,13 @@ pub fn parse_annotations(source: &str, item_start_byte: usize) -> Vec<MoveClippy
             continue;
         }
 
-        // Parse attribute lines
-        if trimmed.starts_with("#[") || trimmed.starts_with("#![") {
+        // Stop at module-level directives; they apply to the file header scope, not an item.
+        if trimmed.starts_with("#![") {
+            break;
+        }
+
+        // Parse item-level attribute lines.
+        if trimmed.starts_with("#[") {
             if let Some(ann) = parse_annotation_line(trimmed) {
                 annotations.push(ann);
             }
@@ -94,9 +99,94 @@ pub fn parse_annotations(source: &str, item_start_byte: usize) -> Vec<MoveClippy
     annotations
 }
 
+/// Parse module-level annotations from the file header.
+///
+/// Module-level annotations use `#![...]` syntax and apply to the entire file.
+/// This scan stops at the first non-attribute, non-doc, non-empty line.
+pub fn parse_module_annotations(source: &str) -> Vec<MoveClippyAnnotation> {
+    let mut annotations = Vec::new();
+
+    let limit = source.len().min(8192);
+    let header = &source[..limit];
+
+    for line in header.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+
+        // Skip doc comments in the header.
+        if trimmed.starts_with("///")
+            || trimmed.starts_with("/**")
+            || trimmed.starts_with('*')
+            || trimmed.starts_with("*/")
+        {
+            continue;
+        }
+
+        if trimmed.starts_with("#![") {
+            if let Some(ann) = parse_annotation_line(trimmed) {
+                annotations.push(ann);
+            }
+            continue;
+        }
+
+        break;
+    }
+
+    annotations
+}
+
+/// Construct an item-level scope from the attribute block preceding an item.
+pub fn item_scope(source: &str, item_start_byte: usize) -> SuppressionScope {
+    SuppressionScope::from_annotations(parse_annotations(source, item_start_byte))
+}
+
+/// Construct a module/file-level scope from file-header `#![...]` directives.
+pub fn module_scope(source: &str) -> SuppressionScope {
+    SuppressionScope::from_annotations(parse_module_annotations(source))
+}
+
 /// Parse a single annotation line.
 fn parse_annotation_line(line: &str) -> Option<MoveClippyAnnotation> {
     let compact: String = line.chars().filter(|c| !c.is_whitespace()).collect();
+
+    // Compiler-valid external attributes:
+    //   #[ext(move_clippy(allow(name)))]
+    //   #[ext(move_clippy(deny(name)))]
+    //   #[ext(move_clippy(expect(name)))]
+    //
+    // This form is accepted by the Move compiler (as an `ext` attribute) and allows
+    // ecosystem packages to compile while still carrying move-clippy directives.
+    for prefix in ["#[ext(", "#![ext("] {
+        if let Some(rest) = compact.strip_prefix(prefix)
+            && let Some(rest) = rest.strip_suffix(")]")
+            && let Some(rest) = rest.strip_prefix("move_clippy(")
+            && let Some(rest) = rest.strip_suffix(")")
+        {
+            for (kw, ctor) in [
+                (
+                    "allow(",
+                    MoveClippyAnnotation::Allow as fn(String) -> MoveClippyAnnotation,
+                ),
+                (
+                    "deny(",
+                    MoveClippyAnnotation::Deny as fn(String) -> MoveClippyAnnotation,
+                ),
+                (
+                    "expect(",
+                    MoveClippyAnnotation::Expect as fn(String) -> MoveClippyAnnotation,
+                ),
+            ] {
+                if let Some(inner) = rest.strip_prefix(kw)
+                    && let Some(name) = inner.strip_suffix(")")
+                {
+                    let name = name.strip_prefix("lint::").unwrap_or(name);
+                    return Some(ctor(name.to_string()));
+                }
+            }
+        }
+    }
 
     // #[allow(lint::name)] or #![allow(lint::name)]
     if let Some(rest) = compact.strip_prefix("#[allow(lint::")
@@ -291,6 +381,33 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_ext_allow_deny_expect_annotations() {
+        let source = r#"
+    #[ext(move_clippy(allow(entry_function_returns_value)))]
+    #[ext(move_clippy(deny(suspicious)))]
+    #[ext(move_clippy(expect(security)))]
+    public fun foo() {}
+"#;
+        let fn_start = source.find("public fun").unwrap();
+        let annotations = parse_annotations(source, fn_start);
+
+        assert_eq!(annotations.len(), 3);
+        assert!(annotations.iter().any(|a| {
+            matches!(a, MoveClippyAnnotation::Allow(n) if n == "entry_function_returns_value")
+        }));
+        assert!(
+            annotations
+                .iter()
+                .any(|a| { matches!(a, MoveClippyAnnotation::Deny(n) if n == "suspicious") })
+        );
+        assert!(
+            annotations
+                .iter()
+                .any(|a| { matches!(a, MoveClippyAnnotation::Expect(n) if n == "security") })
+        );
+    }
+
+    #[test]
     fn test_parse_deny_annotation() {
         let source = r#"
     #[deny(lint::unsafe_arithmetic)]
@@ -386,15 +503,37 @@ module example::test {
     public fun foo() {}
 }
 "#;
-        // Module-level annotation should be parsed
-        let module_start = source.find("module").unwrap();
-        let annotations = parse_annotations(source, module_start);
+        let annotations = parse_module_annotations(source);
 
         assert_eq!(annotations.len(), 1);
         assert!(matches!(
             &annotations[0],
             MoveClippyAnnotation::Allow(name) if name == "style"
         ));
+    }
+
+    #[test]
+    fn test_module_level_deny_and_expect_annotations() {
+        let source = r#"
+#![deny(lint::foo)]
+#![expect(lint::bar)]
+module example::test {
+    public fun baz() {}
+}
+"#;
+
+        let annotations = parse_module_annotations(source);
+        assert_eq!(annotations.len(), 2);
+        assert!(
+            annotations
+                .iter()
+                .any(|a| matches!(a, MoveClippyAnnotation::Deny(n) if n == "foo"))
+        );
+        assert!(
+            annotations
+                .iter()
+                .any(|a| matches!(a, MoveClippyAnnotation::Expect(n) if n == "bar"))
+        );
     }
 
     #[test]

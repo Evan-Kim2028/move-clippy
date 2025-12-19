@@ -1,0 +1,5 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+generic_type_witness_unused:sources/generic_type_witness_unused.move:21: 5: warning: Generic function `positive` takes a `type_name::TypeName` witness but never uses it. Either remove the witness parameter or use it to validate the generic type argument.

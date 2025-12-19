@@ -2,7 +2,14 @@
 
 This directory contains user-facing documentation for move-clippy development and usage.
 
-## User-Facing Documentation
+**Status:** Index (kept current)
+
+**Documentation taxonomy (code-as-docs):**
+- **Generated reference**: derived from the code (authoritative, do not edit).
+- **Developer workflow**: how to build/test/extend the tool (kept current).
+- **Design notes**: research, drafts, and historical notes (may drift).
+
+## Documentation Map
 
 ### For Contributors
 
@@ -16,19 +23,21 @@ This directory contains user-facing documentation for move-clippy development an
 - [`SECURITY_LINTS.md`](SECURITY_LINTS.md): Security lint reference with audit sources and detection methods
 - [`SEMANTIC_LINT_STATUS.md`](SEMANTIC_LINT_STATUS.md): Status of semantic lints (requires `--mode full`)
 
+### Generated Reference (authoritative)
+
+- `docs/LINT_REFERENCE.md` (generated per-lint catalog; see header for regen command)
+- `docs/LINT_CATALOG_SUMMARY.md` (generated counts by tier/phase/category; see header for regen command)
+
 ---
 
-## Internal Documentation (Gitignored)
+## Research & Design Notes
 
-The following docs are for internal development/research and **not committed to version control**:
+This repo keeps a mix of user-facing docs and deeper research/design notes in the same `docs/` directory (e.g. analysis gaps, phase summaries, specs). These are useful when developing new lints and maintaining FP guarantees.
 
-- `DATAFLOW_ANALYSIS_GAPS.md` - Analysis of dataflow limitations
-- `KEY_STORE_PROXY_ANALYSIS.md` - Deep dive into key+store type detection
-- `LINT_GROUNDING_ANALYSIS.md` - Lint audit grounding research
-- `LINT_INVENTORY.md` - Internal lint catalog and status tracking
-- `LOCAL_ECOSYSTEM_VALIDATION.md` - Local validation workflow notes
-- `PHASE_*_SUMMARY.md` - Implementation phase summaries
-- `IMPLEMENTATION_COMPLETE.md` - Completion checklist
-- `SEMANTIC_LINTER_EXPANSION_SPEC.md` - Internal spec document
+If you’re looking for the “single entry point”:
 
-These are kept locally for reference but excluded from the repository to keep it focused on user-facing documentation.
+- `docs/LINT_REFERENCE.md` (generated per-lint reference; see header for regen command)
+- `docs/STABILITY.md` (tier policy)
+- `docs/FP_PREVENTION.md` (how we avoid false positives)
+
+Long-form notes and saved writeups live under `docs/notes/`.

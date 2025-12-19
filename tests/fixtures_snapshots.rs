@@ -110,11 +110,10 @@ fn prefer_vector_methods_suppressed_allow_attribute() {
     let src = include_str!("fixtures/prefer_vector_methods/positive_suppressed.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r"
-    empty_vector_literal:7:17: warning: Prefer `vector<u8>` over `vector::empty<u8>()`
-    prefer_vector_methods:8:5: warning: Prefer method syntax: `v.push_back(...)`
-    prefer_vector_methods:9:5: warning: Prefer method syntax: `v.length()`
-    ");
+    assert_snapshot!(
+        format_diags(&diags),
+        @"empty_vector_literal:7:17: warning: Prefer `vector<u8>` over `vector::empty<u8>()`"
+    );
 }
 
 #[test]

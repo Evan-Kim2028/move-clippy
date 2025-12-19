@@ -1,0 +1,8 @@
+[package]
+name = "non_transferable_fungible_object_pkg"
+edition = "2024"
+
+[addresses]
+non_transferable_fungible_object_pkg = "0x0"
+sui = "0x2"
+

@@ -1,5 +1,7 @@
 # Lint Development Guide
 
+**Status:** Developer workflow (kept current)
+
 A comprehensive guide for contributing new lints to move-clippy.
 
 ## Table of Contents
@@ -45,10 +47,12 @@ move-clippy has two lint modes:
 /// ```
 pub static MY_LINT: LintDescriptor = LintDescriptor {
     name: "my_lint",                         // snake_case
-    category: LintCategory::Security,        // Security | Style | Conventions | TestQuality | Modernization
+    category: LintCategory::Security,        // Security | Suspicious | Style | Modernization | Naming | TestQuality
     description: "Brief description (see: audit source if security)",
-    group: RuleGroup::Stable,                // Stable or Preview
-    fix: FixDescriptor::none(),              // Or available("description")
+    group: RuleGroup::Stable,                // Stable | Preview | Experimental | Deprecated
+    fix: FixDescriptor::none(),              // Or FixDescriptor::safe("...") / FixDescriptor::unsafe_fix("...")
+    analysis: AnalysisKind::Syntactic,        // Syntactic | TypeBased | TypeBasedCFG | CrossModule
+    gap: None,                               // Some(TypeSystemGap::...) for security/suspicious families
 };
 
 pub struct MyLint;
@@ -86,23 +90,14 @@ fn check_my_pattern(node: Node, source: &str, ctx: &mut LintContext<'_>) {
 
 ### 3. Register the Lint
 
-```rust
-// In src/lint.rs
+Move Clippy uses a unified registry:
 
-// Add to FAST_LINT_NAMES (or SEMANTIC_LINT_NAMES)
-pub const FAST_LINT_NAMES: &[&str] = &[
-    // ... existing lints ...
-    "my_lint",
-];
+- **Phase I (fast / syntactic)**: register the `LintRule` in `src/unified.rs` by adding it to `build_syntactic_registry()`.
+- **Phase II (semantic / type-based)**: add the descriptor to the `DESCRIPTORS` slice in `src/semantic.rs`.
+- **Phase III (CFG / AbsInt)**: add the descriptor to the `DESCRIPTORS` slice in `src/absint_lints.rs`.
+- **Phase IV (cross-module)**: add the descriptor to the `DESCRIPTORS` slice in `src/cross_module_lints.rs`.
 
-// Add to registry builder
-"my_lint" => {
-    reg = reg.with_rule(crate::rules::MyLint);
-}
-
-// Add to group mapping
-"my_lint" => RuleGroup::Stable, // or Preview
-```
+The unified registry is built automatically from these sources (`src/unified.rs:build_unified_registry()`), and the CLI (`list-rules`, `explain`) reads from it.
 
 ### 4. Add Tests
 
@@ -114,9 +109,14 @@ mod tests {
     use super::*;
     
     fn lint_source(source: &str) -> Vec<String> {
-        let reg = LintRegistry::default_rules().with_rule(MyLint);
-        let ctx = reg.lint(source);
-        ctx.messages.into_iter().map(|m| m.message).collect()
+        let reg = LintRegistry::new().with_rule(MyLint);
+        let engine = LintEngine::new(reg);
+        engine
+            .lint_source(source)
+            .expect("linting should succeed")
+            .into_iter()
+            .map(|d| d.message)
+            .collect()
     }
     
     #[test]
@@ -153,20 +153,55 @@ mod tests {
 | Field | Description | Requirements |
 |-------|-------------|--------------|
 | `name` | Unique identifier | snake_case, unique across all lints |
-| `category` | Lint type | One of: Security, Style, Conventions, TestQuality, Modernization |
+| `category` | Lint category | One of: security, suspicious, style, modernization, naming, test_quality |
 | `description` | Brief explanation | 10+ chars, security lints need "(see: source)" |
-| `group` | Stability level | Stable (low FP risk) or Preview (experimental) |
-| `fix` | Auto-fix info | `none()` or `available("description")` |
+| `group` | Stability level | Stable/Preview/Experimental/Deprecated |
+| `fix` | Auto-fix metadata | `none()` / `safe(...)` / `unsafe_fix(...)` |
+| `analysis` | Detection technique | Syntactic/TypeBased/TypeBasedCFG/CrossModule |
+| `gap` | Type-system gap tag | Optional; used primarily for security/suspicious taxonomy |
 
 ### Categories
 
 | Category | Description | FP Tolerance |
 |----------|-------------|--------------|
 | **Security** | Potential vulnerabilities | Zero tolerance |
-| **Style** | Code formatting | Very low |
-| **Conventions** | Idioms and patterns | Low |
-| **TestQuality** | Test best practices | Low |
+| **Suspicious** | Potentially dangerous patterns | Very low |
+| **Style** | Code clarity/idioms | Very low |
 | **Modernization** | Modern Move features | Very low |
+| **Naming** | Naming conventions | Very low |
+| **TestQuality** | Test best practices | Low |
+
+### Directives (testing and suppression)
+
+Move Clippy supports allow/deny/expect directives on **lint names** and **lint categories** (e.g. `style`, `security`).
+
+**Fast mode (tree-sitter):**
+
+- `#[allow(lint::...)]` / `#![allow(lint::...)]`
+- `#[deny(lint::...)]` / `#![deny(lint::...)]`
+- `#[expect(lint::...)]` / `#![expect(lint::...)]` (emits `unfulfilled_expectation` if unmet)
+
+Note: `#![...]` forms are treated as *move-clippy directives*, not Move language features. They may not compile under the Move compiler and are intended for fast-mode fixtures.
+
+**Full mode (compiler-valid directives):**
+
+Use `ext` attributes so packages still compile:
+
+- `#[ext(move_clippy(allow(<name|category>)))]`
+- `#[ext(move_clippy(deny(<name|category>)))]`
+- `#[ext(move_clippy(expect(<name|category>)))]`
+
+Attach them to the relevant item (function/struct/module). `expect` is treated as a testing invariant and overrides config-level `allow` so the expected lint still shows up in test output.
+
+### Fixtures As Documentation
+
+Prefer documenting lint behavior as runnable tests/fixtures (this is harder to let drift than prose):
+
+- **Positive**: code that must trigger the lint
+- **Negative**: code that must not trigger the lint
+- **Directive coverage**: code that proves `allow/deny/expect` works (fast syntax or `ext(move_clippy(...))` in full mode)
+
+See `tests/fixtures/README.md` for fixture layout and conventions.
 
 ---
 
@@ -222,26 +257,18 @@ fn is_benign_struct(name: &str) -> bool {
 
 ### 4. FP Prevention Tests Required
 
-Every lint MUST have tests in `tests/false_positive_prevention.rs`:
+Every lint MUST have explicit false-positive prevention coverage:
 
-```rust
-mod my_lint {
-    #[test]
-    fn ignores_benign_pattern_1() {
-        // Test that DOESN'T fire
-    }
-    
-    #[test]
-    fn ignores_benign_pattern_2() {
-        // Another edge case
-    }
-    
-    #[test]
-    fn detects_actual_violation() {
-        // Ensure true positive still works
-    }
-}
-```
+- **Positive**: a minimal case that must trigger.
+- **Negative**: a minimal case that must not trigger.
+- **Near miss**: a case that looks similar to the positive but must not trigger.
+
+Where these tests live depends on the lint phase:
+
+- **Fast mode (Phase I):** add unit tests colocated with the rule under `src/rules/` and/or a minimal syntactic snapshot fixture.
+- **Full mode (Phases II–IV):** add a minimal fixture package under `tests/fixtures/phase{2,3,4}/...` and wire it into `tests/semantic_package_snapshots.rs` and/or add a spec invariant test in `tests/*_spec.rs`.
+
+The guiding idea is “fixtures as documentation”: the most trustworthy documentation is code that compiles and is asserted on.
 
 ---
 
@@ -249,11 +276,12 @@ mod my_lint {
 
 ### Minimum Test Coverage
 
-| Lint Type | Positive Tests | Negative Tests | FP Prevention |
-|-----------|---------------|----------------|---------------|
+| Lint Type | Positive Tests | Negative Tests | Near Misses |
+|-----------|---------------|----------------|------------|
 | Security | ≥2 | ≥2 | ≥3 |
+| Suspicious | ≥1 | ≥1 | ≥2 |
 | Style | ≥1 | ≥1 | ≥1 |
-| Conventions | ≥1 | ≥1 | ≥1 |
+| Naming | ≥1 | ≥1 | ≥1 |
 | Test Quality | ≥1 | ≥1 | ≥1 |
 | Modernization | ≥1 | ≥1 | ≥1 |
 
@@ -261,24 +289,37 @@ mod my_lint {
 
 ```
 tests/
-├── false_positive_prevention.rs  # FP edge cases (MUST have)
-├── lint_quality.rs               # Meta-tests on lints themselves
-├── cli.rs                        # CLI integration tests
-└── ecosystem_snapshots.rs        # Real-world code snapshots
+├── syntactic_snapshots.rs            # tree-sitter snapshot tests (fast mode)
+├── semantic_package_snapshots.rs     # compiler-based package snapshots (full mode)
+├── *_spec.rs                         # spec-driven semantic invariants (full mode)
+├── meta_invariants.rs                # meta-tests about the lint engine itself
+├── ecosystem_snapshots.rs            # real-world code snapshots
+└── support/                          # shared helpers for integration tests
 ```
 
 ### Running Tests
 
 ```bash
-# All tests
+# Fast mode + unit tests
 cargo test
 
+# Full mode (semantic/CFG/cross-module)
+cargo test --features full
+
+# Update semantic snapshots (writes under tests/snapshots/)
+INSTA_UPDATE=always cargo test --features full --test semantic_package_snapshots
+
 # Specific test file
-cargo test --test false_positive_prevention
+cargo test --features full --test semantic_package_snapshots
 
 # Specific test
-cargo test test_my_lint_detected
+cargo test --features full spec_copyable_capability_exhaustive
 ```
+
+For full-mode lints (Phases II–IV), prefer compiler-backed tests:
+
+- `tests/semantic_package_snapshots.rs` for end-to-end fixture package snapshots.
+- `tests/*_spec.rs` for spec-driven invariants (helpers live under `tests/support/`).
 
 ---
 
@@ -384,10 +425,9 @@ Before submitting a PR, verify:
 
 ### Registration
 
-- [ ] Added to FAST_LINT_NAMES or SEMANTIC_LINT_NAMES
-- [ ] Added to registry builder match arm
-- [ ] Added to group mapping
-- [ ] Group set correctly (Stable/Preview)
+- [ ] Phase I: added to `src/unified.rs:build_syntactic_registry()` (fast lints only)
+- [ ] Phase II/III/IV: added to that phase's `DESCRIPTORS` slice
+- [ ] Tier set correctly (`RuleGroup::{Stable,Preview,Experimental,Deprecated}`)
 
 ---
 

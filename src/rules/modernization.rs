@@ -119,7 +119,7 @@ impl LintRule for EqualityInAssertLint {
                         help: Some("Use assert_eq! for better error messages".to_string()),
                         suggestion,
                     };
-                    ctx.report_diagnostic(diagnostic);
+                    ctx.report_diagnostic_for_node(node, diagnostic);
                 }
             }
         });
@@ -274,7 +274,7 @@ impl LintRule for ManualOptionCheckLint {
                         help: Some("Use do! macro for cleaner option handling".to_string()),
                         suggestion,
                     };
-                    ctx.report_diagnostic(diagnostic);
+                    ctx.report_diagnostic_for_node(node, diagnostic);
                 }
             }
         });
@@ -443,7 +443,7 @@ impl LintRule for ManualLoopIterationLint {
                         )),
                         suggestion,
                     };
-                    ctx.report_diagnostic(diagnostic);
+                    ctx.report_diagnostic_for_node(node, diagnostic);
                 }
             }
         });
@@ -534,7 +534,7 @@ impl LintRule for ModernModuleSyntaxLint {
                         return;
                     }
 
-                    ctx.report_diagnostic(diagnostic);
+                    ctx.report_diagnostic_for_node(node, diagnostic);
                 } else {
                     // Fallback if we can't extract module identity
                     ctx.report_node(
@@ -610,7 +610,7 @@ impl LintRule for PreferVectorMethodsLint {
                     help: Some("Use method call syntax for cleaner code".to_string()),
                     suggestion,
                 };
-                ctx.report_diagnostic(diagnostic);
+                ctx.report_diagnostic_for_node(node, diagnostic);
             } else if callee == "vector::length" {
                 let Some(args) = split_args(args_str) else {
                     return;
@@ -643,7 +643,7 @@ impl LintRule for PreferVectorMethodsLint {
                     help: Some("Use method call syntax for cleaner code".to_string()),
                     suggestion,
                 };
-                ctx.report_diagnostic(diagnostic);
+                ctx.report_diagnostic_for_node(node, diagnostic);
             }
         });
     }
@@ -814,7 +814,7 @@ impl LintRule for ModernMethodSyntaxLint {
                     help: Some("Use method call syntax for cleaner code".to_string()),
                     suggestion,
                 };
-                ctx.report_diagnostic(diagnostic);
+                ctx.report_diagnostic_for_node(node, diagnostic);
                 return;
             }
         });
@@ -858,7 +858,7 @@ impl LintRule for UnnecessaryPublicEntryLint {
                     help: Some("Remove `public` modifier - `entry` functions are implicitly public".to_string()),
                     suggestion,
                 };
-                ctx.report_diagnostic(diagnostic);
+                ctx.report_diagnostic_for_node(node, diagnostic);
             }
         });
     }
@@ -918,7 +918,7 @@ impl LintRule for PublicMutTxContextLint {
                             help: Some("Add `mut` to make TxContext mutable".to_string()),
                             suggestion,
                         };
-                        ctx.report_diagnostic(diagnostic);
+                        ctx.report_diagnostic_for_node(ty, diagnostic);
                     }
                 }
             }
@@ -994,7 +994,7 @@ impl LintRule for WhileTrueToLoopLint {
                     return;
                 }
 
-                ctx.report_diagnostic(diagnostic);
+                ctx.report_diagnostic_for_node(node, diagnostic);
             }
         });
     }
@@ -1067,13 +1067,9 @@ fn generate_remove_public_fix(node: Node, source: &str) -> Option<Suggestion> {
         // General case: remove "public" and any trailing whitespace before "entry"
         // Find where "public" appears and remove it along with trailing spaces
         let public_start = function_text.find(public_text)?;
-        let before = &function_text[..public_start];
-        let after_public = public_start + public_text.len();
-        let after = &function_text[after_public..];
-
-        // Skip whitespace after "public" until we find "entry"
-        let after_trimmed = after.trim_start();
-        format!("{}{}", before, after_trimmed)
+        let _after = &function_text[public_start + public_text.len()..];
+        let after_trimmed = _after.trim_start();
+        format!("{}{}", &function_text[..public_start], after_trimmed)
     };
 
     Some(Suggestion {

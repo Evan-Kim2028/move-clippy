@@ -24,7 +24,9 @@ fn lint_fixture_package(fixture_dir: &str, package_name: &str) -> Vec<String> {
 
     let settings = LintSettings::default();
 
-    match lint_package(&fixture_path, &settings, true) {
+    let experimental = fixture_dir == "phase3";
+
+    match lint_package(&fixture_path, &settings, true, experimental) {
         Ok(diags) => {
             if diags.is_empty() {
                 vec!["No findings.".to_string()]
@@ -81,6 +83,8 @@ mod phase2 {
         let names: Vec<&str> = descriptors.iter().map(|d| d.name).collect();
         assert!(names.contains(&"phantom_capability"));
         assert!(names.contains(&"unchecked_division_v2"));
+        assert!(names.contains(&"destroy_zero_unchecked_v2"));
+        assert!(names.contains(&"fresh_address_reuse_v2"));
     }
 
     #[test]
@@ -88,8 +92,19 @@ mod phase2 {
         // Verify visitors can be instantiated
         use move_clippy::absint_lints;
 
-        let visitors = absint_lints::create_visitors(true);
-        assert_eq!(visitors.len(), 2, "Should create 2 Phase II visitors");
+        let visitors = absint_lints::create_visitors(true, false);
+        assert_eq!(
+            visitors.len(),
+            3,
+            "Should create 3 Phase II preview visitors"
+        );
+
+        let visitors = absint_lints::create_visitors(true, true);
+        assert_eq!(
+            visitors.len(),
+            4,
+            "Should create 4 Phase II visitors when experimental is enabled"
+        );
     }
 }
 
@@ -131,7 +146,7 @@ mod phase3 {
         }
 
         let settings = LintSettings::default();
-        let result = lint_package(&fixture_path, &settings, true);
+        let result = lint_package(&fixture_path, &settings, true, true);
 
         // We just verify it doesn't panic - actual lint detection depends on fixtures
         assert!(

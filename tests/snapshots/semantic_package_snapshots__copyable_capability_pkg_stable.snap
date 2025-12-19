@@ -1,0 +1,6 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+copyable_capability:sources/copyable_cap.move:16: 19: warning: Struct `Copyable` is `key + store + copy`. This creates a transferable, copyable authority/asset, which is almost always a severe security bug (privileges or value can be duplicated). Remove `copy`.
+copyable_capability:sources/copyable_cap.move:22: 19: warning: Struct `CopyableWithDrop` is `key + store + copy`. This creates a transferable, copyable authority/asset, which is almost always a severe security bug (privileges or value can be duplicated). Remove `copy`.

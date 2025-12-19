@@ -3,6 +3,4 @@ source: tests/sui_lints.rs
 expression: output
 ---
 sources/main.move:13:12: coin_field: sub-optimal 'sui::coin::Coin' field type: Sub-optimal 'sui::coin::Coin' field type. Using 'sui::balance::Balance' instead will be more space efficient
-sources/main.move:13:12: coin_field: sub-optimal 'sui::coin::Coin' field type: Sub-optimal 'sui::coin::Coin' field type. Using 'sui::balance::Balance' instead will be more space efficient
-sources/main.move:27:12: coin_field: sub-optimal 'sui::coin::Coin' field type: Sub-optimal 'sui::coin::Coin' field type. Using 'sui::balance::Balance' instead will be more space efficient
 sources/main.move:27:12: coin_field: sub-optimal 'sui::coin::Coin' field type: Sub-optimal 'sui::coin::Coin' field type. Using 'sui::balance::Balance' instead will be more space efficient

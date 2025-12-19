@@ -1517,7 +1517,9 @@ impl DestroyZeroVerifierAI<'_> {
                     return None;
                 };
 
-                let var = self.extract_var(var_side)?;
+                let var = self
+                    .extract_var(var_side)
+                    .or_else(|| self.extract_var_from_value_call(var_side))?;
 
                 // `var == 0` means var is zero when true
                 // `var != 0` means var is NOT zero when true
@@ -1539,6 +1541,26 @@ impl DestroyZeroVerifierAI<'_> {
                     return self.extract_var(arg).map(|v| (v, false)); // Conservative
                 }
                 None
+            }
+            _ => None,
+        }
+    }
+
+    fn extract_var_from_value_call(&self, e: &Exp) -> Option<Var> {
+        match &e.exp.value {
+            UnannotatedExp_::ModuleCall(call) => {
+                let module_sym = call.module.value.module.value();
+                let func_sym = call.name.value();
+                let module_name = module_sym.as_str();
+                let func_name = func_sym.as_str();
+                if (module_name == "balance" || module_name == "coin")
+                    && func_name == "value"
+                    && let Some(arg) = call.arguments.first()
+                {
+                    self.extract_var(arg)
+                } else {
+                    None
+                }
             }
             _ => None,
         }
@@ -1819,6 +1841,20 @@ impl SimpleExecutionContext for FreshAddressExecutionContext {
 // Public API
 // ============================================================================
 
+pub const ABSINT_CUSTOM_DIAG_CODE_MAP: &[(u8, &LintDescriptor)] = &[
+    (1, &PHANTOM_CAPABILITY),        // UNUSED_CAP_V2_DIAG
+    (2, &UNCHECKED_DIVISION_V2),     // UNCHECKED_DIV_V2_DIAG
+    (3, &PHANTOM_CAPABILITY),        // UNVALIDATED_CAP_V2_DIAG
+    (4, &DESTROY_ZERO_UNCHECKED_V2), // DESTROY_ZERO_UNCHECKED_V2_DIAG
+    (5, &FRESH_ADDRESS_REUSE_V2),    // FRESH_ADDRESS_REUSE_V2_DIAG
+];
+
+pub fn descriptor_for_diag_code(code: u8) -> Option<&'static LintDescriptor> {
+    ABSINT_CUSTOM_DIAG_CODE_MAP
+        .iter()
+        .find_map(|(c, d)| (*c == code).then_some(*d))
+}
+
 static DESCRIPTORS: &[&LintDescriptor] = &[
     &PHANTOM_CAPABILITY,
     &UNCHECKED_DIVISION_V2,
@@ -1836,16 +1872,32 @@ pub fn find_descriptor(name: &str) -> Option<&'static LintDescriptor> {
     descriptors().iter().copied().find(|d| d.name == name)
 }
 
-/// Create Abstract Interpreter visitors for all Phase II lints
-pub fn create_visitors(preview: bool) -> Vec<Box<dyn AbstractInterpreterVisitor>> {
-    if !preview {
+/// Create Abstract Interpreter visitors for all Phase II lints.
+///
+/// Phase II lints are gated by `--preview` / `--experimental`:
+/// - Preview includes CFG-aware lints that aim for low false positives.
+/// - Experimental includes research lints that may be noisier.
+pub fn create_visitors(
+    preview: bool,
+    experimental: bool,
+) -> Vec<Box<dyn AbstractInterpreterVisitor>> {
+    if !preview && !experimental {
         return Vec::new();
     }
 
-    vec![
-        Box::new(UnusedCapabilityVerifier) as Box<dyn AbstractInterpreterVisitor>,
-        Box::new(UncheckedDivisionVerifier) as Box<dyn AbstractInterpreterVisitor>,
-    ]
+    let mut visitors: Vec<Box<dyn AbstractInterpreterVisitor>> = Vec::new();
+
+    if preview {
+        visitors.push(Box::new(UncheckedDivisionVerifier) as Box<dyn AbstractInterpreterVisitor>);
+        visitors.push(Box::new(DestroyZeroVerifier) as Box<dyn AbstractInterpreterVisitor>);
+        visitors.push(Box::new(FreshAddressReuseVerifier) as Box<dyn AbstractInterpreterVisitor>);
+    }
+
+    if experimental {
+        visitors.push(Box::new(UnusedCapabilityVerifier) as Box<dyn AbstractInterpreterVisitor>);
+    }
+
+    visitors
 }
 
 #[cfg(test)]

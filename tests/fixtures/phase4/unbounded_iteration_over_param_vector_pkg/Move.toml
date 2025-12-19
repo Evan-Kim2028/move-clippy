@@ -1,0 +1,9 @@
+[package]
+name = "unbounded_iteration_over_param_vector_pkg"
+edition = "2024"
+
+[addresses]
+unbounded_iteration_over_param_vector_pkg = "0x0"
+sui = "0x2"
+std = "0x1"
+

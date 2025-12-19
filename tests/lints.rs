@@ -92,5 +92,5 @@ fn all_known_lints_with_aliases_includes_canonical() {
     assert!(known.contains("modern_module_syntax"));
     assert!(known.contains("prefer_to_string"));
     assert!(known.contains("constant_naming"));
-    assert!(known.contains("capability_naming")); // semantic lint
+    assert!(known.contains("share_owned")); // semantic lint
 }

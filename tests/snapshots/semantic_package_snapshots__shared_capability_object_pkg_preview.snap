@@ -1,0 +1,11 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+custom_state_change:sources/shared_capability_object.move:37: 16: warning: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom share function.
+share_owned:sources/shared_capability_object.move:38: 9: warning: possible owned object share: Potential abort from a (potentially) owned object created by a different transaction.
+share_owned:sources/shared_capability_object.move:47: 9: warning: possible owned object share: Potential abort from a (potentially) owned object created by a different transaction.
+share_owned_authority:sources/shared_capability_object.move:38: 9: warning: Sharing `cases::AdminCap` (has key+store) in `positive` makes it publicly accessible. This is dangerous for authority objects (capabilities). If this is intentional shared state, suppress with #[ext(move_clippy(allow(share_owned_authority)))].
+share_owned_authority:sources/shared_capability_object.move:47: 9: warning: Sharing `cases::AdminCap` (has key+store) in `suppressed` makes it publicly accessible. This is dangerous for authority objects (capabilities). If this is intentional shared state, suppress with #[ext(move_clippy(allow(share_owned_authority)))].
+shared_capability_object:sources/shared_capability_object.move:38: 9: warning: Sharing capability-like object `cases::AdminCap` in `positive` makes it publicly accessible. Ensure this cannot be used to bypass authorization, or suppress if intentional.
+shared_capability_object:sources/shared_capability_object.move:47: 9: warning: Sharing capability-like object `cases::AdminCap` in `suppressed` makes it publicly accessible. Ensure this cannot be used to bypass authorization, or suppress if intentional.

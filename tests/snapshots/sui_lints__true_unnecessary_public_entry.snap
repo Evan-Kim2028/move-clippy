@@ -2,7 +2,4 @@
 source: tests/sui_lints.rs
 expression: output
 ---
-sources/main.move:2:12: unnecessary_public_entry: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
-sources/main.move:2:12: unnecessary_public_entry: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
-sources/main.move:3:5: unnecessary_public_entry: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
-sources/main.move:3:5: unnecessary_public_entry: unnecessary `entry` on a `public` function: `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
+
