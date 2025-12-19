@@ -9,14 +9,15 @@
 //!
 //! ## How It Works
 //!
-//! 1. Clone or reference ecosystem repos (e.g., OpenZeppelin Sui)
-//! 2. Run all stable lints against each repo
-//! 3. Snapshot the findings using insta
-//! 4. Review any changes in CI before merging
+//! 1. Run embedded fixtures and regression samples
+//! 2. Snapshot the findings using insta
+//! 3. Review any changes in CI before merging
+//!
+//! External ecosystem repo snapshots are maintained in the
+//! ecosystem-test-repos runner.
 //!
 //! ## Updating Snapshots
 //!
-//! When lints legitimately change behavior:
 //! ```bash
 //! cargo insta test --test ecosystem_snapshots
 //! cargo insta review
@@ -319,62 +320,6 @@ mod embedded_fixtures {
     fn snapshot_modern_patterns() {
         let messages = lint_source(MODERN_PATTERNS);
         insta::assert_debug_snapshot!("modern_patterns", messages);
-    }
-}
-
-// ============================================================================
-// Local Repository Tests
-// ============================================================================
-//
-// These tests run against local repos if available. They're marked #[ignore]
-// by default but can be run with --ignored flag.
-
-mod local_repos {
-    use super::*;
-
-    /// Test against OpenZeppelin Sui if available locally
-    #[test]
-    #[ignore = "requires local openzeppelin-sui clone"]
-    fn snapshot_openzeppelin_sui() {
-        let path = Path::new("../../openzeppelin-sui");
-        if !path.exists() {
-            eprintln!("Skipping: openzeppelin-sui not found at {}", path.display());
-            return;
-        }
-
-        let results = lint_directory(path);
-        let snapshot = format_snapshot(&results);
-        insta::assert_snapshot!("openzeppelin_sui", snapshot);
-    }
-
-    /// Test against DeepBook v3 if available
-    #[test]
-    #[ignore = "requires local deepbookv3 clone"]
-    fn snapshot_deepbook_v3() {
-        let path = Path::new("../../deepbookv3");
-        if !path.exists() {
-            eprintln!("Skipping: deepbookv3 not found at {}", path.display());
-            return;
-        }
-
-        let results = lint_directory(path);
-        let snapshot = format_snapshot(&results);
-        insta::assert_snapshot!("deepbook_v3", snapshot);
-    }
-
-    /// Test against Sui framework if available
-    #[test]
-    #[ignore = "requires local sui clone"]
-    fn snapshot_sui_framework() {
-        let path = Path::new("../../sui/crates/sui-framework/packages");
-        if !path.exists() {
-            eprintln!("Skipping: sui-framework not found at {}", path.display());
-            return;
-        }
-
-        let results = lint_directory(path);
-        let snapshot = format_snapshot(&results);
-        insta::assert_snapshot!("sui_framework", snapshot);
     }
 }
 
