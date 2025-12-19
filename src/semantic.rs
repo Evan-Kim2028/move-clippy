@@ -702,7 +702,8 @@ mod full {
                             Err(Error::semantic(format!(
                                 "Move compilation failed while running Phase II visitors:\n{}",
                                 String::from_utf8_lossy(&rendered)
-                            )).into())
+                            ))
+                            .into())
                         }
                     }
                 })?;
@@ -1449,56 +1450,27 @@ mod full {
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
                     check_shared_capability_in_seq_item(
-                        item,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        item, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
                 check_shared_capability_in_exp(
-                    if_body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
+                    if_body, share_fns, out, settings, file_map, func_name,
                 );
                 if let Some(else_e) = else_body {
                     check_shared_capability_in_exp(
-                        else_e,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        else_e, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
                 check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
-                check_shared_capability_in_exp(
-                    body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_shared_capability_in_exp(
-                    body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
             }
             _ => {}
         }
@@ -2397,7 +2369,14 @@ mod full {
                 }
             }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
-                check_capability_transfer_in_exp(cond, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(
+                    cond,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
                 check_capability_transfer_in_exp(
                     if_body,
                     transfer_fns,
@@ -2418,7 +2397,14 @@ mod full {
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
-                check_capability_transfer_in_exp(cond, transfer_fns, out, settings, file_map, func_name);
+                check_capability_transfer_in_exp(
+                    cond,
+                    transfer_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
                 check_capability_transfer_in_exp(
                     body,
                     transfer_fns,
@@ -2760,7 +2746,14 @@ mod full {
                 check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
                 check_division_in_exp(if_body, validated_vars, out, settings, file_map, func_name);
                 if let Some(else_e) = else_body {
-                    check_division_in_exp(else_e, validated_vars, out, settings, file_map, func_name);
+                    check_division_in_exp(
+                        else_e,
+                        validated_vars,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
@@ -3164,12 +3157,7 @@ mod full {
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
                     check_share_owned_in_seq_item(
-                        item,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        item, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
@@ -3233,9 +3221,7 @@ mod full {
                 let prefix = if *is_mut { "&mut " } else { "&" };
                 format!("{}{}", prefix, format_type(&inner.value))
             }
-            N::Type_::Apply(_, type_name, type_args) => {
-                format_apply_type(type_name, type_args)
-            }
+            N::Type_::Apply(_, type_name, type_args) => format_apply_type(type_name, type_args),
             N::Type_::Param(tp) => tp.user_specified_name.value.to_string(),
             N::Type_::Fun(args, ret) => {
                 let arg_strs: Vec<_> = args.iter().map(|t| format_type(&t.value)).collect();
@@ -3761,7 +3747,8 @@ mod full {
                     Err(Error::semantic(format!(
                         "Move compilation failed while running Sui lints:\n{}",
                         String::from_utf8_lossy(&rendered)
-                    )).into())
+                    ))
+                    .into())
                 }
             }
         })?;
