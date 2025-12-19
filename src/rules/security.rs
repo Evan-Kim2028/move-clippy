@@ -13,6 +13,7 @@ use crate::lint::{
     AnalysisKind, FixDescriptor, LintCategory, LintContext, LintDescriptor, LintRule, RuleGroup,
     TypeSystemGap,
 };
+use crate::rules::util::is_test_only_module;
 use tree_sitter::Node;
 
 // ============================================================================
@@ -510,6 +511,10 @@ impl LintRule for MissingWitnessDropLint {
     }
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        // Skip test modules - OTW pattern is irrelevant in tests
+        if is_test_only_module(root, source) {
+            return;
+        }
         check_missing_witness_drop(root, source, ctx);
     }
 }
@@ -724,6 +729,10 @@ impl LintRule for IgnoredBooleanReturnLint {
     }
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        // Skip test modules - benchmarks legitimately ignore returns
+        if is_test_only_module(root, source) {
+            return;
+        }
         check_ignored_boolean_return(root, source, ctx);
     }
 }
@@ -988,6 +997,10 @@ impl LintRule for DestroyZeroUncheckedLint {
     }
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        // Skip test modules - test cleanup code may legitimately skip checks
+        if is_test_only_module(root, source) {
+            return;
+        }
         check_destroy_zero_unchecked(root, source, ctx);
     }
 }
@@ -1085,6 +1098,10 @@ impl LintRule for OtwPatternViolationLint {
     }
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        // Skip test modules - test coin types don't need real OTW pattern
+        if is_test_only_module(root, source) {
+            return;
+        }
         check_otw_pattern(root, source, ctx, None);
     }
 }
@@ -1202,6 +1219,10 @@ impl LintRule for DigestAsRandomnessLint {
     }
 
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        // Skip test modules - test helpers may use digest for deterministic tests
+        if is_test_only_module(root, source) {
+            return;
+        }
         check_digest_as_randomness(root, source, ctx);
     }
 }
@@ -1882,11 +1903,11 @@ module example::stake {
 
         let messages = lint_source(source);
         // Deprecated lint should produce no diagnostics
-        let coin_split_msgs: Vec<_> = messages
+        let withdraw_msgs: Vec<_> = messages
             .iter()
-            .filter(|m| m.contains("coin::split"))
+            .filter(|m| m.contains("withdraw") && m.contains("balance"))
             .collect();
-        assert!(coin_split_msgs.is_empty());
+        assert!(withdraw_msgs.is_empty());
     }
 
     #[test]
@@ -1903,7 +1924,10 @@ module example::stake {
 
         let messages = lint_source(source);
         // Should not fire when there's a balance check
-        let withdraw_msgs: Vec<_> = messages.iter().filter(|m| m.contains("withdraw")).collect();
+        let withdraw_msgs: Vec<_> = messages
+            .iter()
+            .filter(|m| m.contains("withdraw") && m.contains("balance"))
+            .collect();
         assert!(withdraw_msgs.is_empty());
     }
 

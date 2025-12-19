@@ -199,3 +199,36 @@ pub(crate) fn generate_method_call_fix(
 pub(crate) fn is_simple_receiver(receiver: &str) -> bool {
     is_simple_ident(receiver)
 }
+
+/// Check if this is a test-only module based on attributes and naming conventions.
+///
+/// Returns true if:
+/// - Module has `#[test_only]` attribute
+/// - Module name contains `_tests` or `_test`
+pub(crate) fn is_test_only_module(root: tree_sitter::Node, source: &str) -> bool {
+    let mut cursor = root.walk();
+    for child in root.children(&mut cursor) {
+        // Check for #[test_only] attribute
+        if child.kind() == "attribute" {
+            let text = slice(source, child);
+            if text.contains("test_only") {
+                return true;
+            }
+        }
+        // Also check annotations (different grammar node type)
+        if child.kind() == "annotation" {
+            let text = slice(source, child);
+            if text.contains("test_only") {
+                return true;
+            }
+        }
+        // Check the module definition name for test naming patterns
+        if child.kind() == "module_definition" {
+            let name = slice(source, child);
+            if name.contains("_tests") || name.contains("_test") {
+                return true;
+            }
+        }
+    }
+    false
+}
