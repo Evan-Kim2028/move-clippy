@@ -1,21 +1,18 @@
+#[cfg(feature = "telemetry")]
 use std::sync::OnceLock;
 
 #[cfg(feature = "telemetry")]
 use tracing_subscriber::{EnvFilter, fmt};
 
 /// Initialize tracing subscriber once per process.
+#[cfg(feature = "telemetry")]
 pub fn init_tracing() {
-    #[cfg(feature = "telemetry")]
     static INIT: OnceLock<()> = OnceLock::new();
-
-    #[cfg(feature = "telemetry")]
-    {
-        INIT.get_or_init(|| {
-            let filter = EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("move_clippy=info"));
-            let _ = fmt().with_env_filter(filter).try_init();
-        });
-    }
+    INIT.get_or_init(|| {
+        let filter = EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| EnvFilter::new("move_clippy=info"));
+        let _ = fmt().with_env_filter(filter).try_init();
+    });
 }
 
 #[cfg(not(feature = "telemetry"))]
