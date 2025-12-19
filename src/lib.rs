@@ -62,6 +62,7 @@ pub struct LintEngine {
 
 impl LintEngine {
     /// Create a new engine with default lint settings.
+    #[must_use]
     pub fn new(registry: LintRegistry) -> Self {
         Self {
             registry,
@@ -70,11 +71,13 @@ impl LintEngine {
     }
 
     /// Create a new engine with explicit lint settings (e.g. from config).
+    #[must_use]
     pub fn new_with_settings(registry: LintRegistry, settings: LintSettings) -> Self {
         Self { registry, settings }
     }
 
     /// Lint a single in-memory source string and return diagnostics.
+    #[must_use = "diagnostics should be processed or reported"]
     pub fn lint_source(&self, source: &str) -> Result<Vec<Diagnostic>> {
         let tree = parse_source(source)?;
         self.run_rules(source, &tree)
@@ -99,6 +102,7 @@ impl LintEngine {
 }
 
 /// Construct a `LintEngine` with all built-in fast lints enabled.
+#[must_use = "engine should be used for linting"]
 pub fn create_default_engine() -> LintEngine {
     // Use filtered registry to respect tier system (Stable only by default)
     let registry = LintRegistry::default_rules_filtered_with_experimental(

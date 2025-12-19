@@ -40,6 +40,7 @@ pub struct LintsConfig {
 pub const DEFAULT_CONFIG_FILE_NAME: &str = "move-clippy.toml";
 
 /// Walk up from `start_dir` to find the nearest `move-clippy.toml`, if any.
+#[must_use]
 pub fn find_config_file(start_dir: &Path) -> Option<PathBuf> {
     let mut cur = Some(start_dir);
     while let Some(dir) = cur {
@@ -53,6 +54,7 @@ pub fn find_config_file(start_dir: &Path) -> Option<PathBuf> {
 }
 
 /// Load and parse a configuration file from disk.
+#[must_use = "configuration may contain important settings"]
 pub fn load_config_file(path: &Path) -> Result<MoveClippyConfig> {
     let raw = std::fs::read_to_string(path)
         .with_context(|| format!("failed to read config file: {}", path.display()))?;
@@ -62,6 +64,7 @@ pub fn load_config_file(path: &Path) -> Result<MoveClippyConfig> {
 }
 
 /// Load configuration from an explicit path or by searching from `start_dir`.
+#[must_use = "configuration may contain important settings"]
 pub fn load_config(
     explicit_path: Option<&Path>,
     start_dir: &Path,

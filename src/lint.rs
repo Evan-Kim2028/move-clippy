@@ -461,6 +461,7 @@ pub struct LintSettings {
 }
 
 impl LintSettings {
+    #[must_use]
     pub fn with_config_levels(mut self, levels: HashMap<String, LintLevel>) -> Self {
         // Resolve aliases when storing levels
         for (name, level) in levels {
@@ -470,6 +471,7 @@ impl LintSettings {
         self
     }
 
+    #[must_use]
     pub fn disable(mut self, disabled: impl IntoIterator<Item = String>) -> Self {
         for name in disabled {
             // Resolve aliases when disabling
@@ -775,6 +777,7 @@ impl<'src> LintContext<'src> {
         &self.settings
     }
 
+    #[must_use]
     pub fn into_diagnostics(mut self) -> Vec<Diagnostic> {
         self.append_unfulfilled_expectation_diagnostics();
         self.diagnostics
@@ -906,10 +909,12 @@ impl Default for LintRegistry {
 }
 
 impl LintRegistry {
+    #[must_use]
     pub fn new() -> Self {
         Self { rules: Vec::new() }
     }
 
+    #[must_use]
     pub fn with_rule(mut self, rule: impl LintRule + 'static) -> Self {
         self.rules.push(Box::new(rule));
         self
@@ -927,10 +932,12 @@ impl LintRegistry {
         self.descriptors().find(|d| d.name == name)
     }
 
+    #[must_use = "registry should be used to create an engine"]
     pub fn default_rules() -> Self {
         crate::unified::build_syntactic_registry()
     }
 
+    /// Returns error if any lint name in `only`, `skip`, or `disabled` is unknown.
     pub fn default_rules_filtered(
         only: &[String],
         skip: &[String],
@@ -944,6 +951,10 @@ impl LintRegistry {
     }
 
     /// Filter rules with full tier support including experimental.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if any lint name in `only`, `skip`, or `disabled` is unknown.
     pub fn default_rules_filtered_with_experimental(
         only: &[String],
         skip: &[String],

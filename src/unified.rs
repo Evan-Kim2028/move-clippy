@@ -17,6 +17,7 @@ use std::sync::OnceLock;
 
 static UNIFIED_REGISTRY: OnceLock<UnifiedLintRegistry> = OnceLock::new();
 
+#[must_use]
 pub fn unified_registry() -> &'static UnifiedLintRegistry {
     UNIFIED_REGISTRY.get_or_init(build_unified_registry)
 }
@@ -110,6 +111,7 @@ impl UnifiedLintRegistry {
     }
 
     /// Get a lint by name.
+    #[must_use]
     pub fn get(&self, name: &str) -> Option<&UnifiedLint> {
         self.lints.get(name)
     }

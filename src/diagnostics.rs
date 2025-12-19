@@ -4,6 +4,7 @@ use tree_sitter::Range;
 
 /// A single lint finding produced by Move Clippy.
 #[derive(Debug, Clone)]
+#[must_use]
 pub struct Diagnostic {
     pub lint: &'static LintDescriptor,
     pub level: LintLevel,
@@ -47,6 +48,7 @@ pub struct Position {
 
 impl Span {
     /// Construct a `Span` from a tree-sitter range, converting to 1-based positions.
+    #[must_use]
     pub fn from_range(range: Range) -> Self {
         Self {
             start: Position {
