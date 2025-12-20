@@ -31,8 +31,8 @@ pub use security::{
 // Style lints
 pub use style::{
     AbilitiesOrderLint, ConstantNamingLint, DocCommentStyleLint, EmptyVectorLiteralLint,
-    EventSuffixLint, ExplicitSelfAssignmentsLint, PreferToStringLint, RedundantSelfImportLint,
-    TypedAbortCodeLint, UnneededReturnLint,
+    ErrorConstNamingLint, EventSuffixLint, ExplicitSelfAssignmentsLint, PreferToStringLint,
+    RedundantSelfImportLint, TypedAbortCodeLint, UnneededReturnLint,
 };
 
 // Test quality lints

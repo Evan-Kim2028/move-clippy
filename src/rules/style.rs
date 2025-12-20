@@ -597,7 +597,7 @@ pub struct RedundantSelfImportLint;
 static REDUNDANT_SELF_IMPORT: LintDescriptor = LintDescriptor {
     name: "redundant_self_import",
     category: LintCategory::Style,
-    description: "Avoid `use pkg::mod::{Self};`; prefer `use pkg::mod;`",
+    description: "Use `pkg::mod` instead of `pkg::mod::{Self}`",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Remove redundant `{Self}`"),
     analysis: AnalysisKind::Syntactic,
@@ -615,46 +615,59 @@ impl LintRule for RedundantSelfImportLint {
                 return;
             }
 
-            // Zero-FP strategy: only flag the exact single-item brace form `{Self}`.
-            // If there are multiple items, aliases, or other syntax, we do nothing.
             let text = slice(source, node);
-            let Some(braced) = extract_braced_items(text) else {
-                return;
-            };
 
-            let items: Vec<&str> = braced
-                .split(',')
-                .map(|s| s.trim())
-                .filter(|s| !s.is_empty())
-                .collect();
+            // Check for pattern: ::{Self} at the end with no other members
+            // This matches `use pkg::mod::{Self};` but not `use pkg::mod::{Self, Other};`
+            if text.contains("::{Self}") || text.contains("::{ Self }") {
+                // Count members in the braces
+                let brace_content = text
+                    .split("::{")
+                    .nth(1)
+                    .and_then(|s| s.strip_suffix("};"))
+                    .or_else(|| {
+                        text.split("::{ ")
+                            .nth(1)
+                            .and_then(|s| s.strip_suffix(" };"))
+                    })
+                    .unwrap_or("");
 
-            if items.len() == 1 && items[0] == "Self" {
-                // Generate the fixed version by removing "::{Self}"
-                let replacement = text.replace("::{Self}", "").replace("::{ Self }", "");
+                let members: Vec<&str> = brace_content
+                    .split(',')
+                    .map(|s| s.trim())
+                    .filter(|s| !s.is_empty())
+                    .collect();
 
-                // Create diagnostic with auto-fix
-                let diagnostic = crate::diagnostics::Diagnostic {
-                    lint: self.descriptor(),
-                    level: ctx.settings().level_for(self.descriptor().name),
-                    file: None,
-                    span: Span::from_range(node.range()),
-                    message: "Redundant `{Self}` import; prefer `use pkg::mod;`".to_string(),
-                    help: Some("Remove `{Self}`".to_string()),
-                    suggestion: Some(Suggestion {
-                        message: "Remove redundant `{Self}`".to_string(),
-                        replacement,
-                        applicability: Applicability::MachineApplicable,
-                    }),
-                };
+                // Only warn if Self is the only member
+                if members.len() == 1 && members[0] == "Self" {
+                    let module_path = text
+                        .trim_start_matches("use ")
+                        .split("::{")
+                        .next()
+                        .unwrap_or("")
+                        .trim();
 
-                // Check for suppression
-                let node_start = node.start_byte();
-                if crate::suppression::is_suppressed_at(source, node_start, self.descriptor().name)
-                {
-                    return;
+                    let replacement = format!("use {};", module_path);
+
+                    let diagnostic = crate::diagnostics::Diagnostic {
+                        lint: &REDUNDANT_SELF_IMPORT,
+                        level: ctx.settings().level_for(REDUNDANT_SELF_IMPORT.name),
+                        file: None,
+                        span: Span::from_range(node.range()),
+                        message: format!(
+                            "Redundant `{{Self}}` import. Use `{}` instead.",
+                            replacement
+                        ),
+                        help: Some(format!("Simplify to `{}`", replacement)),
+                        suggestion: Some(Suggestion {
+                            message: "Remove redundant `{Self}`".to_string(),
+                            replacement,
+                            applicability: Applicability::MachineApplicable,
+                        }),
+                    };
+
+                    ctx.report_diagnostic_for_node(node, diagnostic);
                 }
-
-                ctx.report_diagnostic_for_node(node, diagnostic);
             }
         });
     }
@@ -996,4 +1009,140 @@ fn trailing_return_expression(block: Node) -> Option<Node> {
         "return_expression" => Some(last),
         _ => None,
     }
+}
+
+// ============================================================================
+// ErrorConstNamingLint - P0 (Zero FP)
+// ============================================================================
+
+/// Detects error constants that don't follow EPascalCase naming.
+///
+/// From [Move Book Code Quality Checklist](https://move-book.com/guides/code-quality-checklist/):
+/// > Error Constants are in `EPascalCase`
+///
+/// # Example
+///
+/// ```move
+/// // bad! all-caps are used for regular constants
+/// const NOT_AUTHORIZED: u64 = 0;
+///
+/// // good! clear indication it's an error constant
+/// const ENotAuthorized: u64 = 0;
+/// ```
+pub struct ErrorConstNamingLint;
+
+static ERROR_CONST_NAMING: LintDescriptor = LintDescriptor {
+    name: "error_const_naming",
+    category: LintCategory::Style,
+    description: "Error constants should use EPascalCase (e.g., `ENotAuthorized`)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(), // Renaming requires updating all usages
+    analysis: AnalysisKind::Syntactic,
+    gap: None,
+};
+
+impl LintRule for ErrorConstNamingLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &ERROR_CONST_NAMING
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        // First pass: collect constants used in abort/assert
+        let mut error_consts: std::collections::HashSet<String> = std::collections::HashSet::new();
+        
+        walk(root, &mut |node| {
+            // Look for abort expressions: abort ERROR_CODE
+            if node.kind() == "abort_expression" {
+                if let Some(arg) = node.named_child(0) {
+                    let text = slice(source, arg).trim();
+                    // If it's a simple identifier (constant reference)
+                    if arg.kind() == "name_expression" || arg.kind() == "module_access" {
+                        error_consts.insert(text.to_string());
+                    }
+                }
+            }
+            
+            // Look for assert! macro: assert!(condition, ERROR_CODE)
+            if node.kind() == "macro_call" {
+                let text = slice(source, node);
+                if text.starts_with("assert!") {
+                    // Extract the second argument (error code)
+                    if let Some(args) = node.child_by_field_name("arguments") {
+                        let mut cursor = args.walk();
+                        let children: Vec<_> = args.children(&mut cursor).collect();
+                        // Find the comma and get the expression after it
+                        for (i, child) in children.iter().enumerate() {
+                            if slice(source, *child) == "," {
+                                if let Some(next) = children.get(i + 1) {
+                                    let err_text = slice(source, *next).trim();
+                                    error_consts.insert(err_text.to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Second pass: check constant definitions
+        walk(root, &mut |node| {
+            if node.kind() != "constant" {
+                return;
+            }
+
+            let Some(name_node) = node.child_by_field_name("name") else {
+                return;
+            };
+
+            let name = slice(source, name_node);
+
+            // Check if this constant is used as an error code
+            if !error_consts.contains(name) {
+                // Also check if name suggests it's an error (starts with E followed by uppercase,
+                // or contains ERROR/ERR in screaming case)
+                let looks_like_error = name.starts_with('E') && name.chars().nth(1).map(|c| c.is_uppercase()).unwrap_or(false)
+                    || name.contains("ERROR")
+                    || name.contains("ERR_")
+                    || name.starts_with("E_");
+                
+                if !looks_like_error {
+                    return;
+                }
+            }
+
+            // This is an error constant - check naming
+            if !is_valid_error_const_name(name) {
+                let suggested = to_e_pascal_case(name);
+                ctx.report_node(
+                    &ERROR_CONST_NAMING,
+                    name_node,
+                    format!(
+                        "Error constant `{}` should use EPascalCase. Consider renaming to `{}`.",
+                        name, suggested
+                    ),
+                );
+            }
+        });
+    }
+}
+
+/// Check if a name follows EPascalCase (starts with E, followed by PascalCase)
+fn is_valid_error_const_name(name: &str) -> bool {
+    if !name.starts_with('E') {
+        return false;
+    }
+    
+    let rest = &name[1..];
+    if rest.is_empty() {
+        return false;
+    }
+    
+    // First char after E should be uppercase
+    let first = rest.chars().next().unwrap();
+    if !first.is_uppercase() {
+        return false;
+    }
+    
+    // Should be PascalCase (no underscores, not all caps)
+    !rest.contains('_') && !rest.chars().all(|c| c.is_uppercase() || c.is_numeric())
 }

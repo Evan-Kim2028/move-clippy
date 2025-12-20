@@ -1,5 +1,5 @@
 ---
-source: tests/semantic_snapshots.rs
+source: tests/syntactic_snapshots.rs
 expression: output
 ---
 No findings.

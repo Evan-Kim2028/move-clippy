@@ -250,6 +250,7 @@ pub(crate) fn build_syntactic_registry() -> LintRegistry {
         .with_rule(crate::rules::EventSuffixLint)
         .with_rule(crate::rules::EmptyVectorLiteralLint)
         .with_rule(crate::rules::TypedAbortCodeLint)
+        .with_rule(crate::rules::ErrorConstNamingLint)
         // Security lints (audit-backed)
         .with_rule(crate::rules::StaleOraclePriceLint)
         .with_rule(crate::rules::SingleStepOwnershipTransferLint)
