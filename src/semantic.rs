@@ -1644,63 +1644,27 @@ mod full {
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
                     check_shared_capability_in_seq_item(
-                        item,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        item, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
                 check_shared_capability_in_exp(
-                    if_body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
+                    if_body, share_fns, out, settings, file_map, func_name,
                 );
                 if let Some(else_e) = else_body {
                     check_shared_capability_in_exp(
-                        else_e,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        else_e, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
-                check_shared_capability_in_exp(
-                    cond,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
-                check_shared_capability_in_exp(
-                    body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
+                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_shared_capability_in_exp(
-                    body,
-                    share_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
             }
             _ => {}
         }
@@ -2056,18 +2020,16 @@ mod full {
             T::UnannotatedExp_::UnaryExp(_, inner) => extract_local_var_id(inner),
             T::UnannotatedExp_::Builtin(_, args) => extract_local_var_id(args),
             T::UnannotatedExp_::Vector(_, _, _, args) => extract_local_var_id(args),
-            T::UnannotatedExp_::ExpList(items) => {
-                items.iter().find_map(|item| match item {
-                    T::ExpListItem::Single(e, _) => extract_local_var_id(e),
-                    T::ExpListItem::Splat(_, e, _) => extract_local_var_id(e),
-                })
-            }
-            T::UnannotatedExp_::Pack(_, _, _, fields) => {
-                fields.iter().find_map(|(_, _, (_, (_, e)))| extract_local_var_id(e))
-            }
-            T::UnannotatedExp_::PackVariant(_, _, _, _, fields) => {
-                fields.iter().find_map(|(_, _, (_, (_, e)))| extract_local_var_id(e))
-            }
+            T::UnannotatedExp_::ExpList(items) => items.iter().find_map(|item| match item {
+                T::ExpListItem::Single(e, _) => extract_local_var_id(e),
+                T::ExpListItem::Splat(_, e, _) => extract_local_var_id(e),
+            }),
+            T::UnannotatedExp_::Pack(_, _, _, fields) => fields
+                .iter()
+                .find_map(|(_, _, (_, (_, e)))| extract_local_var_id(e)),
+            T::UnannotatedExp_::PackVariant(_, _, _, _, fields) => fields
+                .iter()
+                .find_map(|(_, _, (_, (_, e)))| extract_local_var_id(e)),
             _ => None,
         }
     }
@@ -2339,12 +2301,10 @@ mod full {
             T::UnannotatedExp_::ModuleCall(call) => exp_uses_var(&call.arguments, target),
             T::UnannotatedExp_::Builtin(_, args) => exp_uses_var(args, target),
             T::UnannotatedExp_::Vector(_loc, _n, _ty, args) => exp_uses_var(args, target),
-            T::UnannotatedExp_::ExpList(items) => {
-                items.iter().any(|item| match item {
-                    T::ExpListItem::Single(e, _) => exp_uses_var(e, target),
-                    T::ExpListItem::Splat(_, e, _) => exp_uses_var(e, target),
-                })
-            }
+            T::UnannotatedExp_::ExpList(items) => items.iter().any(|item| match item {
+                T::ExpListItem::Single(e, _) => exp_uses_var(e, target),
+                T::ExpListItem::Splat(_, e, _) => exp_uses_var(e, target),
+            }),
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 exp_uses_var(cond, target)
                     || exp_uses_var(if_body, target)
@@ -2488,9 +2448,7 @@ mod full {
                 let prefix = if *is_mut { "&mut " } else { "&" };
                 format!("{}{}", prefix, format_type(&inner.value))
             }
-            N::Type_::Apply(_, type_name, type_args) => {
-                format_apply_type(type_name, type_args)
-            }
+            N::Type_::Apply(_, type_name, type_args) => format_apply_type(type_name, type_args),
             N::Type_::Param(tp) => tp.user_specified_name.value.to_string(),
             N::Type_::Fun(args, ret) => {
                 let arg_strs: Vec<_> = args.iter().map(|t| format_type(&t.value)).collect();
@@ -3056,7 +3014,14 @@ mod full {
                 check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
                 check_division_in_exp(if_body, validated_vars, out, settings, file_map, func_name);
                 if let Some(else_e) = else_body {
-                    check_division_in_exp(else_e, validated_vars, out, settings, file_map, func_name);
+                    check_division_in_exp(
+                        else_e,
+                        validated_vars,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
+                    );
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
@@ -3064,14 +3029,7 @@ mod full {
                 check_division_in_exp(body, validated_vars, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_division_in_exp(
-                    body,
-                    validated_vars,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_division_in_exp(body, validated_vars, out, settings, file_map, func_name);
             }
             _ => {}
         }
@@ -3209,7 +3167,14 @@ mod full {
             }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 check_unused_return_in_exp(cond, important_fns, out, settings, file_map, func_name);
-                check_unused_return_in_exp(if_body, important_fns, out, settings, file_map, func_name);
+                check_unused_return_in_exp(
+                    if_body,
+                    important_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
                 if let Some(else_e) = else_body {
                     check_unused_return_in_exp(
                         else_e,
@@ -3226,14 +3191,7 @@ mod full {
                 check_unused_return_in_exp(body, important_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_unused_return_in_exp(
-                    body,
-                    important_fns,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_unused_return_in_exp(body, important_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::BinopExp(l, _op, _ty, r) => {
                 check_unused_return_in_exp(l, important_fns, out, settings, file_map, func_name);
@@ -3474,12 +3432,7 @@ mod full {
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
                     check_share_owned_in_seq_item(
-                        item,
-                        share_fns,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
+                        item, share_fns, out, settings, file_map, func_name,
                     );
                 }
             }
@@ -3662,7 +3615,7 @@ mod full {
         ("Withdraw", "Withdrawn"),
         ("Add", "Added"),
         ("Remove", "Removed"),
-        ("Set", "Set"),  // "Set" can be past tense too, but SetX -> XSet is cleaner
+        ("Set", "Set"), // "Set" can be past tense too, but SetX -> XSet is cleaner
         ("Claim", "Claimed"),
         ("Stake", "Staked"),
         ("Unstake", "Unstaked"),
@@ -3685,14 +3638,12 @@ mod full {
     /// Returns Some((present_verb, suggested_name)) if a verb is found.
     fn check_present_tense_event(name: &str) -> Option<(&'static str, String)> {
         for (present, past) in PRESENT_TENSE_VERBS {
-            if name.starts_with(present) {
-                // Extract the noun part (e.g., "CreateItem" -> "Item")
-                let noun = &name[present.len()..];
-                if !noun.is_empty() {
-                    // Suggest "NounVerbed" pattern (e.g., "ItemCreated")
-                    let suggested = format!("{noun}{past}");
-                    return Some((present, suggested));
-                }
+            if let Some(noun) = name.strip_prefix(present)
+                && !noun.is_empty()
+            {
+                // Suggest "NounVerbed" pattern (e.g., "ItemCreated")
+                let suggested = format!("{noun}{past}");
+                return Some((present, suggested));
             }
         }
         None
@@ -3770,36 +3721,35 @@ mod full {
                 .iter()
                 .any(|(mod_pat, fn_pat)| module_name == *mod_pat && call_name == *fn_pat);
 
-            if is_emit_call && let Some(type_arg) = call.type_arguments.first() {
-                // Extract the type name
-                if let N::Type_::Apply(_, type_name, _) = &type_arg.value {
-                    if let N::TypeName_::ModuleType(_, struct_name) = &type_name.value {
-                        let struct_sym = struct_name.value();
-                        let event_name = struct_sym.as_str();
+            if is_emit_call
+                && let Some(type_arg) = call.type_arguments.first()
+                && let N::Type_::Apply(_, type_name, _) = &type_arg.value
+                && let N::TypeName_::ModuleType(_, struct_name) = &type_name.value
+            {
+                let struct_sym = struct_name.value();
+                let event_name = struct_sym.as_str();
 
-                        // Check if it uses present tense
-                        if let Some((verb, suggested)) = check_present_tense_event(event_name) {
-                            let loc = exp.exp.loc;
-                            let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                                return;
-                            };
-                            let anchor = loc.start() as usize;
+                // Check if it uses present tense
+                if let Some((verb, suggested)) = check_present_tense_event(event_name) {
+                    let loc = exp.exp.loc;
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        return;
+                    };
+                    let anchor = loc.start() as usize;
 
-                            push_diag(
-                                out,
-                                settings,
-                                &EVENT_PAST_TENSE,
-                                file,
-                                span,
-                                contents.as_ref(),
-                                anchor,
-                                format!(
-                                    "Event `{event_name}` uses present tense (starts with `{verb}`). \
-                                     Events describe things that happened, use past tense like `{suggested}`."
-                                ),
-                            );
-                        }
-                    }
+                    push_diag(
+                        out,
+                        settings,
+                        &EVENT_PAST_TENSE,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Event `{event_name}` uses present tense (starts with `{verb}`). \
+                             Events describe things that happened, use past tense like `{suggested}`."
+                        ),
+                    );
                 }
             }
         }
@@ -4033,7 +3983,9 @@ mod full {
         file_map: &MappedFiles,
         info: &TypingProgramInfo,
     ) -> Result<()> {
-        use crate::type_classifier::{has_copy_ability, has_drop_ability, has_key_ability, has_store_ability};
+        use crate::type_classifier::{
+            has_copy_ability, has_drop_ability, has_key_ability, has_store_ability,
+        };
 
         for (mident, minfo) in info.modules.key_cloned_iter() {
             match minfo.target_kind {
@@ -4071,9 +4023,15 @@ mod full {
                     let anchor = loc.start() as usize;
 
                     let mut bad_abilities = Vec::new();
-                    if has_copy { bad_abilities.push("copy"); }
-                    if has_key { bad_abilities.push("key"); }
-                    if has_store { bad_abilities.push("store"); }
+                    if has_copy {
+                        bad_abilities.push("copy");
+                    }
+                    if has_key {
+                        bad_abilities.push("key");
+                    }
+                    if has_store {
+                        bad_abilities.push("store");
+                    }
 
                     push_diag(
                         out,
@@ -4169,7 +4127,9 @@ mod full {
         info: &TypingProgramInfo,
         prog: &T::Program,
     ) -> Result<()> {
-        use crate::type_classifier::{has_copy_ability, has_drop_ability, has_key_ability, has_store_ability};
+        use crate::type_classifier::{
+            has_copy_ability, has_drop_ability, has_key_ability, has_store_ability,
+        };
 
         for (mident, minfo) in info.modules.key_cloned_iter() {
             match minfo.target_kind {
@@ -4198,8 +4158,8 @@ mod full {
                     N::StructFields::Defined(_, fields) => fields.is_empty(),
                     N::StructFields::Native(_) => true,
                 };
-                let name_is_witness = struct_name.contains("Witness") 
-                    || struct_name == expected_otw_name;
+                let name_is_witness =
+                    struct_name.contains("Witness") || struct_name == expected_otw_name;
 
                 // Not a witness if it doesn't have drop or has fields
                 if !has_drop || !is_empty {
@@ -4298,50 +4258,51 @@ mod full {
 
                     // Check if return type is a witness
                     let ret_ty = &fdef.signature.return_type;
-                    if let N::Type_::Apply(_, type_name, _) = &ret_ty.value {
-                        if let N::TypeName_::ModuleType(ret_mident, ret_struct) = &type_name.value {
-                            // Only check if returning a type from the same module
-                            if ret_mident.value.module.value() != module_name {
-                                continue;
-                            }
+                    if let N::Type_::Apply(_, type_name, _) = &ret_ty.value
+                        && let N::TypeName_::ModuleType(ret_mident, ret_struct) = &type_name.value
+                    {
+                        // Only check if returning a type from the same module
+                        if ret_mident.value.module.value() != module_name {
+                            continue;
+                        }
 
-                            let ret_struct_sym = ret_struct.value();
-                            let ret_struct_name = ret_struct_sym.as_str();
-                            
-                            // Check if the returned struct is a witness
-                            if let Some(sdef) = minfo.structs.get_(&ret_struct_sym) {
-                                let is_empty = match &sdef.fields {
-                                    N::StructFields::Defined(_, fields) => fields.is_empty(),
-                                    N::StructFields::Native(_) => true,
+                        let ret_struct_sym = ret_struct.value();
+                        let ret_struct_name = ret_struct_sym.as_str();
+
+                        // Check if the returned struct is a witness
+                        if let Some(sdef) = minfo.structs.get_(&ret_struct_sym) {
+                            let is_empty = match &sdef.fields {
+                                N::StructFields::Defined(_, fields) => fields.is_empty(),
+                                N::StructFields::Native(_) => true,
+                            };
+                            let has_drop = has_drop_ability(&sdef.abilities);
+                            let is_witness_name = ret_struct_name.contains("Witness")
+                                || ret_struct_name == expected_otw_name;
+
+                            if is_empty && has_drop && is_witness_name {
+                                let loc = fdef.loc;
+                                let Some((file, span, contents)) = diag_from_loc(file_map, &loc)
+                                else {
+                                    continue;
                                 };
-                                let has_drop = has_drop_ability(&sdef.abilities);
-                                let is_witness_name = ret_struct_name.contains("Witness")
-                                    || ret_struct_name == expected_otw_name;
+                                let anchor = loc.start() as usize;
+                                let fn_name_sym = fname.value();
+                                let fn_name = fn_name_sym.as_str();
 
-                                if is_empty && has_drop && is_witness_name {
-                                    let loc = fdef.loc;
-                                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                                        continue;
-                                    };
-                                    let anchor = loc.start() as usize;
-                                    let fn_name_sym = fname.value();
-                                    let fn_name = fn_name_sym.as_str();
-
-                                    push_diag(
-                                        out,
-                                        settings,
-                                        &WITNESS_ANTIPATTERNS,
-                                        file,
-                                        span,
-                                        contents.as_ref(),
-                                        anchor,
-                                        format!(
-                                            "Public function `{fn_name}` returns witness type `{ret_struct_name}`. \
-                                             Witnesses should only be constructible within their module. \
-                                             Make this function private or package-internal."
-                                        ),
-                                    );
-                                }
+                                push_diag(
+                                    out,
+                                    settings,
+                                    &WITNESS_ANTIPATTERNS,
+                                    file,
+                                    span,
+                                    contents.as_ref(),
+                                    anchor,
+                                    format!(
+                                        "Public function `{fn_name}` returns witness type `{ret_struct_name}`. \
+                                         Witnesses should only be constructible within their module. \
+                                         Make this function private or package-internal."
+                                    ),
+                                );
                             }
                         }
                     }
@@ -4426,7 +4387,7 @@ mod full {
                 if !has_key_ability(abilities) {
                     // Check if it has any abilities that suggest it should be an object
                     let has_store = crate::type_classifier::has_store_ability(abilities);
-                    
+
                     if has_store {
                         let loc = sname.loc();
                         let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
@@ -4455,7 +4416,7 @@ mod full {
             // Check 3: Public capability minting
             if let Some(mdef) = prog.modules.get(&mident) {
                 let module_name = mident.value.module.value();
-                
+
                 for (fname, fdef) in mdef.functions.key_cloned_iter() {
                     let fn_name_sym = fname.value();
                     let fn_name = fn_name_sym.as_str();
@@ -4476,38 +4437,39 @@ mod full {
 
                     // Check if return type is a capability from this module
                     let ret_ty = &fdef.signature.return_type;
-                    if let N::Type_::Apply(_, type_name, _) = &ret_ty.value {
-                        if let N::TypeName_::ModuleType(ret_mident, ret_struct) = &type_name.value {
-                            // Only check types from the same module
-                            if ret_mident.value.module.value() != module_name {
+                    if let N::Type_::Apply(_, type_name, _) = &ret_ty.value
+                        && let N::TypeName_::ModuleType(ret_mident, ret_struct) = &type_name.value
+                    {
+                        // Only check types from the same module
+                        if ret_mident.value.module.value() != module_name {
+                            continue;
+                        }
+
+                        let ret_struct_sym = ret_struct.value();
+                        let ret_struct_name = ret_struct_sym.as_str();
+
+                        if is_capability_name(ret_struct_name) {
+                            let loc = fdef.loc;
+                            let Some((file, span, contents)) = diag_from_loc(file_map, &loc)
+                            else {
                                 continue;
-                            }
+                            };
+                            let anchor = loc.start() as usize;
 
-                            let ret_struct_sym = ret_struct.value();
-                            let ret_struct_name = ret_struct_sym.as_str();
-
-                            if is_capability_name(ret_struct_name) {
-                                let loc = fdef.loc;
-                                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                                    continue;
-                                };
-                                let anchor = loc.start() as usize;
-
-                                push_diag(
-                                    out,
-                                    settings,
-                                    &CAPABILITY_ANTIPATTERNS,
-                                    file,
-                                    span,
-                                    contents.as_ref(),
-                                    anchor,
-                                    format!(
-                                        "Public function `{fn_name}` returns capability type `{ret_struct_name}`. \
-                                         Capabilities should only be created in `init` or internal functions. \
-                                         Make this function `public(package)` or private."
-                                    ),
-                                );
-                            }
+                            push_diag(
+                                out,
+                                settings,
+                                &CAPABILITY_ANTIPATTERNS,
+                                file,
+                                span,
+                                contents.as_ref(),
+                                anchor,
+                                format!(
+                                    "Public function `{fn_name}` returns capability type `{ret_struct_name}`. \
+                                     Capabilities should only be created in `init` or internal functions. \
+                                     Make this function `public(package)` or private."
+                                ),
+                            );
                         }
                     }
                 }
@@ -4619,13 +4581,7 @@ mod full {
 
         match &exp.exp.value {
             T::UnannotatedExp_::ModuleCall(call) => {
-                check_stale_oracle_in_exp(
-                    &call.arguments,
-                    out,
-                    settings,
-                    file_map,
-                    func_name,
-                );
+                check_stale_oracle_in_exp(&call.arguments, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {

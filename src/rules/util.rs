@@ -18,6 +18,8 @@ pub(crate) fn slice<'a>(source: &'a str, node: Node) -> &'a str {
     source.get(start..end).unwrap_or("")
 }
 
+// Unused function - kept for potential future use
+#[allow(dead_code)]
 pub(crate) fn extract_braced_items(text: &str) -> Option<&str> {
     let open = text.find('{')?;
     let close = text[open + 1..].find('}')? + (open + 1);

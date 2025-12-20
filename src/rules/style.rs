@@ -4,7 +4,7 @@ use crate::lint::{
 };
 use tree_sitter::Node;
 
-use super::util::{compact_ws, extract_braced_items, slice, walk};
+use super::util::{compact_ws, slice, walk};
 
 // ============================================================================
 // AbilitiesOrderLint - P0 (Zero FP)
@@ -1049,35 +1049,34 @@ impl LintRule for ErrorConstNamingLint {
     fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
         // First pass: collect constants used in abort/assert
         let mut error_consts: std::collections::HashSet<String> = std::collections::HashSet::new();
-        
+
         walk(root, &mut |node| {
             // Look for abort expressions: abort ERROR_CODE
-            if node.kind() == "abort_expression" {
-                if let Some(arg) = node.named_child(0) {
-                    let text = slice(source, arg).trim();
-                    // If it's a simple identifier (constant reference)
-                    if arg.kind() == "name_expression" || arg.kind() == "module_access" {
-                        error_consts.insert(text.to_string());
-                    }
+            if node.kind() == "abort_expression"
+                && let Some(arg) = node.named_child(0)
+            {
+                let text = slice(source, arg).trim();
+                // If it's a simple identifier (constant reference)
+                if arg.kind() == "name_expression" || arg.kind() == "module_access" {
+                    error_consts.insert(text.to_string());
                 }
             }
-            
+
             // Look for assert! macro: assert!(condition, ERROR_CODE)
             if node.kind() == "macro_call" {
                 let text = slice(source, node);
-                if text.starts_with("assert!") {
-                    // Extract the second argument (error code)
-                    if let Some(args) = node.child_by_field_name("arguments") {
-                        let mut cursor = args.walk();
-                        let children: Vec<_> = args.children(&mut cursor).collect();
-                        // Find the comma and get the expression after it
-                        for (i, child) in children.iter().enumerate() {
-                            if slice(source, *child) == "," {
-                                if let Some(next) = children.get(i + 1) {
-                                    let err_text = slice(source, *next).trim();
-                                    error_consts.insert(err_text.to_string());
-                                }
-                            }
+                if text.starts_with("assert!")
+                    && let Some(args) = node.child_by_field_name("arguments")
+                {
+                    let mut cursor = args.walk();
+                    let children: Vec<_> = args.children(&mut cursor).collect();
+                    // Find the comma and get the expression after it
+                    for (i, child) in children.iter().enumerate() {
+                        if slice(source, *child) == ","
+                            && let Some(next) = children.get(i + 1)
+                        {
+                            let err_text = slice(source, *next).trim();
+                            error_consts.insert(err_text.to_string());
                         }
                     }
                 }
@@ -1100,11 +1099,16 @@ impl LintRule for ErrorConstNamingLint {
             if !error_consts.contains(name) {
                 // Also check if name suggests it's an error (starts with E followed by uppercase,
                 // or contains ERROR/ERR in screaming case)
-                let looks_like_error = name.starts_with('E') && name.chars().nth(1).map(|c| c.is_uppercase()).unwrap_or(false)
+                let looks_like_error = name.starts_with('E')
+                    && name
+                        .chars()
+                        .nth(1)
+                        .map(|c| c.is_uppercase())
+                        .unwrap_or(false)
                     || name.contains("ERROR")
                     || name.contains("ERR_")
                     || name.starts_with("E_");
-                
+
                 if !looks_like_error {
                     return;
                 }
@@ -1131,18 +1135,18 @@ fn is_valid_error_const_name(name: &str) -> bool {
     if !name.starts_with('E') {
         return false;
     }
-    
+
     let rest = &name[1..];
     if rest.is_empty() {
         return false;
     }
-    
+
     // First char after E should be uppercase
     let first = rest.chars().next().unwrap();
     if !first.is_uppercase() {
         return false;
     }
-    
+
     // Should be PascalCase (no underscores, not all caps)
     !rest.contains('_') && !rest.chars().all(|c| c.is_uppercase() || c.is_numeric())
 }
