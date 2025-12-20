@@ -635,6 +635,45 @@ pub static WITNESS_ANTIPATTERNS: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
+/// Detects capability structs with security antipatterns.
+///
+/// # Capability Pattern
+///
+/// Capabilities are objects that grant authority. They should:
+/// - Have `key` ability (be trackable objects)
+/// - NOT have `copy` ability (authority should be unique)
+/// - Only be created in `init` or internal functions
+///
+/// # Antipatterns Detected
+///
+/// 1. **Copyable Capability**: `*Cap` with `copy` ability - authority can be duplicated
+/// 2. **Public Capability Minting**: `*Cap` returned from public function - anyone can create
+/// 3. **Non-Object Capability**: `*Cap` without `key` ability - not a proper Sui object
+///
+/// # Example (Bad)
+///
+/// ```move
+/// // BAD - can be duplicated
+/// public struct AdminCap has key, store, copy { id: UID }
+///
+/// // BAD - anyone can create
+/// public fun create_admin_cap(ctx: &mut TxContext): AdminCap {
+///     AdminCap { id: object::new(ctx) }
+/// }
+///
+/// // BAD - not an object
+/// public struct MintCap has store { }
+/// ```
+pub static CAPABILITY_ANTIPATTERNS: LintDescriptor = LintDescriptor {
+    name: "capability_antipatterns",
+    category: LintCategory::Security,
+    description: "Capability struct has copy ability, public constructor, or missing key - security vulnerability (type-based)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::CapabilityEscape),
+};
+
 /// Detects usage of unsafe oracle price functions from known oracle providers.
 ///
 /// Uses type-based detection to verify the call is to a known oracle module.
@@ -693,6 +732,7 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &MISSING_WITNESS_DROP_V2,
     &INVALID_OTW,
     &WITNESS_ANTIPATTERNS,
+    &CAPABILITY_ANTIPATTERNS,
     &STALE_ORACLE_PRICE_V2,
     // Security (preview, type-based)
     &SHARED_CAPABILITY_OBJECT,
@@ -857,6 +897,7 @@ mod full {
             lint_missing_witness_drop_v2(&mut out, settings, &file_map, &typing_info)?;
             lint_invalid_otw(&mut out, settings, &file_map, &typing_info)?;
             lint_witness_antipatterns(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
+            lint_capability_antipatterns(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
             lint_stale_oracle_price_v2(&mut out, settings, &file_map, &typing_ast)?;
             // Phase 4 security lints (type-based, preview)
             if preview {
@@ -4076,6 +4117,171 @@ mod full {
                                         ),
                                     );
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    // =========================================================================
+    // Capability Antipatterns Lint (type-based)
+    // =========================================================================
+
+    /// Checks if a struct name indicates it's a capability.
+    fn is_capability_name(name: &str) -> bool {
+        name.ends_with("Cap") || name.contains("Capability")
+    }
+
+    /// Detects capability structs with security antipatterns.
+    ///
+    /// Checks:
+    /// 1. Copyable capability: `*Cap` with `copy` ability
+    /// 2. Non-object capability: `*Cap` without `key` ability  
+    /// 3. Public capability minting: `*Cap` returned from public function (not init)
+    fn lint_capability_antipatterns(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        info: &TypingProgramInfo,
+        prog: &T::Program,
+    ) -> Result<()> {
+        use crate::type_classifier::{has_copy_ability, has_key_ability};
+
+        for (mident, minfo) in info.modules.key_cloned_iter() {
+            match minfo.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            // Check 1 & 2: Struct-level antipatterns
+            for (sname, sdef) in minfo.structs.key_cloned_iter() {
+                let struct_name_sym = sname.value();
+                let struct_name = struct_name_sym.as_str();
+
+                // Only check structs that look like capabilities
+                if !is_capability_name(struct_name) {
+                    continue;
+                }
+
+                let abilities = &sdef.abilities;
+
+                // Check 1: Copyable capability
+                if has_copy_ability(abilities) {
+                    let loc = sname.loc();
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        continue;
+                    };
+                    let anchor = loc.start() as usize;
+
+                    push_diag(
+                        out,
+                        settings,
+                        &CAPABILITY_ANTIPATTERNS,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Capability struct `{struct_name}` has `copy` ability. \
+                             This allows the capability to be duplicated, defeating access control. \
+                             Remove `copy` from the abilities."
+                        ),
+                    );
+                }
+
+                // Check 2: Non-object capability (no key)
+                // Only flag if it has store but no key - this is suspicious
+                // (having neither key nor store might be intentional for internal use)
+                if !has_key_ability(abilities) {
+                    // Check if it has any abilities that suggest it should be an object
+                    let has_store = crate::type_classifier::has_store_ability(abilities);
+                    
+                    if has_store {
+                        let loc = sname.loc();
+                        let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                            continue;
+                        };
+                        let anchor = loc.start() as usize;
+
+                        push_diag(
+                            out,
+                            settings,
+                            &CAPABILITY_ANTIPATTERNS,
+                            file,
+                            span,
+                            contents.as_ref(),
+                            anchor,
+                            format!(
+                                "Capability struct `{struct_name}` has `store` but no `key` ability. \
+                                 Capabilities should be Sui objects with `key` for proper ownership tracking. \
+                                 Add `key` ability and include `id: UID` as the first field."
+                            ),
+                        );
+                    }
+                }
+            }
+
+            // Check 3: Public capability minting
+            if let Some(mdef) = prog.modules.get(&mident) {
+                let module_name = mident.value.module.value();
+                
+                for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                    let fn_name_sym = fname.value();
+                    let fn_name = fn_name_sym.as_str();
+
+                    // Skip init function - it's allowed to create capabilities
+                    if fn_name == "init" {
+                        continue;
+                    }
+
+                    // Skip non-public functions
+                    let is_public = matches!(
+                        fdef.visibility,
+                        move_compiler::expansion::ast::Visibility::Public(_)
+                    );
+                    if !is_public {
+                        continue;
+                    }
+
+                    // Check if return type is a capability from this module
+                    let ret_ty = &fdef.signature.return_type;
+                    if let N::Type_::Apply(_, type_name, _) = &ret_ty.value {
+                        if let N::TypeName_::ModuleType(ret_mident, ret_struct) = &type_name.value {
+                            // Only check types from the same module
+                            if ret_mident.value.module.value() != module_name {
+                                continue;
+                            }
+
+                            let ret_struct_sym = ret_struct.value();
+                            let ret_struct_name = ret_struct_sym.as_str();
+
+                            if is_capability_name(ret_struct_name) {
+                                let loc = fdef.loc;
+                                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                                    continue;
+                                };
+                                let anchor = loc.start() as usize;
+
+                                push_diag(
+                                    out,
+                                    settings,
+                                    &CAPABILITY_ANTIPATTERNS,
+                                    file,
+                                    span,
+                                    contents.as_ref(),
+                                    anchor,
+                                    format!(
+                                        "Public function `{fn_name}` returns capability type `{ret_struct_name}`. \
+                                         Capabilities should only be created in `init` or internal functions. \
+                                         Make this function `public(package)` or private."
+                                    ),
+                                );
                             }
                         }
                     }
