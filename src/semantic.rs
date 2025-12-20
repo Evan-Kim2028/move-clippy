@@ -371,8 +371,8 @@ pub static GENERIC_TYPE_WITNESS_UNUSED: LintDescriptor = LintDescriptor {
 pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
     name: "droppable_hot_potato_v2",
     category: LintCategory::Security,
-    description: "Struct has only `drop` ability - likely a broken hot potato (type-based, zero FP)",
-    group: RuleGroup::Stable,
+    description: "Struct has only `drop` ability - likely a broken hot potato (type-based, high FP rate - see #31)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::ApiMisuse),
@@ -525,6 +525,102 @@ pub static MISSING_WITNESS_DROP_V2: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
+/// Detects one-time witness (OTW) structs that violate Sui Adapter rules.
+///
+/// # OTW Rules (From Sui Documentation)
+///
+/// A type is a valid OTW if and only if:
+/// 1. Has **only `drop`** ability (no `copy`, `key`, `store`)
+/// 2. Has **no fields**
+/// 3. Is **not generic**
+/// 4. Named after the module with **ALL UPPERCASE**
+///
+/// # Why This Matters
+///
+/// If an OTW is malformed, `sui::types::is_one_time_witness()` will return false,
+/// and code relying on OTW guarantees (like `coin::create_currency`) will abort.
+///
+/// # Example (Bad)
+///
+/// ```move
+/// module my_package::token;
+///
+/// // BAD - OTW has `copy` ability
+/// public struct TOKEN has drop, copy {}
+///
+/// // BAD - OTW has fields
+/// public struct TOKEN has drop { value: u64 }
+///
+/// // BAD - OTW is generic
+/// public struct TOKEN<T> has drop {}
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// module my_package::token;
+///
+/// // GOOD - proper OTW
+/// public struct TOKEN has drop {}
+/// ```
+pub static INVALID_OTW: LintDescriptor = LintDescriptor {
+    name: "invalid_otw",
+    category: LintCategory::Security,
+    description: "One-time witness violates Sui Adapter rules - has wrong abilities, fields, or is generic (type-based)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
+};
+
+/// Detects witness structs with antipatterns that may indicate security issues.
+///
+/// # Witness Pattern
+///
+/// A witness is a proof of module ownership. Witnesses should:
+/// - Have only `drop` ability (consumed after use)
+/// - Have no fields (or minimal marker fields)
+/// - Not be publicly constructible
+///
+/// # Antipatterns
+///
+/// 1. **Witness with `copy`**: Can be duplicated, defeating the proof
+/// 2. **Witness with `store`**: Can be persisted and replayed
+/// 3. **Witness with `key`**: Conflating witness with capability pattern
+/// 4. **Public witness constructor**: Anyone can create the proof
+///
+/// # Example (Bad)
+///
+/// ```move
+/// // BAD - witness can be duplicated
+/// public struct MyWitness has drop, copy {}
+///
+/// // BAD - witness can be stored and reused
+/// public struct MyWitness has drop, store {}
+///
+/// // BAD - anyone can create the witness
+/// public fun create_witness(): MyWitness { MyWitness {} }
+/// ```
+///
+/// # Correct Pattern
+///
+/// ```move
+/// // GOOD - witness with only drop, private construction
+/// public struct MyWitness has drop {}
+///
+/// // Only callable within the module
+/// fun get_witness(): MyWitness { MyWitness {} }
+/// ```
+pub static WITNESS_ANTIPATTERNS: LintDescriptor = LintDescriptor {
+    name: "witness_antipatterns",
+    category: LintCategory::Security,
+    description: "Witness struct has copy/store/key ability or public constructor - may defeat proof pattern (type-based)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
+};
+
 /// Detects usage of unsafe oracle price functions from known oracle providers.
 ///
 /// Uses type-based detection to verify the call is to a known oracle module.
@@ -581,6 +677,8 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &NON_TRANSFERABLE_FUNGIBLE_OBJECT,
     &PUBLIC_RANDOM_ACCESS_V2,
     &MISSING_WITNESS_DROP_V2,
+    &INVALID_OTW,
+    &WITNESS_ANTIPATTERNS,
     &STALE_ORACLE_PRICE_V2,
     // Security (preview, type-based)
     &SHARED_CAPABILITY_OBJECT,
@@ -742,6 +840,8 @@ mod full {
             lint_non_transferable_fungible_object(&mut out, settings, &file_map, &typing_info)?;
             lint_public_random_access_v2(&mut out, settings, &file_map, &typing_ast)?;
             lint_missing_witness_drop_v2(&mut out, settings, &file_map, &typing_info)?;
+            lint_invalid_otw(&mut out, settings, &file_map, &typing_info)?;
+            lint_witness_antipatterns(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
             lint_stale_oracle_price_v2(&mut out, settings, &file_map, &typing_ast)?;
             // Phase 4 security lints (type-based, preview)
             if preview {
@@ -1450,27 +1550,63 @@ mod full {
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
                     check_shared_capability_in_seq_item(
-                        item, share_fns, out, settings, file_map, func_name,
+                        item,
+                        share_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
                     );
                 }
             }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
                 check_shared_capability_in_exp(
-                    if_body, share_fns, out, settings, file_map, func_name,
+                    if_body,
+                    share_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
                 );
                 if let Some(else_e) = else_body {
                     check_shared_capability_in_exp(
-                        else_e, share_fns, out, settings, file_map, func_name,
+                        else_e,
+                        share_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
                     );
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
-                check_shared_capability_in_exp(cond, share_fns, out, settings, file_map, func_name);
-                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
+                check_shared_capability_in_exp(
+                    cond,
+                    share_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
+                check_shared_capability_in_exp(
+                    body,
+                    share_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_shared_capability_in_exp(body, share_fns, out, settings, file_map, func_name);
+                check_shared_capability_in_exp(
+                    body,
+                    share_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             _ => {}
         }
@@ -1823,6 +1959,21 @@ mod full {
             T::UnannotatedExp_::Cast(inner, _) => extract_local_var_id(inner),
             T::UnannotatedExp_::Annotate(inner, _) => extract_local_var_id(inner),
             T::UnannotatedExp_::Borrow(_, base, _) => extract_local_var_id(base),
+            T::UnannotatedExp_::UnaryExp(_, inner) => extract_local_var_id(inner),
+            T::UnannotatedExp_::Builtin(_, args) => extract_local_var_id(args),
+            T::UnannotatedExp_::Vector(_, _, _, args) => extract_local_var_id(args),
+            T::UnannotatedExp_::ExpList(items) => {
+                items.iter().find_map(|item| match item {
+                    T::ExpListItem::Single(e, _) => extract_local_var_id(e),
+                    T::ExpListItem::Splat(_, e, _) => extract_local_var_id(e),
+                })
+            }
+            T::UnannotatedExp_::Pack(_, _, _, fields) => {
+                fields.iter().find_map(|(_, _, (_, (_, e)))| extract_local_var_id(e))
+            }
+            T::UnannotatedExp_::PackVariant(_, _, _, _, fields) => {
+                fields.iter().find_map(|(_, _, (_, (_, e)))| extract_local_var_id(e))
+            }
             _ => None,
         }
     }
@@ -1978,9 +2129,9 @@ mod full {
                     file_map,
                     func_name,
                 );
-                if let Some(e) = e_opt {
+                if let Some(else_e) = e_opt {
                     check_unbounded_iter_in_exp(
-                        e,
+                        else_e,
                         vector_param_ids,
                         out,
                         settings,
@@ -2060,7 +2211,6 @@ mod full {
                 if let N::TypeName_::ModuleType(mident, struct_name) = &type_name.value {
                     let module_sym = mident.value.module.value();
                     let struct_sym = struct_name.value();
-                    // Match sui::coin::Coin or any coin module's Coin type
                     module_sym.as_str() == "type_name" && struct_sym.as_str() == "TypeName"
                 } else {
                     false
@@ -2095,10 +2245,12 @@ mod full {
             T::UnannotatedExp_::ModuleCall(call) => exp_uses_var(&call.arguments, target),
             T::UnannotatedExp_::Builtin(_, args) => exp_uses_var(args, target),
             T::UnannotatedExp_::Vector(_loc, _n, _ty, args) => exp_uses_var(args, target),
-            T::UnannotatedExp_::ExpList(items) => items.iter().any(|item| match item {
-                T::ExpListItem::Single(e, _) => exp_uses_var(e, target),
-                T::ExpListItem::Splat(_, e, _) => exp_uses_var(e, target),
-            }),
+            T::UnannotatedExp_::ExpList(items) => {
+                items.iter().any(|item| match item {
+                    T::ExpListItem::Single(e, _) => exp_uses_var(e, target),
+                    T::ExpListItem::Splat(_, e, _) => exp_uses_var(e, target),
+                })
+            }
             T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 exp_uses_var(cond, target)
                     || exp_uses_var(if_body, target)
@@ -2134,10 +2286,10 @@ mod full {
             }
             T::UnannotatedExp_::Pack(_, _, _tys, fields) => fields
                 .iter()
-                .any(|(_f, _idx, (_, (_, e)))| exp_uses_var(e, target)),
+                .any(|(_, _, (_, (_, e)))| exp_uses_var(e, target)),
             T::UnannotatedExp_::PackVariant(_, _, _, _tys, fields) => fields
                 .iter()
-                .any(|(_f, _idx, (_, (_, e)))| exp_uses_var(e, target)),
+                .any(|(_, _, (_, (_, e)))| exp_uses_var(e, target)),
             _ => false,
         }
     }
@@ -2215,6 +2367,70 @@ mod full {
         }
 
         Ok(())
+    }
+
+    fn is_coin_type(ty: &N::Type_) -> bool {
+        match ty {
+            N::Type_::Apply(_, type_name, _) => {
+                if let N::TypeName_::ModuleType(mident, struct_name) = &type_name.value {
+                    let module_sym = mident.value.module.value();
+                    let struct_sym = struct_name.value();
+                    // Match sui::coin::Coin or any coin module's Coin type
+                    module_sym.as_str() == "coin" && struct_sym.as_str() == "Coin"
+                } else {
+                    false
+                }
+            }
+            N::Type_::Ref(_, inner) => is_coin_type(&inner.value),
+            _ => false,
+        }
+    }
+
+    /// Format a type for display in error messages (using naming::ast::Type_ structure).
+    fn format_type(ty: &N::Type_) -> String {
+        match ty {
+            N::Type_::Unit => "()".to_string(),
+            N::Type_::Ref(is_mut, inner) => {
+                let prefix = if *is_mut { "&mut " } else { "&" };
+                format!("{}{}", prefix, format_type(&inner.value))
+            }
+            N::Type_::Apply(_, type_name, type_args) => {
+                format_apply_type(type_name, type_args)
+            }
+            N::Type_::Param(tp) => tp.user_specified_name.value.to_string(),
+            N::Type_::Fun(args, ret) => {
+                let arg_strs: Vec<_> = args.iter().map(|t| format_type(&t.value)).collect();
+                format!(
+                    "fun({}) -> {}",
+                    arg_strs.join(", "),
+                    format_type(&ret.value)
+                )
+            }
+            N::Type_::Var(_) => "_".to_string(),
+            N::Type_::Anything => "any".to_string(),
+            N::Type_::Void => "void".to_string(),
+            N::Type_::UnresolvedError => "error".to_string(),
+        }
+    }
+
+    /// Format an Apply type (module::Type<args>) for display.
+    fn format_apply_type(type_name: &N::TypeName, type_args: &[N::Type]) -> String {
+        let name = match &type_name.value {
+            N::TypeName_::Builtin(builtin) => format!("{:?}", builtin.value),
+            N::TypeName_::ModuleType(mident, struct_name) => {
+                format!("{}::{}", mident.value.module.value(), struct_name.value())
+            }
+            N::TypeName_::Multiple(_) => "tuple".to_string(),
+        };
+        if type_args.is_empty() {
+            name
+        } else {
+            let args: Vec<_> = type_args
+                .iter()
+                .map(|t| format_type(strip_refs(&t.value)))
+                .collect();
+            format!("{}<{}>", name, args.join(", "))
+        }
     }
 
     // =========================================================================
@@ -2746,14 +2962,7 @@ mod full {
                 check_division_in_exp(cond, validated_vars, out, settings, file_map, func_name);
                 check_division_in_exp(if_body, validated_vars, out, settings, file_map, func_name);
                 if let Some(else_e) = else_body {
-                    check_division_in_exp(
-                        else_e,
-                        validated_vars,
-                        out,
-                        settings,
-                        file_map,
-                        func_name,
-                    );
+                    check_division_in_exp(else_e, validated_vars, out, settings, file_map, func_name);
                 }
             }
             T::UnannotatedExp_::While(_, cond, body) => {
@@ -2761,7 +2970,14 @@ mod full {
                 check_division_in_exp(body, validated_vars, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_division_in_exp(body, validated_vars, out, settings, file_map, func_name);
+                check_division_in_exp(
+                    body,
+                    validated_vars,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             _ => {}
         }
@@ -2885,8 +3101,8 @@ mod full {
         func_name: &str,
     ) {
         match &exp.exp.value {
-            T::UnannotatedExp_::Block((_, seq)) => {
-                for item in seq.iter() {
+            T::UnannotatedExp_::Block((_, seq_items)) => {
+                for item in seq_items.iter() {
                     check_unused_return_in_seq_item(
                         item,
                         important_fns,
@@ -2897,12 +3113,12 @@ mod full {
                     );
                 }
             }
-            T::UnannotatedExp_::IfElse(cond, t, e_opt) => {
+            T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
                 check_unused_return_in_exp(cond, important_fns, out, settings, file_map, func_name);
-                check_unused_return_in_exp(t, important_fns, out, settings, file_map, func_name);
-                if let Some(e) = e_opt {
+                check_unused_return_in_exp(if_body, important_fns, out, settings, file_map, func_name);
+                if let Some(else_e) = else_body {
                     check_unused_return_in_exp(
-                        e,
+                        else_e,
                         important_fns,
                         out,
                         settings,
@@ -2916,7 +3132,14 @@ mod full {
                 check_unused_return_in_exp(body, important_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Loop { body, .. } => {
-                check_unused_return_in_exp(body, important_fns, out, settings, file_map, func_name);
+                check_unused_return_in_exp(
+                    body,
+                    important_fns,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::UnannotatedExp_::BinopExp(l, _op, _ty, r) => {
                 check_unused_return_in_exp(l, important_fns, out, settings, file_map, func_name);
@@ -2962,7 +3185,7 @@ mod full {
                     func_name,
                 );
             }
-            T::UnannotatedExp_::Vector(_, _, _, args) => {
+            T::UnannotatedExp_::Vector(_loc, _n, _ty, args) => {
                 check_unused_return_in_exp(args, important_fns, out, settings, file_map, func_name);
             }
             T::UnannotatedExp_::Builtin(_, args) => {
@@ -3157,7 +3380,12 @@ mod full {
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
                     check_share_owned_in_seq_item(
-                        item, share_fns, out, settings, file_map, func_name,
+                        item,
+                        share_fns,
+                        out,
+                        settings,
+                        file_map,
+                        func_name,
                     );
                 }
             }
@@ -3176,85 +3404,6 @@ mod full {
                 check_share_owned_in_exp(body, share_fns, out, settings, file_map, func_name);
             }
             _ => {}
-        }
-    }
-
-    /// Extract abilities from a Type (using naming::ast::Type_ structure).
-    /// The typing AST re-exports Type_ from naming::ast.
-    #[allow(dead_code)]
-    fn get_type_abilities(ty: &N::Type_) -> Option<move_compiler::expansion::ast::AbilitySet> {
-        match ty {
-            N::Type_::Apply(abilities, _, _) => abilities.clone(),
-            N::Type_::Ref(_, inner) => get_type_abilities(&inner.value),
-            N::Type_::Param(tp) => Some(tp.abilities.clone()),
-            _ => None,
-        }
-    }
-
-    /// Check if a type is `sui::coin::Coin<T>`.
-    ///
-    /// Coin types have the same ability pattern as capabilities (key+store, no copy/drop)
-    /// but they are value tokens, not access control objects. We exclude them from
-    /// capability transfer warnings to avoid false positives.
-    fn is_coin_type(ty: &N::Type_) -> bool {
-        match ty {
-            N::Type_::Apply(_, type_name, _) => {
-                if let N::TypeName_::ModuleType(mident, struct_name) = &type_name.value {
-                    let module_sym = mident.value.module.value();
-                    let struct_sym = struct_name.value();
-                    // Match sui::coin::Coin or any coin module's Coin type
-                    module_sym.as_str() == "coin" && struct_sym.as_str() == "Coin"
-                } else {
-                    false
-                }
-            }
-            N::Type_::Ref(_, inner) => is_coin_type(&inner.value),
-            _ => false,
-        }
-    }
-
-    /// Format a type for display in error messages (using naming::ast::Type_ structure).
-    fn format_type(ty: &N::Type_) -> String {
-        match ty {
-            N::Type_::Unit => "()".to_string(),
-            N::Type_::Ref(is_mut, inner) => {
-                let prefix = if *is_mut { "&mut " } else { "&" };
-                format!("{}{}", prefix, format_type(&inner.value))
-            }
-            N::Type_::Apply(_, type_name, type_args) => format_apply_type(type_name, type_args),
-            N::Type_::Param(tp) => tp.user_specified_name.value.to_string(),
-            N::Type_::Fun(args, ret) => {
-                let arg_strs: Vec<_> = args.iter().map(|t| format_type(&t.value)).collect();
-                format!(
-                    "fun({}) -> {}",
-                    arg_strs.join(", "),
-                    format_type(&ret.value)
-                )
-            }
-            N::Type_::Var(_) => "_".to_string(),
-            N::Type_::Anything => "any".to_string(),
-            N::Type_::Void => "void".to_string(),
-            N::Type_::UnresolvedError => "error".to_string(),
-        }
-    }
-
-    /// Format an Apply type (module::Type<args>) for display.
-    fn format_apply_type(type_name: &N::TypeName, type_args: &[N::Type]) -> String {
-        let name = match &type_name.value {
-            N::TypeName_::Builtin(builtin) => format!("{:?}", builtin.value),
-            N::TypeName_::ModuleType(mident, struct_name) => {
-                format!("{}::{}", mident.value.module.value(), struct_name.value())
-            }
-            N::TypeName_::Multiple(_) => "tuple".to_string(),
-        };
-        if type_args.is_empty() {
-            name
-        } else {
-            let args: Vec<_> = type_args
-                .iter()
-                .map(|t| format_type(strip_refs(&t.value)))
-                .collect();
-            format!("{}<{}>", name, args.join(", "))
         }
     }
 
@@ -3587,6 +3736,342 @@ mod full {
     }
 
     // =========================================================================
+    // Invalid OTW Lint (type-based)
+    // =========================================================================
+
+    /// Detects one-time witness (OTW) structs that violate Sui Adapter rules.
+    ///
+    /// A valid OTW must:
+    /// 1. Have only `drop` ability (no `copy`, `key`, `store`)
+    /// 2. Have no fields
+    /// 3. Not be generic
+    /// 4. Be named after the module in SCREAMING_CASE
+    fn lint_invalid_otw(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        info: &TypingProgramInfo,
+    ) -> Result<()> {
+        use crate::type_classifier::{has_copy_ability, has_drop_ability, has_key_ability, has_store_ability};
+
+        for (mident, minfo) in info.modules.key_cloned_iter() {
+            match minfo.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            let module_name = mident.value.module.value();
+            let module_name_str = module_name.as_str();
+            let expected_otw_name = module_name_str.to_uppercase();
+
+            for (sname, sdef) in minfo.structs.key_cloned_iter() {
+                let struct_name_sym = sname.value();
+                let struct_name = struct_name_sym.as_str();
+
+                // Only check structs that match the OTW naming pattern
+                if struct_name != expected_otw_name {
+                    continue;
+                }
+
+                let abilities = &sdef.abilities;
+                let has_drop = has_drop_ability(abilities);
+                let has_copy = has_copy_ability(abilities);
+                let has_key = has_key_ability(abilities);
+                let has_store = has_store_ability(abilities);
+
+                // Check for wrong abilities (OTW must have ONLY drop)
+                if has_copy || has_key || has_store {
+                    let loc = sname.loc();
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        continue;
+                    };
+                    let anchor = loc.start() as usize;
+
+                    let mut bad_abilities = Vec::new();
+                    if has_copy { bad_abilities.push("copy"); }
+                    if has_key { bad_abilities.push("key"); }
+                    if has_store { bad_abilities.push("store"); }
+
+                    push_diag(
+                        out,
+                        settings,
+                        &INVALID_OTW,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Struct `{struct_name}` appears to be a one-time witness (OTW) but has \
+                             forbidden abilities: {}. OTW must have ONLY `drop` ability. \
+                             This will cause `sui::types::is_one_time_witness()` to return false.",
+                            bad_abilities.join(", ")
+                        ),
+                    );
+                    continue;
+                }
+
+                // Check for fields (OTW must have no fields)
+                let has_fields = match &sdef.fields {
+                    N::StructFields::Defined(_, fields) => !fields.is_empty(),
+                    N::StructFields::Native(_) => false,
+                };
+
+                if has_fields {
+                    let loc = sname.loc();
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        continue;
+                    };
+                    let anchor = loc.start() as usize;
+
+                    push_diag(
+                        out,
+                        settings,
+                        &INVALID_OTW,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Struct `{struct_name}` appears to be a one-time witness (OTW) but has fields. \
+                             OTW must be an empty struct with no fields. \
+                             This will cause `sui::types::is_one_time_witness()` to return false."
+                        ),
+                    );
+                    continue;
+                }
+
+                // Check for generics (OTW must not be generic)
+                if !sdef.type_parameters.is_empty() {
+                    let loc = sname.loc();
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        continue;
+                    };
+                    let anchor = loc.start() as usize;
+
+                    push_diag(
+                        out,
+                        settings,
+                        &INVALID_OTW,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Struct `{struct_name}` appears to be a one-time witness (OTW) but is generic. \
+                             OTW must not have type parameters. \
+                             This will cause `sui::types::is_one_time_witness()` to return false."
+                        ),
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    // =========================================================================
+    // Witness Antipatterns Lint (type-based)
+    // =========================================================================
+
+    /// Detects witness structs with antipatterns that may defeat the proof pattern.
+    ///
+    /// Witnesses are identified by:
+    /// 1. Having `drop` ability
+    /// 2. Having no fields (or only phantom type params)
+    /// 3. Name contains "Witness" or matching OTW pattern
+    fn lint_witness_antipatterns(
+        out: &mut Vec<Diagnostic>,
+        settings: &LintSettings,
+        file_map: &MappedFiles,
+        info: &TypingProgramInfo,
+        prog: &T::Program,
+    ) -> Result<()> {
+        use crate::type_classifier::{has_copy_ability, has_drop_ability, has_key_ability, has_store_ability};
+
+        for (mident, minfo) in info.modules.key_cloned_iter() {
+            match minfo.target_kind {
+                TargetKind::Source {
+                    is_root_package: true,
+                } => {}
+                _ => continue,
+            }
+
+            let module_name = mident.value.module.value();
+            let module_name_str = module_name.as_str();
+            let expected_otw_name = module_name_str.to_uppercase();
+
+            for (sname, sdef) in minfo.structs.key_cloned_iter() {
+                let struct_name_sym = sname.value();
+                let struct_name = struct_name_sym.as_str();
+
+                let abilities = &sdef.abilities;
+
+                // Identify witness structs by heuristics:
+                // 1. Has `drop` ability
+                // 2. Is empty (no fields)
+                // 3. Name contains "Witness" OR matches OTW pattern
+                let has_drop = has_drop_ability(abilities);
+                let is_empty = match &sdef.fields {
+                    N::StructFields::Defined(_, fields) => fields.is_empty(),
+                    N::StructFields::Native(_) => true,
+                };
+                let name_is_witness = struct_name.contains("Witness") 
+                    || struct_name == expected_otw_name;
+
+                // Not a witness if it doesn't have drop or has fields
+                if !has_drop || !is_empty {
+                    continue;
+                }
+
+                // Skip if name doesn't suggest it's a witness
+                if !name_is_witness {
+                    continue;
+                }
+
+                // Check for copy ability (witness should not be copyable)
+                if has_copy_ability(abilities) {
+                    let loc = sname.loc();
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        continue;
+                    };
+                    let anchor = loc.start() as usize;
+
+                    push_diag(
+                        out,
+                        settings,
+                        &WITNESS_ANTIPATTERNS,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Witness struct `{struct_name}` has `copy` ability. \
+                             This allows the witness to be duplicated, defeating the proof-of-ownership pattern. \
+                             Remove `copy` from the abilities."
+                        ),
+                    );
+                }
+
+                // Check for store ability (witness should not be storable)
+                if has_store_ability(abilities) {
+                    let loc = sname.loc();
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        continue;
+                    };
+                    let anchor = loc.start() as usize;
+
+                    push_diag(
+                        out,
+                        settings,
+                        &WITNESS_ANTIPATTERNS,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Witness struct `{struct_name}` has `store` ability. \
+                             This allows the witness to be persisted and replayed. \
+                             Remove `store` from the abilities."
+                        ),
+                    );
+                }
+
+                // Check for key ability (witness conflating with capability)
+                if has_key_ability(abilities) {
+                    let loc = sname.loc();
+                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                        continue;
+                    };
+                    let anchor = loc.start() as usize;
+
+                    push_diag(
+                        out,
+                        settings,
+                        &WITNESS_ANTIPATTERNS,
+                        file,
+                        span,
+                        contents.as_ref(),
+                        anchor,
+                        format!(
+                            "Witness struct `{struct_name}` has `key` ability. \
+                             Witnesses are ephemeral proofs and should not be objects. \
+                             This conflates the witness pattern with the capability pattern."
+                        ),
+                    );
+                }
+            }
+
+            // Check for public witness constructors
+            if let Some(mdef) = prog.modules.get(&mident) {
+                for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                    // Skip non-public functions
+                    let is_public = matches!(
+                        fdef.visibility,
+                        move_compiler::expansion::ast::Visibility::Public(_)
+                    );
+                    if !is_public {
+                        continue;
+                    }
+
+                    // Check if return type is a witness
+                    let ret_ty = &fdef.signature.return_type;
+                    if let N::Type_::Apply(_, type_name, _) = &ret_ty.value {
+                        if let N::TypeName_::ModuleType(ret_mident, ret_struct) = &type_name.value {
+                            // Only check if returning a type from the same module
+                            if ret_mident.value.module.value() != module_name {
+                                continue;
+                            }
+
+                            let ret_struct_sym = ret_struct.value();
+                            let ret_struct_name = ret_struct_sym.as_str();
+                            
+                            // Check if the returned struct is a witness
+                            if let Some(sdef) = minfo.structs.get_(&ret_struct_sym) {
+                                let is_empty = match &sdef.fields {
+                                    N::StructFields::Defined(_, fields) => fields.is_empty(),
+                                    N::StructFields::Native(_) => true,
+                                };
+                                let has_drop = has_drop_ability(&sdef.abilities);
+                                let is_witness_name = ret_struct_name.contains("Witness")
+                                    || ret_struct_name == expected_otw_name;
+
+                                if is_empty && has_drop && is_witness_name {
+                                    let loc = fdef.loc;
+                                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                                        continue;
+                                    };
+                                    let anchor = loc.start() as usize;
+                                    let fn_name_sym = fname.value();
+                                    let fn_name = fn_name_sym.as_str();
+
+                                    push_diag(
+                                        out,
+                                        settings,
+                                        &WITNESS_ANTIPATTERNS,
+                                        file,
+                                        span,
+                                        contents.as_ref(),
+                                        anchor,
+                                        format!(
+                                            "Public function `{fn_name}` returns witness type `{ret_struct_name}`. \
+                                             Witnesses should only be constructible within their module. \
+                                             Make this function private or package-internal."
+                                        ),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    // =========================================================================
     // Stale Oracle Price V2 Lint (type-based)
     // =========================================================================
 
@@ -3688,7 +4173,13 @@ mod full {
 
         match &exp.exp.value {
             T::UnannotatedExp_::ModuleCall(call) => {
-                check_stale_oracle_in_exp(&call.arguments, out, settings, file_map, func_name);
+                check_stale_oracle_in_exp(
+                    &call.arguments,
+                    out,
+                    settings,
+                    file_map,
+                    func_name,
+                );
             }
             T::UnannotatedExp_::Block((_, seq_items)) => {
                 for item in seq_items.iter() {
