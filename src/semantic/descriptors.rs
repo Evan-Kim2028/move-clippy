@@ -15,7 +15,7 @@ pub static SHARE_OWNED: LintDescriptor = LintDescriptor {
     name: "share_owned",
     category: LintCategory::Suspicious,
     description: "[Sui Linter] Possible owned object share (from sui_mode::linters)",
-    group: RuleGroup::Stable,
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::OwnershipViolation),
@@ -25,7 +25,7 @@ pub static SELF_TRANSFER: LintDescriptor = LintDescriptor {
     name: "self_transfer",
     category: LintCategory::Suspicious,
     description: "[Sui Linter] Transferring object to self - consider returning instead (from sui_mode::linters)",
-    group: RuleGroup::Stable,
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::OwnershipViolation),
@@ -134,11 +134,25 @@ pub static FREEZING_CAPABILITY: LintDescriptor = LintDescriptor {
 ///     total / count
 /// }
 /// ```
+pub static UNCHECKED_DIVISION: LintDescriptor = LintDescriptor {
+    name: "unchecked_division",
+    category: LintCategory::Security,
+    description: "Division without zero-check may abort transaction (type-based)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ArithmeticSafety),
+};
+
+/// Detects important return values that are ignored.
+///
+/// Some APIs signal failure via return values. Ignoring them can hide errors
+/// or bypass safety checks.
 pub static UNUSED_RETURN_VALUE: LintDescriptor = LintDescriptor {
     name: "unused_return_value",
     category: LintCategory::Security,
     description: "Important return value is ignored, may indicate bug (type-based)",
-    group: RuleGroup::Stable,
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::ApiMisuse),
@@ -234,7 +248,7 @@ pub static SHARE_OWNED_AUTHORITY: LintDescriptor = LintDescriptor {
     name: "share_owned_authority",
     category: LintCategory::Security,
     description: "Sharing key+store object makes it publicly accessible - dangerous for authority objects (type-based)",
-    group: RuleGroup::Stable,
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::OwnershipViolation),
@@ -357,11 +371,46 @@ pub static GENERIC_TYPE_WITNESS_UNUSED: LintDescriptor = LintDescriptor {
 pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
     name: "droppable_hot_potato_v2",
     category: LintCategory::Security,
-    description: "Struct has only `drop` ability - likely a broken hot potato (type-based, zero FP)",
-    group: RuleGroup::Stable,
+    description: "Struct has only `drop` ability - likely a broken hot potato (type-based)",
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::ApiMisuse),
+};
+
+/// Detects droppable receipts returned alongside Coin/Balance values.
+///
+/// Flash loan receipts should not have `drop`; otherwise borrowers can ignore repayment.
+pub static DROPPABLE_FLASH_LOAN_RECEIPT: LintDescriptor = LintDescriptor {
+    name: "droppable_flash_loan_receipt",
+    category: LintCategory::Security,
+    description: "Function returns Coin/Balance with a droppable receipt struct (type-based, experimental)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
+};
+
+/// Detects receipt structs that fail to preserve coin type via phantom parameters.
+pub static RECEIPT_MISSING_PHANTOM_TYPE: LintDescriptor = LintDescriptor {
+    name: "receipt_missing_phantom_type",
+    category: LintCategory::Security,
+    description: "Receipt returned without phantom coin type enables type confusion (type-based, experimental)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::TypeConfusion),
+};
+
+/// Detects copyable fungible value types that can be duplicated.
+pub static COPYABLE_FUNGIBLE_TYPE: LintDescriptor = LintDescriptor {
+    name: "copyable_fungible_type",
+    category: LintCategory::Security,
+    description: "Copyable fungible value type can be duplicated (type-based, experimental)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
 /// Detects structs that are transferable (`key + store`) but also copyable.
@@ -561,7 +610,6 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &EVENT_EMIT_TYPE_SANITY,
     &ENTRY_FUNCTION_RETURNS_VALUE,
     &PRIVATE_ENTRY_FUNCTION,
-    &SHARE_OWNED_AUTHORITY,
     &COPYABLE_CAPABILITY,
     &DROPPABLE_CAPABILITY,
     &NON_TRANSFERABLE_FUNGIBLE_OBJECT,
@@ -570,11 +618,17 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &STALE_ORACLE_PRICE_V2,
     // Security (preview, type-based)
     &SHARED_CAPABILITY_OBJECT,
-    &UNUSED_RETURN_VALUE,
-    &DROPPABLE_HOT_POTATO_V2,
     &CAPABILITY_TRANSFER_LITERAL_ADDRESS,
     &MUT_KEY_PARAM_MISSING_AUTHORITY,
     &UNBOUNDED_ITERATION_OVER_PARAM_VECTOR,
+    // Security (experimental, type-based)
+    &UNCHECKED_DIVISION,
+    &UNUSED_RETURN_VALUE,
+    &SHARE_OWNED_AUTHORITY,
+    &DROPPABLE_HOT_POTATO_V2,
+    &DROPPABLE_FLASH_LOAN_RECEIPT,
+    &RECEIPT_MISSING_PHANTOM_TYPE,
+    &COPYABLE_FUNGIBLE_TYPE,
     &CAPABILITY_TRANSFER_V2,
     &GENERIC_TYPE_WITNESS_UNUSED,
     // NOTE: phantom_capability is in absint_lints.rs (CFG-aware)

@@ -46,6 +46,43 @@ fn lint_fixture_package(fixture_dir: &str, package_name: &str) -> Vec<String> {
     }
 }
 
+/// Helper to run semantic lints with explicit experimental gating
+fn lint_fixture_package_with_experimental(
+    fixture_dir: &str,
+    package_name: &str,
+    experimental: bool,
+) -> Vec<String> {
+    let mut fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    fixture_path.push("tests/fixtures");
+    fixture_path.push(fixture_dir);
+    fixture_path.push(package_name);
+
+    if !fixture_path.exists() {
+        return vec![format!("ERROR: Package not found: {:?}", fixture_path)];
+    }
+
+    let settings = LintSettings::default();
+
+    match lint_package(&fixture_path, &settings, true, experimental) {
+        Ok(diags) => {
+            if diags.is_empty() {
+                vec!["No findings.".to_string()]
+            } else {
+                diags
+                    .iter()
+                    .map(|d| {
+                        format!(
+                            "[{}] {}:{} - {}",
+                            d.lint.name, d.span.start.row, d.span.start.column, d.message
+                        )
+                    })
+                    .collect()
+            }
+        }
+        Err(e) => vec![format!("ERROR: {}", e)],
+    }
+}
+
 /// Check if a specific lint was triggered
 fn has_lint(findings: &[String], lint_name: &str) -> bool {
     findings.iter().any(|f| f.contains(lint_name))
@@ -226,7 +263,8 @@ mod share_owned_authority_tests {
     #[test]
     fn test_share_owned_authority_fires_on_key_store_share() {
         // Test that the lint fires when sharing objects with key+store
-        let findings = lint_fixture_package("phase2", "share_owned_authority_pkg");
+        let findings =
+            lint_fixture_package_with_experimental("phase2", "share_owned_authority_pkg", true);
 
         // Skip test if we get errors due to parallel test interference
         if findings.iter().any(|f| f.starts_with("ERROR:")) {
@@ -243,7 +281,8 @@ mod share_owned_authority_tests {
 
     #[test]
     fn test_share_owned_authority_positive_cases() {
-        let findings = lint_fixture_package("phase2", "share_owned_authority_pkg");
+        let findings =
+            lint_fixture_package_with_experimental("phase2", "share_owned_authority_pkg", true);
 
         // Debug: print all findings to understand what's returned
         eprintln!("All findings: {:?}", findings);
@@ -285,7 +324,8 @@ mod share_owned_authority_tests {
 
     #[test]
     fn test_share_owned_authority_message_content() {
-        let findings = lint_fixture_package("phase2", "share_owned_authority_pkg");
+        let findings =
+            lint_fixture_package_with_experimental("phase2", "share_owned_authority_pkg", true);
 
         // Skip test if we get errors due to parallel test interference
         if findings.iter().any(|f| f.starts_with("ERROR:")) {
@@ -323,7 +363,8 @@ mod share_owned_authority_tests {
     fn test_share_owned_authority_no_fire_on_key_only() {
         // key-only objects (no store) are intentional shared state
         // The lint should NOT fire on these
-        let findings = lint_fixture_package("phase2", "share_owned_authority_pkg");
+        let findings =
+            lint_fixture_package_with_experimental("phase2", "share_owned_authority_pkg", true);
 
         // Skip test if we get errors due to parallel test interference
         if findings.iter().any(|f| f.starts_with("ERROR:")) {

@@ -12,15 +12,15 @@ cargo run --features full --bin gen_lint_catalog_summary > docs/LINT_CATALOG_SUM
 
 ## Totals
 
-- Total lints: 71
+- Total lints: 76
 
 ## By Tier
 
 | Tier | Count |
 |------|-------|
-| stable | 48 |
-| preview | 8 |
-| experimental | 12 |
+| stable | 46 |
+| preview | 7 |
+| experimental | 20 |
 | deprecated | 3 |
 
 ## By Phase
@@ -28,8 +28,8 @@ cargo run --features full --bin gen_lint_catalog_summary > docs/LINT_CATALOG_SUM
 | Phase | Count |
 |-------|-------|
 | syntactic | 39 |
-| semantic | 24 |
-| absint | 6 |
+| semantic | 31 |
+| absint | 4 |
 | cross-module | 2 |
 
 ## By Category
@@ -39,7 +39,7 @@ cargo run --features full --bin gen_lint_catalog_summary > docs/LINT_CATALOG_SUM
 | style | 9 |
 | modernization | 9 |
 | naming | 2 |
-| security | 35 |
+| security | 40 |
 | suspicious | 13 |
 | test_quality | 3 |
 
@@ -48,6 +48,6 @@ cargo run --features full --bin gen_lint_catalog_summary > docs/LINT_CATALOG_SUM
 | Analysis | Count | Requires |
 |----------|-------|----------|
 | syntactic | 39 | `fast` |
-| type-based | 24 | `--mode full` |
-| type-based-cfg | 6 | `--mode full` |
+| type-based | 31 | `--mode full` |
+| type-based-cfg | 4 | `--mode full` |
 | cross-module | 2 | `--mode full` |

@@ -63,7 +63,8 @@ fn lint_fixture_package_with_experimental(rel: &str, preview: bool, experimental
 
 #[test]
 fn unchecked_div_pkg_preview() {
-    let out = lint_fixture_package("tests/fixtures/phase2/unchecked_div_pkg", true);
+    let out =
+        lint_fixture_package_with_experimental("tests/fixtures/phase2/unchecked_div_pkg", true, true);
     assert_snapshot!(out);
 }
 
@@ -80,8 +81,12 @@ fn fresh_address_reuse_pkg_preview() {
 }
 
 #[test]
-fn share_owned_authority_pkg_stable() {
-    let out = lint_fixture_package("tests/fixtures/phase2/share_owned_authority_pkg", false);
+fn share_owned_authority_pkg_experimental() {
+    let out = lint_fixture_package_with_experimental(
+        "tests/fixtures/phase2/share_owned_authority_pkg",
+        false,
+        true,
+    );
     assert_snapshot!(out);
 }
 
@@ -160,6 +165,36 @@ fn unbounded_iteration_over_param_vector_pkg_preview() {
 fn generic_type_witness_unused_pkg_experimental() {
     let out = lint_fixture_package_with_experimental(
         "tests/fixtures/phase4/generic_type_witness_unused_pkg",
+        false,
+        true,
+    );
+    assert_snapshot!(out);
+}
+
+#[test]
+fn droppable_flash_loan_receipt_pkg_experimental() {
+    let out = lint_fixture_package_with_experimental(
+        "tests/fixtures/phase4/droppable_flash_loan_receipt_pkg",
+        false,
+        true,
+    );
+    assert_snapshot!(out);
+}
+
+#[test]
+fn receipt_missing_phantom_type_pkg_experimental() {
+    let out = lint_fixture_package_with_experimental(
+        "tests/fixtures/phase4/receipt_missing_phantom_type_pkg",
+        false,
+        true,
+    );
+    assert_snapshot!(out);
+}
+
+#[test]
+fn copyable_fungible_type_pkg_experimental() {
+    let out = lint_fixture_package_with_experimental(
+        "tests/fixtures/phase4/copyable_fungible_type_pkg",
         false,
         true,
     );

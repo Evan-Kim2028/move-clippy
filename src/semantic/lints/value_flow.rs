@@ -8,7 +8,7 @@ use move_compiler::shared::files::MappedFiles;
 use move_compiler::typing::ast as T;
 
 use super::super::util::{diag_from_loc, push_diag};
-use super::super::{SHARE_OWNED_AUTHORITY, UNUSED_RETURN_VALUE};
+use super::super::{SHARE_OWNED_AUTHORITY, UNCHECKED_DIVISION, UNUSED_RETURN_VALUE};
 use super::shared::format_type;
 
 type Result<T> = ClippyResult<T>;
@@ -172,7 +172,7 @@ fn check_division_in_exp(
                     push_diag(
                         out,
                         settings,
-                        &UNUSED_RETURN_VALUE,
+                        &UNCHECKED_DIVISION,
                         file,
                         span,
                         contents.as_ref(),

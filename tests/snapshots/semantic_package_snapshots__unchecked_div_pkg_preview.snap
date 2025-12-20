@@ -2,6 +2,11 @@
 source: tests/semantic_package_snapshots.rs
 expression: out
 ---
+unchecked_division:sources/unchecked_div.move:14: 9: warning: Division in function `bad_modulo` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
+unchecked_division:sources/unchecked_div.move:40: 9: warning: Division in function `conditional_divide` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
+unchecked_division:sources/unchecked_div.move:46: 9: warning: Division in function `checked_via_call` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
+unchecked_division:sources/unchecked_div.move:58: 13: warning: Division in function `inline_check_divide` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
+unchecked_division:sources/unchecked_div.move:9: 9: warning: Division in function `bad_divide` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
 unchecked_division_v2:sources/unchecked_div.move:14: 9: warning: Division or modulo operation without zero-check validation
 unchecked_division_v2:sources/unchecked_div.move:20: 9: warning: Division or modulo operation without zero-check validation
 unchecked_division_v2:sources/unchecked_div.move:26: 9: warning: Division or modulo operation without zero-check validation
@@ -9,8 +14,3 @@ unchecked_division_v2:sources/unchecked_div.move:40: 9: warning: Division or mod
 unchecked_division_v2:sources/unchecked_div.move:46: 9: warning: Division or modulo operation without zero-check validation
 unchecked_division_v2:sources/unchecked_div.move:58: 13: warning: Division or modulo operation without zero-check validation
 unchecked_division_v2:sources/unchecked_div.move:9: 9: warning: Division or modulo operation without zero-check validation
-unused_return_value:sources/unchecked_div.move:14: 9: warning: Division in function `bad_modulo` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
-unused_return_value:sources/unchecked_div.move:40: 9: warning: Division in function `conditional_divide` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
-unused_return_value:sources/unchecked_div.move:46: 9: warning: Division in function `checked_via_call` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
-unused_return_value:sources/unchecked_div.move:58: 13: warning: Division in function `inline_check_divide` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.
-unused_return_value:sources/unchecked_div.move:9: 9: warning: Division in function `bad_divide` may divide by zero. Consider adding `assert!(divisor != 0, E_DIVISION_BY_ZERO)` before this operation.

@@ -7,4 +7,3 @@ capability_transfer_literal_address:sources/capability_transfer_literal_address.
 custom_state_change:sources/capability_transfer_literal_address.move:41: 16: warning: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom transfer function.
 custom_state_change:sources/capability_transfer_literal_address.move:45: 16: warning: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom transfer function.
 public_mut_tx_context:sources/capability_transfer_literal_address.move:45: 52: warning: prefer '&mut TxContext' over '&TxContext': 'public' functions should prefer '&mut TxContext' over '&TxContext' for better upgradability.
-self_transfer:sources/capability_transfer_literal_address.move:46: 9: warning: non-composable transfer to sender: Transfer of an object to transaction sender address

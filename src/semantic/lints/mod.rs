@@ -6,6 +6,7 @@ mod fungible;
 mod iteration;
 mod oracle;
 mod random;
+mod receipt;
 mod shared;
 mod sui_delegated;
 mod value_flow;
@@ -20,12 +21,13 @@ pub(super) use capability::{
 };
 pub(super) use entry::{lint_entry_function_returns_value, lint_private_entry_function};
 pub(super) use event::lint_event_emit_type_sanity;
-pub(super) use fungible::lint_non_transferable_fungible_object;
+pub(super) use fungible::{lint_copyable_fungible_type, lint_non_transferable_fungible_object};
 pub(super) use iteration::{
     lint_mut_key_param_missing_authority, lint_unbounded_iteration_over_param_vector,
 };
 pub(super) use oracle::lint_stale_oracle_price_v2;
 pub(super) use random::lint_public_random_access_v2;
+pub(super) use receipt::{lint_droppable_flash_loan_receipt, lint_receipt_missing_phantom_type};
 pub(super) use sui_delegated::lint_sui_visitors;
 pub(super) use value_flow::{
     lint_share_owned_authority, lint_unchecked_division, lint_unused_return_value,

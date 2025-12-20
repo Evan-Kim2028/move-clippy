@@ -30,6 +30,27 @@ pub(super) fn is_coin_type(ty: &N::Type_) -> bool {
     }
 }
 
+/// Check if a type is `sui::balance::Balance<T>`.
+pub(super) fn is_balance_type(ty: &N::Type_) -> bool {
+    match ty {
+        N::Type_::Apply(_, type_name, _) => {
+            if let N::TypeName_::ModuleType(mident, struct_name) = &type_name.value {
+                let module_sym = mident.value.module.value();
+                let struct_sym = struct_name.value();
+                module_sym.as_str() == "balance" && struct_sym.as_str() == "Balance"
+            } else {
+                false
+            }
+        }
+        N::Type_::Ref(_, inner) => is_balance_type(&inner.value),
+        _ => false,
+    }
+}
+
+pub(super) fn is_coin_or_balance_type(ty: &N::Type_) -> bool {
+    is_coin_type(ty) || is_balance_type(ty)
+}
+
 /// Format a type for display in error messages (using naming::ast::Type_ structure).
 pub(super) fn format_type(ty: &N::Type_) -> String {
     match ty {
