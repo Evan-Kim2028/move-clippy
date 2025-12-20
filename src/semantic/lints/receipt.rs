@@ -124,7 +124,7 @@ pub(crate) fn lint_droppable_flash_loan_receipt(
                     settings,
                     &DROPPABLE_FLASH_LOAN_RECEIPT,
                     file.clone(),
-                    span.clone(),
+                    span,
                     contents.as_ref(),
                     anchor,
                     format!(

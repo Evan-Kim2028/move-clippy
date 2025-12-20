@@ -208,7 +208,7 @@ pub(crate) fn lint_copyable_fungible_type(
             let type_key = format!("{}::{}", mident.value.module.value(), sname.value());
             let is_transferred = transferred_types.contains(&type_key);
 
-            if !has_key && !(has_store && is_transferred) {
+            if !(has_key || (has_store && is_transferred)) {
                 continue;
             }
 
