@@ -1,0 +1,7 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+copyable_fungible_type:sources/copyable_fungible_type.move:32: 19: warning: Struct `CopyKey` is `copy` and has `key`, making it duplicable as a fungible value. Remove `copy` or redesign the type to prevent infinite duplication.
+copyable_fungible_type:sources/copyable_fungible_type.move:36: 19: warning: Struct `CopyStore` is `copy` and is used in transfer operations, making it duplicable as a fungible value. Remove `copy` or redesign the type to prevent infinite duplication.
+non_transferable_fungible_object:sources/copyable_fungible_type.move:32: 19: warning: Struct `CopyKey` is `key` without `store` but has `copy` and/or `drop`. A `key`-without-`store` type is a legitimate non-transferable (soulbound) object pattern, but adding `copy`/`drop` makes it duplicable/discardable while still non-transferable. Remove `copy`/`drop` or redesign the type.

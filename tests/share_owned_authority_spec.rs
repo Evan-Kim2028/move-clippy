@@ -104,7 +104,7 @@ fn run_lint(source: &str, lint_name: &str) -> Vec<String> {
     };
 
     let result =
-        move_clippy::semantic::lint_package(tmp.path(), &LintSettings::default(), false, false);
+        move_clippy::semantic::lint_package(tmp.path(), &LintSettings::default(), false, true);
 
     match result {
         Ok(diags) => diags

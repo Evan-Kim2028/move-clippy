@@ -92,8 +92,9 @@ fn run_lint(source: &str, lint_name: &str) -> Vec<String> {
     let tmp = create_temp_package(MOVE_TOML, &[("test.move", source)])
         .expect("should create temp package");
 
+    // Enable experimental lints since droppable_hot_potato_v2 is now in RuleGroup::Experimental
     let result =
-        move_clippy::semantic::lint_package(tmp.path(), &LintSettings::default(), false, false);
+        move_clippy::semantic::lint_package(tmp.path(), &LintSettings::default(), false, true);
 
     match result {
         Ok(diags) => diags

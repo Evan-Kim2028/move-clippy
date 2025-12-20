@@ -34,7 +34,7 @@ fn merge_test_attributes_negative_merged_already() {
     let src = include_str!("fixtures/merge_test_attributes/negative_merged.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -43,7 +43,7 @@ fn merge_test_attributes_negative_not_adjacent() {
     let src = include_str!("fixtures/merge_test_attributes/negative_not_adjacent.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -54,7 +54,7 @@ fn prefer_to_string_positive() {
     let diags = engine.lint_source(src).expect("linting should succeed");
     assert_snapshot!(
         format_diags(&diags),
-        @r###"prefer_to_string:3:1: warning: Prefer `b"...".to_string()` over `std::string::utf8(b"...")`"###
+        @r#"prefer_to_string:3:1: warning: Prefer `b"...".to_string()` over `std::string::utf8(b"...")`"#
     );
 }
 
@@ -66,7 +66,7 @@ fn prefer_to_string_positive_brace() {
     let diags = engine.lint_source(src).expect("linting should succeed");
     assert_snapshot!(
         format_diags(&diags),
-        @r###"prefer_to_string:3:1: warning: Prefer `b"...".to_string()` over `std::string::utf8(b"...")`"###
+        @r#"prefer_to_string:3:1: warning: Prefer `b"...".to_string()` over `std::string::utf8(b"...")`"#
     );
 }
 
@@ -76,7 +76,7 @@ fn prefer_to_string_negative_alias() {
     let src = include_str!("fixtures/prefer_to_string/negative_alias.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -147,7 +147,7 @@ fn modern_method_syntax_negative_extra_args() {
     let src = include_str!("fixtures/modern_method_syntax/negative_extra_args.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -158,10 +158,11 @@ fn constant_naming_positive() {
     let diags = engine.lint_source(src).expect("linting should succeed");
     assert_snapshot!(
         format_diags(&diags),
-        @r###"
-constant_naming:3:7: warning: Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `max_value`
-constant_naming:4:7: warning: Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `E_bad_error`
-"###
+        @r"
+    constant_naming:3:7: warning: Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `max_value`
+    constant_naming:4:7: warning: Regular constants should be SCREAMING_SNAKE_CASE (e.g. `MAX_SUPPLY`), found `E_bad_error`
+    error_const_naming:4:7: warning: Error constant `E_bad_error` should use EPascalCase. Consider renaming to `EBadError`.
+    "
     );
 }
 
@@ -171,7 +172,7 @@ fn constant_naming_negative() {
     let src = include_str!("fixtures/constant_naming/negative.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -180,7 +181,7 @@ fn unneeded_return_positive() {
     let src = include_str!("fixtures/unneeded_return/positive.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -189,7 +190,7 @@ fn unneeded_return_negative() {
     let src = include_str!("fixtures/unneeded_return/negative.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -200,10 +201,10 @@ fn unnecessary_public_entry_positive() {
     let diags = engine.lint_source(src).expect("linting should succeed");
     assert_snapshot!(
         format_diags(&diags),
-        @r###"
-unnecessary_public_entry:3:1: warning: Functions should not be both `public` and `entry`; remove one of the modifiers
-unnecessary_public_entry:5:1: warning: Functions should not be both `public` and `entry`; remove one of the modifiers
-"###
+        @r"
+    unnecessary_public_entry:3:1: warning: Functions should not be both `public` and `entry`; remove one of the modifiers
+    unnecessary_public_entry:5:1: warning: Functions should not be both `public` and `entry`; remove one of the modifiers
+    "
     );
 }
 
@@ -213,7 +214,7 @@ fn unnecessary_public_entry_negative() {
     let src = include_str!("fixtures/unnecessary_public_entry/negative.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -224,10 +225,10 @@ fn public_mut_tx_context_positive() {
     let diags = engine.lint_source(src).expect("linting should succeed");
     assert_snapshot!(
         format_diags(&diags),
-        @r###"
-public_mut_tx_context:5:30: warning: TxContext parameters should use `&mut TxContext`
-public_mut_tx_context:9:33: warning: TxContext parameters should use `&mut TxContext`
-"###
+        @r"
+    public_mut_tx_context:5:30: warning: TxContext parameters should use `&mut TxContext`
+    public_mut_tx_context:9:33: warning: TxContext parameters should use `&mut TxContext`
+    "
     );
 }
 
@@ -237,7 +238,7 @@ fn public_mut_tx_context_negative() {
     let src = include_str!("fixtures/public_mut_tx_context/negative.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }
 
 #[test]
@@ -248,7 +249,7 @@ fn while_true_to_loop_positive() {
     let diags = engine.lint_source(src).expect("linting should succeed");
     assert_snapshot!(
         format_diags(&diags),
-        @r###"while_true_to_loop:4:5: warning: Use `loop { ... }` for infinite loops instead of `while (true)`"###
+        @"while_true_to_loop:4:5: warning: Use `loop { ... }` for infinite loops instead of `while (true)`"
     );
 }
 
@@ -258,5 +259,5 @@ fn while_true_to_loop_negative() {
     let src = include_str!("fixtures/while_true_to_loop/negative.move");
 
     let diags = engine.lint_source(src).expect("linting should succeed");
-    assert_snapshot!(format_diags(&diags), @r###""###);
+    assert_snapshot!(format_diags(&diags), @"");
 }

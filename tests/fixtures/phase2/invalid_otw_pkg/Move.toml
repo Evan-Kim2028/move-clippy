@@ -1,0 +1,7 @@
+[package]
+name = "invalid_otw_pkg"
+edition = "2024"
+
+[addresses]
+invalid_otw_pkg = "0x0"
+sui = "0x2"

@@ -1,14 +1,17 @@
 use crate::diagnostics::Diagnostic;
 use crate::error::Result as ClippyResult;
 use crate::lint::LintSettings;
+use move_compiler::naming::ast as N;
 use move_compiler::parser::ast::TargetKind;
 use move_compiler::shared::Identifier;
 use move_compiler::shared::files::MappedFiles;
+use move_compiler::shared::program_info::TypingProgramInfo;
 use move_compiler::typing::ast as T;
 
 use super::super::util::{diag_from_loc, push_diag};
 use super::super::{
-    CAPABILITY_TRANSFER_LITERAL_ADDRESS, CAPABILITY_TRANSFER_V2, SHARED_CAPABILITY_OBJECT,
+    CAPABILITY_ANTIPATTERNS, CAPABILITY_TRANSFER_LITERAL_ADDRESS, CAPABILITY_TRANSFER_V2,
+    SHARED_CAPABILITY_OBJECT,
 };
 use super::shared::{format_type, is_coin_type};
 
@@ -17,6 +20,144 @@ type Result<T> = ClippyResult<T>;
 // =========================================================================
 // Phase 4 Preview Lints (type-based)
 // =========================================================================
+
+fn is_capability_name(name: &str) -> bool {
+    name.ends_with("Cap") || name.contains("Capability")
+}
+
+pub(crate) fn lint_capability_antipatterns(
+    out: &mut Vec<Diagnostic>,
+    settings: &LintSettings,
+    file_map: &MappedFiles,
+    info: &TypingProgramInfo,
+    prog: &T::Program,
+) -> Result<()> {
+    use crate::type_classifier::{has_copy_ability, has_key_ability, has_store_ability};
+
+    for (mident, minfo) in info.modules.key_cloned_iter() {
+        match minfo.target_kind {
+            TargetKind::Source {
+                is_root_package: true,
+            } => {}
+            _ => continue,
+        }
+
+        for (sname, sdef) in minfo.structs.key_cloned_iter() {
+            let struct_name_sym = sname.value();
+            let struct_name = struct_name_sym.as_str();
+
+            if !is_capability_name(struct_name) {
+                continue;
+            }
+
+            let abilities = &sdef.abilities;
+
+            if has_copy_ability(abilities) {
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &CAPABILITY_ANTIPATTERNS,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Capability struct `{struct_name}` has `copy` ability. \
+                         This allows the capability to be duplicated, defeating access control. \
+                         Remove `copy` from the abilities."
+                    ),
+                );
+            }
+
+            if !has_key_ability(abilities) && has_store_ability(abilities) {
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &CAPABILITY_ANTIPATTERNS,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Capability struct `{struct_name}` has `store` but no `key` ability. \
+                         Capabilities should be Sui objects with `key` for proper ownership tracking. \
+                         Add `key` ability and include `id: UID` as the first field."
+                    ),
+                );
+            }
+        }
+
+        if let Some(mdef) = prog.modules.get(&mident) {
+            let module_name = mident.value.module.value();
+
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                let fn_name_sym = fname.value();
+                let fn_name = fn_name_sym.as_str();
+
+                if fn_name == "init" {
+                    continue;
+                }
+
+                let is_public = matches!(
+                    fdef.visibility,
+                    move_compiler::expansion::ast::Visibility::Public(_)
+                );
+                if !is_public {
+                    continue;
+                }
+
+                let ret_ty = &fdef.signature.return_type;
+                if let N::Type_::Apply(_, type_name, _) = &ret_ty.value
+                    && let N::TypeName_::ModuleType(ret_mident, ret_struct) = &type_name.value
+                {
+                    if ret_mident.value.module.value() != module_name {
+                        continue;
+                    }
+
+                    let ret_struct_sym = ret_struct.value();
+                    let ret_struct_name = ret_struct_sym.as_str();
+
+                    if is_capability_name(ret_struct_name) {
+                        let loc = fdef.loc;
+                        let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                            continue;
+                        };
+                        let anchor = loc.start() as usize;
+
+                        push_diag(
+                            out,
+                            settings,
+                            &CAPABILITY_ANTIPATTERNS,
+                            file,
+                            span,
+                            contents.as_ref(),
+                            anchor,
+                            format!(
+                                "Public function `{fn_name}` returns capability type `{ret_struct_name}`. \
+                                 Capabilities should only be created in `init` or internal functions. \
+                                 Make this function `public(package)` or private."
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
 
 fn exp_list_nth_single(args: &T::Exp, idx: usize) -> Option<&T::Exp> {
     match &args.exp.value {

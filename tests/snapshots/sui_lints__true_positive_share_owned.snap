@@ -2,5 +2,4 @@
 source: tests/sui_lints.rs
 expression: output
 ---
-sources/main.move:17:9: share_owned: possible owned object share: Potential abort from a (potentially) owned object created by a different transaction.
-sources/main.move:42:9: share_owned: possible owned object share: Potential abort from a (potentially) owned object created by a different transaction.
+

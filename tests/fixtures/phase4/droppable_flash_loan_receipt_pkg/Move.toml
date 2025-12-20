@@ -1,0 +1,7 @@
+[package]
+name = "droppable_flash_loan_receipt_pkg"
+edition = "2024"
+
+[addresses]
+droppable_flash_loan_receipt_pkg = "0x0"
+sui = "0x2"

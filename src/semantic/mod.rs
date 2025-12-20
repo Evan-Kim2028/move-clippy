@@ -146,18 +146,18 @@ mod full {
 
             // Type-based naming lints
             // Type-based security lints
-            lint_unchecked_division(&mut out, settings, &file_map, &typing_ast)?;
-            lint_unused_return_value(&mut out, settings, &file_map, &typing_ast)?;
             lint_entry_function_returns_value(&mut out, settings, &file_map, &typing_ast)?;
             lint_private_entry_function(&mut out, settings, &file_map, &typing_ast)?;
             lint_event_emit_type_sanity(&mut out, settings, &file_map, &typing_ast)?;
-            lint_share_owned_authority(&mut out, settings, &file_map, &typing_ast)?;
-            lint_droppable_hot_potato_v2(&mut out, settings, &file_map, &typing_info)?;
+            lint_event_past_tense(&mut out, settings, &file_map, &typing_ast)?;
             lint_copyable_capability(&mut out, settings, &file_map, &typing_info)?;
             lint_droppable_capability(&mut out, settings, &file_map, &typing_info)?;
+            lint_capability_antipatterns(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
             lint_non_transferable_fungible_object(&mut out, settings, &file_map, &typing_info)?;
             lint_public_random_access_v2(&mut out, settings, &file_map, &typing_ast)?;
             lint_missing_witness_drop_v2(&mut out, settings, &file_map, &typing_info)?;
+            lint_invalid_otw(&mut out, settings, &file_map, &typing_info)?;
+            lint_witness_antipatterns(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
             lint_stale_oracle_price_v2(&mut out, settings, &file_map, &typing_ast)?;
             // Phase 4 security lints (type-based, preview)
             if preview {
@@ -178,6 +178,19 @@ mod full {
             }
             // Phase 4 security lints (type-based, experimental)
             if experimental {
+                lint_unchecked_division(&mut out, settings, &file_map, &typing_ast)?;
+                lint_unused_return_value(&mut out, settings, &file_map, &typing_ast)?;
+                lint_share_owned_authority(&mut out, settings, &file_map, &typing_ast)?;
+                lint_droppable_hot_potato_v2(&mut out, settings, &file_map, &typing_info)?;
+                lint_droppable_flash_loan_receipt(&mut out, settings, &file_map, &typing_ast)?;
+                lint_receipt_missing_phantom_type(&mut out, settings, &file_map, &typing_ast)?;
+                lint_copyable_fungible_type(
+                    &mut out,
+                    settings,
+                    &file_map,
+                    &typing_ast,
+                    &typing_info,
+                )?;
                 lint_capability_transfer_v2(&mut out, settings, &file_map, &typing_ast)?;
                 lint_generic_type_witness_unused(&mut out, settings, &file_map, &typing_ast)?;
             }

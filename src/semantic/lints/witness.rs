@@ -8,7 +8,9 @@ use move_compiler::shared::{files::MappedFiles, program_info::TypingProgramInfo}
 use move_compiler::typing::ast as T;
 
 use super::super::util::{diag_from_loc, push_diag};
-use super::super::{GENERIC_TYPE_WITNESS_UNUSED, MISSING_WITNESS_DROP_V2};
+use super::super::{
+    GENERIC_TYPE_WITNESS_UNUSED, INVALID_OTW, MISSING_WITNESS_DROP_V2, WITNESS_ANTIPATTERNS,
+};
 use super::shared::{format_type, strip_refs};
 
 type Result<T> = ClippyResult<T>;
@@ -240,6 +242,317 @@ pub(crate) fn lint_missing_witness_drop_v2(
                      Add `has drop` to the struct."
                 ),
             );
+        }
+    }
+
+    Ok(())
+}
+
+// =========================================================================
+// Invalid OTW Lint (type-based)
+// =========================================================================
+
+pub(crate) fn lint_invalid_otw(
+    out: &mut Vec<Diagnostic>,
+    settings: &LintSettings,
+    file_map: &MappedFiles,
+    info: &TypingProgramInfo,
+) -> Result<()> {
+    use crate::type_classifier::{has_copy_ability, has_key_ability, has_store_ability};
+
+    for (mident, minfo) in info.modules.key_cloned_iter() {
+        match minfo.target_kind {
+            TargetKind::Source {
+                is_root_package: true,
+            } => {}
+            _ => continue,
+        }
+
+        let module_name = mident.value.module.value();
+        let module_name_str = module_name.as_str();
+        let expected_otw_name = module_name_str.to_uppercase();
+
+        for (sname, sdef) in minfo.structs.key_cloned_iter() {
+            let struct_name_sym = sname.value();
+            let struct_name = struct_name_sym.as_str();
+
+            if struct_name != expected_otw_name {
+                continue;
+            }
+
+            let abilities = &sdef.abilities;
+            let has_copy = has_copy_ability(abilities);
+            let has_key = has_key_ability(abilities);
+            let has_store = has_store_ability(abilities);
+
+            if has_copy || has_key || has_store {
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                let mut bad_abilities = Vec::new();
+                if has_copy {
+                    bad_abilities.push("copy");
+                }
+                if has_key {
+                    bad_abilities.push("key");
+                }
+                if has_store {
+                    bad_abilities.push("store");
+                }
+
+                push_diag(
+                    out,
+                    settings,
+                    &INVALID_OTW,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Struct `{struct_name}` appears to be a one-time witness (OTW) but has \
+                         invalid abilities: {}. OTW must have ONLY `drop` ability. \
+                         This will cause `sui::types::is_one_time_witness()` to return false.",
+                        bad_abilities.join(", ")
+                    ),
+                );
+                continue;
+            }
+
+            let has_fields = match &sdef.fields {
+                N::StructFields::Defined(_, fields) => !fields.is_empty(),
+                N::StructFields::Native(_) => false,
+            };
+
+            if has_fields {
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &INVALID_OTW,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Struct `{struct_name}` appears to be a one-time witness (OTW) but has fields. \
+                         OTW must be an empty struct with no fields. \
+                         This will cause `sui::types::is_one_time_witness()` to return false."
+                    ),
+                );
+                continue;
+            }
+
+            if !sdef.type_parameters.is_empty() {
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &INVALID_OTW,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Struct `{struct_name}` appears to be a one-time witness (OTW) but is generic. \
+                         OTW must not have type parameters. \
+                         This will cause `sui::types::is_one_time_witness()` to return false."
+                    ),
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
+// =========================================================================
+// Witness Antipatterns Lint (type-based)
+// =========================================================================
+
+pub(crate) fn lint_witness_antipatterns(
+    out: &mut Vec<Diagnostic>,
+    settings: &LintSettings,
+    file_map: &MappedFiles,
+    info: &TypingProgramInfo,
+    prog: &T::Program,
+) -> Result<()> {
+    use crate::type_classifier::{
+        has_copy_ability, has_drop_ability, has_key_ability, has_store_ability,
+    };
+
+    for (mident, minfo) in info.modules.key_cloned_iter() {
+        match minfo.target_kind {
+            TargetKind::Source {
+                is_root_package: true,
+            } => {}
+            _ => continue,
+        }
+
+        let module_name = mident.value.module.value();
+        let module_name_str = module_name.as_str();
+        let expected_otw_name = module_name_str.to_uppercase();
+
+        for (sname, sdef) in minfo.structs.key_cloned_iter() {
+            let struct_name_sym = sname.value();
+            let struct_name = struct_name_sym.as_str();
+
+            let abilities = &sdef.abilities;
+            let has_drop = has_drop_ability(abilities);
+            let is_empty = match &sdef.fields {
+                N::StructFields::Defined(_, fields) => fields.is_empty(),
+                N::StructFields::Native(_) => true,
+            };
+            let name_is_witness =
+                struct_name.contains("Witness") || struct_name == expected_otw_name;
+
+            if !has_drop || !is_empty {
+                continue;
+            }
+
+            if !name_is_witness {
+                continue;
+            }
+
+            if has_copy_ability(abilities) {
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &WITNESS_ANTIPATTERNS,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Witness struct `{struct_name}` has `copy` ability. \
+                         This allows the witness to be duplicated, defeating the proof-of-ownership pattern. \
+                         Remove `copy` from the abilities."
+                    ),
+                );
+            }
+
+            if has_store_ability(abilities) {
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &WITNESS_ANTIPATTERNS,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Witness struct `{struct_name}` has `store` ability. \
+                         This allows the witness to be persisted and replayed. \
+                         Remove `store` from the abilities."
+                    ),
+                );
+            }
+
+            if has_key_ability(abilities) {
+                let loc = sname.loc();
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    continue;
+                };
+                let anchor = loc.start() as usize;
+
+                push_diag(
+                    out,
+                    settings,
+                    &WITNESS_ANTIPATTERNS,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Witness struct `{struct_name}` has `key` ability. \
+                         Witnesses are ephemeral proofs and should not be objects. \
+                         This conflates the witness pattern with the capability pattern."
+                    ),
+                );
+            }
+        }
+
+        if let Some(mdef) = prog.modules.get(&mident) {
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                let is_public = matches!(
+                    fdef.visibility,
+                    move_compiler::expansion::ast::Visibility::Public(_)
+                );
+                if !is_public {
+                    continue;
+                }
+
+                let ret_ty = &fdef.signature.return_type;
+                if let N::Type_::Apply(_, type_name, _) = &ret_ty.value
+                    && let N::TypeName_::ModuleType(ret_mident, ret_struct) = &type_name.value
+                {
+                    if ret_mident.value.module.value() != module_name {
+                        continue;
+                    }
+
+                    let ret_struct_sym = ret_struct.value();
+                    let ret_struct_name = ret_struct_sym.as_str();
+
+                    if let Some(sdef) = minfo.structs.get_(&ret_struct_sym) {
+                        let is_empty = match &sdef.fields {
+                            N::StructFields::Defined(_, fields) => fields.is_empty(),
+                            N::StructFields::Native(_) => true,
+                        };
+                        let has_drop = has_drop_ability(&sdef.abilities);
+                        let is_witness_name = ret_struct_name.contains("Witness")
+                            || ret_struct_name == expected_otw_name;
+
+                        if is_empty && has_drop && is_witness_name {
+                            let loc = fdef.loc;
+                            let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                                continue;
+                            };
+                            let anchor = loc.start() as usize;
+                            let fn_name_sym = fname.value();
+                            let fn_name = fn_name_sym.as_str();
+
+                            push_diag(
+                                out,
+                                settings,
+                                &WITNESS_ANTIPATTERNS,
+                                file,
+                                span,
+                                contents.as_ref(),
+                                anchor,
+                                format!(
+                                    "Public function `{fn_name}` returns witness type `{ret_struct_name}`. \
+                                     Witnesses should only be constructible within their module. \
+                                     Make this function private or package-internal."
+                                ),
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 

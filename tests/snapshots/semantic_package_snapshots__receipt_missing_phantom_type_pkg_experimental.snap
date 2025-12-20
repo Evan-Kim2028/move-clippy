@@ -1,0 +1,7 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+receipt_missing_phantom_type:sources/receipt_missing_phantom_type.move:37: 5: warning: Function `purchase` takes Coin/Balance parameter(s) with type `CoinType` but returns `cases::PaymentReceipt` without phantom `CoinType`. Add phantom type parameter(s) to the receipt to prevent type confusion.
+receipt_missing_phantom_type:sources/receipt_missing_phantom_type.move:42: 5: warning: Function `purchase_balance` takes Coin/Balance parameter(s) with type `CoinType` but returns `cases::PaymentReceipt` without phantom `CoinType`. Add phantom type parameter(s) to the receipt to prevent type confusion.
+receipt_missing_phantom_type:sources/receipt_missing_phantom_type.move:56: 5: warning: Function `returns_tuple` takes Coin/Balance parameter(s) with type `CoinType` but returns `cases::PaymentReceipt` without phantom `CoinType`. Add phantom type parameter(s) to the receipt to prevent type confusion.
