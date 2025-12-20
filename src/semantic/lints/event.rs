@@ -113,7 +113,9 @@ const PRESENT_TENSE_VERBS: &[(&str, &str)] = &[
 
 fn check_present_tense_event(name: &str) -> Option<(&'static str, String)> {
     for (present, past) in PRESENT_TENSE_VERBS {
-        if let Some(noun) = name.strip_prefix(present) && !noun.is_empty() {
+        if let Some(noun) = name.strip_prefix(present)
+            && !noun.is_empty()
+        {
             let suggested = format!("{noun}{past}");
             return Some((present, suggested));
         }
