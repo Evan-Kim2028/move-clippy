@@ -25,6 +25,23 @@ fn is_capability_name(name: &str) -> bool {
     name.ends_with("Cap") || name.contains("Capability")
 }
 
+fn is_action_capability_name(name: &str) -> bool {
+    const ACTION_CAP_SUFFIXES: &[&str] = &[
+        "PurchaseCap",
+        "MetadataCap",
+        "BorrowCap",
+        "WithdrawCap",
+        "ClaimCap",
+        "ReceiptCap",
+        "RequestCap",
+        "TicketCap",
+    ];
+
+    ACTION_CAP_SUFFIXES
+        .iter()
+        .any(|suffix| name.ends_with(suffix))
+}
+
 pub(crate) fn lint_capability_antipatterns(
     out: &mut Vec<Diagnostic>,
     settings: &LintSettings,
@@ -129,7 +146,9 @@ pub(crate) fn lint_capability_antipatterns(
                     let ret_struct_sym = ret_struct.value();
                     let ret_struct_name = ret_struct_sym.as_str();
 
-                    if is_capability_name(ret_struct_name) {
+                    if is_capability_name(ret_struct_name)
+                        && !is_action_capability_name(ret_struct_name)
+                    {
                         let loc = fdef.loc;
                         let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
                             continue;

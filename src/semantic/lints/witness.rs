@@ -257,6 +257,7 @@ pub(crate) fn lint_invalid_otw(
     settings: &LintSettings,
     file_map: &MappedFiles,
     info: &TypingProgramInfo,
+    prog: &T::Program,
 ) -> Result<()> {
     use crate::type_classifier::{has_copy_ability, has_key_ability, has_store_ability};
 
@@ -271,6 +272,35 @@ pub(crate) fn lint_invalid_otw(
         let module_name = mident.value.module.value();
         let module_name_str = module_name.as_str();
         let expected_otw_name = module_name_str.to_uppercase();
+
+        let mut otw_in_init = false;
+        if let Some(mdef) = prog.modules.get(&mident) {
+            for (fname, fdef) in mdef.functions.key_cloned_iter() {
+                if fname.value().as_str() != "init" {
+                    continue;
+                }
+
+                for (_, _, param_ty) in fdef.signature.parameters.iter() {
+                    if let N::Type_::Apply(_, type_name, _) = strip_refs(&param_ty.value)
+                        && let N::TypeName_::ModuleType(param_mident, param_struct) =
+                            &type_name.value
+                        && param_mident.value.module.value() == module_name
+                        && param_struct.value().as_str() == expected_otw_name
+                    {
+                        otw_in_init = true;
+                        break;
+                    }
+                }
+
+                if otw_in_init {
+                    break;
+                }
+            }
+        }
+
+        if !otw_in_init {
+            continue;
+        }
 
         for (sname, sdef) in minfo.structs.key_cloned_iter() {
             let struct_name_sym = sname.value();

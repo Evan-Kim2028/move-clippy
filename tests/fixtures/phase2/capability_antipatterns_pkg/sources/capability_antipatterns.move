@@ -23,8 +23,24 @@ module capability_antipatterns_pkg::caps {
         id: sui::object::UID,
     }
 
+    public struct PurchaseCap has key, store {
+        id: sui::object::UID,
+    }
+
+    public struct MetadataCap has key, store {
+        id: sui::object::UID,
+    }
+
     public fun mint_cap(ctx: &mut sui::tx_context::TxContext): MintCap {
         MintCap { id: sui::object::new(ctx) }
+    }
+
+    public fun list_with_purchase_cap(ctx: &mut sui::tx_context::TxContext): PurchaseCap {
+        PurchaseCap { id: sui::object::new(ctx) }
+    }
+
+    public fun claim_metadata_cap(ctx: &mut sui::tx_context::TxContext): MetadataCap {
+        MetadataCap { id: sui::object::new(ctx) }
     }
 
     fun init(ctx: &mut sui::tx_context::TxContext) {

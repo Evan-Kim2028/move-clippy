@@ -5,6 +5,13 @@ module invalid_otw_pkg::token {
     public struct TOKEN has drop {}
 }
 
+module invalid_otw_pkg::bcs {
+    // Uppercase helper struct that should NOT be treated as OTW.
+    public struct BCS has copy, drop, store {
+        bytes: vector<u8>,
+    }
+}
+
 module invalid_otw_pkg::coin {
     // Not an OTW name, so it should be ignored by the lint.
     public struct CoinWitness has drop {

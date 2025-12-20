@@ -15,6 +15,14 @@ module event_past_tense_pkg::events {
         id: u64,
     }
 
+    public struct TransferPolicyCreated has copy, drop {
+        id: u64,
+    }
+
+    public struct TransferPolicyDestroyed has copy, drop {
+        id: u64,
+    }
+
     public struct MintToken has copy, drop {
         id: u64,
     }
@@ -22,6 +30,8 @@ module event_past_tense_pkg::events {
     public fun emit_all() {
         event::emit<CreateItem>(CreateItem { id: 1 });
         event::emit<ItemCreated>(ItemCreated { id: 2 });
-        event::emit<MintToken>(MintToken { id: 3 });
+        event::emit<TransferPolicyCreated>(TransferPolicyCreated { id: 3 });
+        event::emit<TransferPolicyDestroyed>(TransferPolicyDestroyed { id: 4 });
+        event::emit<MintToken>(MintToken { id: 5 });
     }
 }
