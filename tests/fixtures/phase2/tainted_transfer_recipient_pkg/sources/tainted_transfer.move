@@ -31,6 +31,34 @@ module sui::transfer {
     public native fun public_share_object<T: key + store>(obj: T);
 }
 
+module sui::coin {
+    use sui::object::UID;
+    use sui::tx_context::TxContext;
+    
+    public struct Coin<phantom T> has key, store {
+        id: UID,
+        value: u64,
+    }
+    
+    public fun split<T>(coin: &mut Coin<T>, amount: u64, _ctx: &mut TxContext): Coin<T> {
+        coin.value = coin.value - amount;
+        Coin { id: sui::object::new(_ctx), value: amount }
+    }
+    
+    public fun value<T>(coin: &Coin<T>): u64 {
+        coin.value
+    }
+}
+
+module sui::dynamic_field {
+    use sui::object::UID;
+    
+    public native fun add<Name: copy + drop + store, Value: store>(obj: &mut UID, name: Name, value: Value);
+    public native fun borrow<Name: copy + drop + store, Value: store>(obj: &UID, name: Name): &Value;
+    public native fun borrow_mut<Name: copy + drop + store, Value: store>(obj: &mut UID, name: Name): &mut Value;
+    public native fun remove<Name: copy + drop + store, Value: store>(obj: &mut UID, name: Name): Value;
+}
+
 // Test module
 module tainted_transfer_recipient_pkg::tainted_transfer {
     use sui::object::UID;
@@ -140,9 +168,77 @@ module tainted_transfer_recipient_pkg::tainted_transfer {
     // =========================================================================
 
     // SHOULD NOT WARN: Multiple params but only one is address type
-    public entry fun good_amount_param(coin: Coin, amount: u64, ctx: &TxContext) {
-        // amount is not an address type, so not tainted
-        let _ = amount;
+    public entry fun good_amount_param(coin: Coin, _amount: u64, ctx: &TxContext) {
+        // amount is not an address type, so not tainted for transfer recipient
         transfer::public_transfer(coin, sui::tx_context::sender(ctx));
+    }
+
+    // =========================================================================
+    // COIN SPLIT AMOUNT SINK TESTS
+    // =========================================================================
+
+    // SHOULD WARN: Tainted amount flows to coin::split
+    public entry fun bad_split_tainted_amount(
+        coin: &mut sui::coin::Coin<Coin>,
+        amount: u64,
+        ctx: &mut TxContext,
+    ) {
+        let split_coin = sui::coin::split(coin, amount, ctx);
+        transfer::public_transfer(split_coin, sui::tx_context::sender(ctx));
+    }
+
+    // SHOULD NOT WARN: Validated amount flows to coin::split
+    public entry fun good_split_validated_amount(
+        coin: &mut sui::coin::Coin<Coin>,
+        amount: u64,
+        max_allowed: u64,
+        ctx: &mut TxContext,
+    ) {
+        assert!(amount <= max_allowed, E_UNAUTHORIZED);
+        let split_coin = sui::coin::split(coin, amount, ctx);
+        transfer::public_transfer(split_coin, sui::tx_context::sender(ctx));
+    }
+
+    // SHOULD NOT WARN: Underscore-prefixed amount is intentional
+    public entry fun good_split_intentional_amount(
+        coin: &mut sui::coin::Coin<Coin>,
+        _amount: u64,
+        ctx: &mut TxContext,
+    ) {
+        let split_coin = sui::coin::split(coin, _amount, ctx);
+        transfer::public_transfer(split_coin, sui::tx_context::sender(ctx));
+    }
+
+    // =========================================================================
+    // DYNAMIC FIELD KEY SINK TESTS
+    // =========================================================================
+
+    // SHOULD WARN: Tainted key flows to dynamic_field::add
+    public entry fun bad_dynamic_field_add(
+        vault: &mut Vault,
+        key: u64,
+        value: u64,
+    ) {
+        sui::dynamic_field::add(&mut vault.id, key, value);
+    }
+
+    // SHOULD NOT WARN: Validated key
+    public entry fun good_dynamic_field_validated(
+        vault: &mut Vault,
+        key: u64,
+        value: u64,
+    ) {
+        // Whitelist validation
+        assert!(key == 1 || key == 2 || key == 3, E_UNAUTHORIZED);
+        sui::dynamic_field::add(&mut vault.id, key, value);
+    }
+
+    // SHOULD NOT WARN: Underscore-prefixed key is intentional
+    public entry fun good_dynamic_field_intentional(
+        vault: &mut Vault,
+        _key: u64,
+        value: u64,
+    ) {
+        sui::dynamic_field::add(&mut vault.id, _key, value);
     }
 }

@@ -17,6 +17,11 @@
 // - Validation state tracking that survives Move operations
 
 #![allow(unused)]
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::collapsible_match)]
+#![allow(clippy::only_used_in_recursion)]
+#![allow(clippy::question_mark)]
+#![allow(clippy::unwrap_or_default)]
 
 use crate::diagnostics::Diagnostic;
 use crate::error::Result as ClippyResult;
@@ -1044,7 +1049,10 @@ impl UncheckedDivisionVerifierAI<'_> {
             | UnannotatedExp_::Copy { var, .. }
             | UnannotatedExp_::BorrowLocal(_, var) => matches!(
                 state.locals.get(var),
-                Some(LocalState::Available(_, DivisorValue::Validated | DivisorValue::Constant))
+                Some(LocalState::Available(
+                    _,
+                    DivisorValue::Validated | DivisorValue::Constant
+                ))
             ),
             UnannotatedExp_::Cast(inner, _ty) => self.is_divisor_safe(state, inner),
             UnannotatedExp_::BinopExp(lhs, op, rhs)
@@ -1868,10 +1876,28 @@ pub struct TaintedTransferRecipientVerifierAI<'a> {
 }
 
 /// Taint source classification
+/// Classification of taint sources for security analysis
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TaintSource {
-    /// Entry function address parameter
+    /// Entry function address parameter - attacker can provide arbitrary address
     EntryAddressParam { var: Var, loc: Loc },
+    /// Entry function u64/u128 parameter - attacker can provide arbitrary amounts
+    EntryAmountParam { var: Var, loc: Loc },
+    /// Oracle price data - external data source that could be manipulated
+    OraclePrice { call_loc: Loc },
+    /// Shared object field read - data from shared objects can be front-run/manipulated
+    SharedObjectField { call_loc: Loc },
+}
+
+/// Classification of dangerous sinks that should be protected
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TaintSink {
+    /// Transfer recipient - sending assets to attacker-controlled address
+    TransferRecipient,
+    /// Coin split amount - extracting attacker-controlled amounts
+    CoinSplitAmount,
+    /// Dynamic field key - attacker-controlled storage access
+    DynamicFieldKey,
 }
 
 /// Abstract value for taint tracking
@@ -1882,7 +1908,10 @@ pub enum TaintValue {
     /// Value is tainted from an untrusted source
     Tainted { source: TaintSource, loc: Loc },
     /// Value was tainted but has been validated through a guard
-    Validated { source: TaintSource, validation_loc: Loc },
+    Validated {
+        source: TaintSource,
+        validation_loc: Loc,
+    },
 }
 
 /// Abstract state for taint analysis
@@ -1918,43 +1947,51 @@ impl SimpleAbsIntConstructor for TaintedTransferRecipientVerifier {
             return None;
         }
 
-        // Find address-typed parameters (taint sources)
-        let tainted_params: Vec<(Var, Loc)> = context
-            .signature
-            .parameters
-            .iter()
-            .filter_map(|(_, var, ty)| {
-                // Skip underscore-prefixed params (intentional escape hatch)
-                if var.starts_with_underscore() {
-                    return None;
-                }
-                // Check if parameter is address type
-                if is_address_type(ty) {
-                    Some((*var, var.0.loc))
-                } else {
-                    None
-                }
-            })
-            .collect();
+        // Find tainted parameters (addresses and amounts)
+        let mut tainted_params: Vec<(Var, Loc, TaintSource)> = Vec::new();
+
+        for (_, var, ty) in &context.signature.parameters {
+            // Skip underscore-prefixed params (intentional escape hatch)
+            if var.starts_with_underscore() {
+                continue;
+            }
+
+            let loc = var.0.loc;
+
+            // Address parameters - can be attacker-controlled recipients
+            if is_address_type(ty) {
+                tainted_params.push((*var, loc, TaintSource::EntryAddressParam { var: *var, loc }));
+            }
+            // Amount parameters (u64, u128) - can be attacker-controlled amounts
+            else if is_amount_type(ty) {
+                tainted_params.push((*var, loc, TaintSource::EntryAmountParam { var: *var, loc }));
+            }
+        }
 
         if tainted_params.is_empty() {
             return None; // No taint sources
         }
 
-        // Initialize tainted params as Tainted in initial state
-        for (var, loc) in &tainted_params {
+        // Initialize tainted params in initial state
+        for (var, loc, source) in &tainted_params {
             if let Some(local_state) = init_state.locals.get_mut(var) {
                 if let LocalState::Available(avail_loc, _) = local_state {
                     *local_state = LocalState::Available(
                         *avail_loc,
                         TaintValue::Tainted {
-                            source: TaintSource::EntryAddressParam { var: *var, loc: *loc },
+                            source: source.clone(),
                             loc: *loc,
                         },
                     );
                 }
             }
         }
+
+        // Convert to simple (Var, Loc) for struct storage
+        let tainted_params: Vec<(Var, Loc)> = tainted_params
+            .into_iter()
+            .map(|(var, loc, _)| (var, loc))
+            .collect();
 
         // Precompute exit blocks for guard detection
         let mut exit_blocks = BTreeSet::new();
@@ -2008,7 +2045,11 @@ impl SimpleAbsInt for TaintedTransferRecipientVerifierAI<'_> {
         use Command_ as C;
 
         match &cmd.value {
-            C::JumpIf { cond, if_true, if_false } => {
+            C::JumpIf {
+                cond,
+                if_true,
+                if_false,
+            } => {
                 // Visit condition first
                 self.exp(context, state, cond);
 
@@ -2035,7 +2076,9 @@ impl SimpleAbsInt for TaintedTransferRecipientVerifierAI<'_> {
 
                 // Collect taint from RHS expression
                 let rhs_taints = self.exp(context, state, rhs);
-                let rhs_taint = rhs_taints.into_iter().find(|t| matches!(t, TaintValue::Tainted { .. }));
+                let rhs_taint = rhs_taints
+                    .into_iter()
+                    .find(|t| matches!(t, TaintValue::Tainted { .. }));
 
                 // Propagate taint to LHS variables
                 for lvalue in lvalues {
@@ -2103,27 +2146,10 @@ impl SimpleAbsInt for TaintedTransferRecipientVerifierAI<'_> {
         call: &ModuleCall,
         args: Vec<TaintValue>,
     ) -> Option<Vec<TaintValue>> {
-        // Check if this is a transfer function with tainted recipient
-        if let Some(recipient_idx) = self.get_transfer_recipient_index(call) {
-            if let Some(TaintValue::Tainted { source, loc: taint_loc }) = args.get(recipient_idx) {
-                // Tainted address reaching transfer sink!
-                let (source_name, source_loc) = match source {
-                    TaintSource::EntryAddressParam { var, loc } => (var.value().as_str().to_owned(), *loc),
-                };
-                
-                let msg = format!(
-                    "Untrusted address parameter `{}` flows to transfer recipient without validation",
-                    source_name
-                );
-                let help = "Add validation: `assert!(recipient == ctx.sender(), E_UNAUTHORIZED)` or use `_recipient` to suppress";
-                let note = "Entry function parameters can be controlled by attackers";
-                
-                context.add_diag(diag!(
-                    TAINTED_TRANSFER_RECIPIENT_DIAG,
-                    (*loc, msg),
-                    (source_loc, note),
-                    (call.name.0.loc, help),
-                ));
+        // Check for tainted values reaching dangerous sinks
+        if let Some((sink, arg_idx)) = self.get_sink_info(call) {
+            if let Some(TaintValue::Tainted { source, .. }) = args.get(arg_idx) {
+                self.report_taint_sink_violation(context, loc, call, sink, source);
             }
         }
 
@@ -2132,16 +2158,102 @@ impl SimpleAbsInt for TaintedTransferRecipientVerifierAI<'_> {
 }
 
 impl TaintedTransferRecipientVerifierAI<'_> {
-    fn get_transfer_recipient_index(&self, call: &ModuleCall) -> Option<usize> {
+    /// Determine if a call is a dangerous sink and which argument index is sensitive
+    fn get_sink_info(&self, call: &ModuleCall) -> Option<(TaintSink, usize)> {
         // transfer::public_transfer(obj, recipient) -> recipient is index 1
         // transfer::transfer(obj, recipient) -> recipient is index 1
         if call.is(&SUI_ADDR, "transfer", "public_transfer")
             || call.is(&SUI_ADDR, "transfer", "transfer")
         {
-            Some(1) // recipient is second argument
-        } else {
-            None
+            return Some((TaintSink::TransferRecipient, 1));
         }
+
+        // coin::split(coin, amount) -> amount is index 1
+        if call.is(&SUI_ADDR, "coin", "split") {
+            return Some((TaintSink::CoinSplitAmount, 1));
+        }
+
+        // dynamic_field::add(obj, key, value) -> key is index 1
+        // dynamic_field::borrow(obj, key) -> key is index 1
+        // dynamic_field::borrow_mut(obj, key) -> key is index 1
+        // dynamic_field::remove(obj, key) -> key is index 1
+        if call.is(&SUI_ADDR, "dynamic_field", "add")
+            || call.is(&SUI_ADDR, "dynamic_field", "borrow")
+            || call.is(&SUI_ADDR, "dynamic_field", "borrow_mut")
+            || call.is(&SUI_ADDR, "dynamic_field", "remove")
+            || call.is(&SUI_ADDR, "dynamic_object_field", "add")
+            || call.is(&SUI_ADDR, "dynamic_object_field", "borrow")
+            || call.is(&SUI_ADDR, "dynamic_object_field", "borrow_mut")
+            || call.is(&SUI_ADDR, "dynamic_object_field", "remove")
+        {
+            return Some((TaintSink::DynamicFieldKey, 1));
+        }
+
+        None
+    }
+
+    /// Report a taint sink violation with appropriate messaging
+    fn report_taint_sink_violation(
+        &self,
+        context: &mut TaintExecutionContext,
+        loc: &Loc,
+        call: &ModuleCall,
+        sink: TaintSink,
+        source: &TaintSource,
+    ) {
+        let (source_name, source_loc, source_note) = match source {
+            TaintSource::EntryAddressParam { var, loc } => (
+                var.value().as_str().to_owned(),
+                *loc,
+                "Entry function parameters can be controlled by attackers",
+            ),
+            TaintSource::EntryAmountParam { var, loc } => (
+                var.value().as_str().to_owned(),
+                *loc,
+                "Entry function amount parameters can be controlled by attackers",
+            ),
+            TaintSource::OraclePrice { call_loc } => (
+                "oracle_price".to_owned(),
+                *call_loc,
+                "Oracle prices can be manipulated through flash loans or price oracle attacks",
+            ),
+            TaintSource::SharedObjectField { call_loc } => (
+                "shared_field".to_owned(),
+                *call_loc,
+                "Shared object fields can be modified by concurrent transactions",
+            ),
+        };
+
+        let (msg, help) = match sink {
+            TaintSink::TransferRecipient => (
+                format!(
+                    "Untrusted address parameter `{}` flows to transfer recipient without validation",
+                    source_name
+                ),
+                "Add validation: `assert!(recipient == ctx.sender(), E_UNAUTHORIZED)` or use `_recipient` to suppress",
+            ),
+            TaintSink::CoinSplitAmount => (
+                format!(
+                    "Untrusted amount `{}` flows to coin::split without validation",
+                    source_name
+                ),
+                "Add bounds checking: `assert!(amount <= max_allowed, E_AMOUNT_TOO_LARGE)`",
+            ),
+            TaintSink::DynamicFieldKey => (
+                format!(
+                    "Untrusted key `{}` flows to dynamic field operation without validation",
+                    source_name
+                ),
+                "Validate the key against expected values or use a whitelist",
+            ),
+        };
+
+        context.add_diag(diag!(
+            TAINTED_TRANSFER_RECIPIENT_DIAG,
+            (*loc, msg),
+            (source_loc, source_note),
+            (call.name.0.loc, help),
+        ));
     }
 
     fn is_assert_call(&self, call: &ModuleCall) -> bool {
@@ -2163,7 +2275,11 @@ impl TaintedTransferRecipientVerifierAI<'_> {
                     let tainted_vars = self.find_tainted_vars_deep(state, exp);
                     for var in tainted_vars {
                         if let Some(local_state) = state.locals.get_mut(&var) {
-                            if let LocalState::Available(avail_loc, TaintValue::Tainted { source, .. }) = local_state {
+                            if let LocalState::Available(
+                                avail_loc,
+                                TaintValue::Tainted { source, .. },
+                            ) = local_state
+                            {
                                 *local_state = LocalState::Available(
                                     *avail_loc,
                                     TaintValue::Validated {
@@ -2175,7 +2291,7 @@ impl TaintedTransferRecipientVerifierAI<'_> {
                         }
                     }
                 } else if matches!(op.value, BinOp_::And | BinOp_::Or) {
-                    // Recurse into && and || 
+                    // Recurse into && and ||
                     self.track_validation_in_exp(state, lhs, validation_loc);
                     self.track_validation_in_exp(state, rhs, validation_loc);
                 }
@@ -2188,7 +2304,11 @@ impl TaintedTransferRecipientVerifierAI<'_> {
                 if let Some(validated_vars) = state.validation_temps.get(var).cloned() {
                     for tainted_var in validated_vars {
                         if let Some(local_state) = state.locals.get_mut(&tainted_var) {
-                            if let LocalState::Available(avail_loc, TaintValue::Tainted { source, .. }) = local_state {
+                            if let LocalState::Available(
+                                avail_loc,
+                                TaintValue::Tainted { source, .. },
+                            ) = local_state
+                            {
                                 *local_state = LocalState::Available(
                                     *avail_loc,
                                     TaintValue::Validated {
@@ -2209,10 +2329,10 @@ impl TaintedTransferRecipientVerifierAI<'_> {
     /// e.g., `$tmp = (recipient == ctx.sender())` -> record $tmp validates recipient
     fn track_validation_comparison(&self, state: &mut TaintState, lvalues: &[LValue], rhs: &Exp) {
         use UnannotatedExp_ as E;
-        
+
         // Recursively find tainted vars in the RHS expression and track them
         let tainted_vars = self.find_tainted_vars_deep(state, rhs);
-        
+
         // Check if RHS contains a comparison (Eq, Neq) - for validation temps
         if self.expression_contains_comparison(rhs) && !tainted_vars.is_empty() {
             // Record that the LHS variable(s) validate these tainted vars
@@ -2234,9 +2354,10 @@ impl TaintedTransferRecipientVerifierAI<'_> {
                 }
                 self.expression_contains_comparison(lhs) || self.expression_contains_comparison(rhs)
             }
-            E::UnaryExp(_, inner) | E::Cast(inner, _) | E::Freeze(inner) | E::Dereference(inner) => {
-                self.expression_contains_comparison(inner)
-            }
+            E::UnaryExp(_, inner)
+            | E::Cast(inner, _)
+            | E::Freeze(inner)
+            | E::Dereference(inner) => self.expression_contains_comparison(inner),
             _ => false,
         }
     }
@@ -2245,10 +2366,12 @@ impl TaintedTransferRecipientVerifierAI<'_> {
     fn find_tainted_vars_deep(&self, state: &TaintState, exp: &Exp) -> Vec<Var> {
         use UnannotatedExp_ as E;
         let mut result = Vec::new();
-        
+
         match &exp.exp.value {
             E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
-                if let Some(LocalState::Available(_, TaintValue::Tainted { .. })) = state.locals.get(var) {
+                if let Some(LocalState::Available(_, TaintValue::Tainted { .. })) =
+                    state.locals.get(var)
+                {
                     result.push(*var);
                 }
             }
@@ -2256,7 +2379,10 @@ impl TaintedTransferRecipientVerifierAI<'_> {
                 result.extend(self.find_tainted_vars_deep(state, lhs));
                 result.extend(self.find_tainted_vars_deep(state, rhs));
             }
-            E::UnaryExp(_, inner) | E::Cast(inner, _) | E::Freeze(inner) | E::Dereference(inner) => {
+            E::UnaryExp(_, inner)
+            | E::Cast(inner, _)
+            | E::Freeze(inner)
+            | E::Dereference(inner) => {
                 result.extend(self.find_tainted_vars_deep(state, inner));
             }
             E::Borrow(_, inner, _, _) => {
@@ -2279,7 +2405,7 @@ impl TaintedTransferRecipientVerifierAI<'_> {
             }
             _ => {}
         }
-        
+
         result
     }
 
@@ -2287,10 +2413,12 @@ impl TaintedTransferRecipientVerifierAI<'_> {
     fn collect_tainted_vars_from_exp(&self, state: &TaintState, exp: &Exp) -> Vec<Var> {
         use UnannotatedExp_ as E;
         let mut result = Vec::new();
-        
+
         match &exp.exp.value {
             E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
-                if let Some(LocalState::Available(_, TaintValue::Tainted { .. })) = state.locals.get(var) {
+                if let Some(LocalState::Available(_, TaintValue::Tainted { .. })) =
+                    state.locals.get(var)
+                {
                     result.push(*var);
                 }
             }
@@ -2306,7 +2434,7 @@ impl TaintedTransferRecipientVerifierAI<'_> {
             }
             _ => {}
         }
-        
+
         result
     }
 
@@ -2314,13 +2442,13 @@ impl TaintedTransferRecipientVerifierAI<'_> {
     /// Handles both direct variable references and validation temporaries.
     fn mark_validated_from_guard(&self, state: &mut TaintState, cond: &Exp, validation_loc: Loc) {
         use UnannotatedExp_ as E;
-        
+
         // Collect vars directly in the condition
         let direct_vars = self.collect_vars_from_exp(cond);
-        
+
         // Also check if the condition references a validation temp
         let mut vars_to_validate: Vec<Var> = Vec::new();
-        
+
         for var in &direct_vars {
             // Check if this var is a validation temp
             if let Some(validated_vars) = state.validation_temps.get(var) {
@@ -2329,11 +2457,13 @@ impl TaintedTransferRecipientVerifierAI<'_> {
             // Also add the var itself if it's directly tainted
             vars_to_validate.push(*var);
         }
-        
+
         // Mark all collected vars as validated
         for var in vars_to_validate {
             if let Some(local_state) = state.locals.get_mut(&var) {
-                if let LocalState::Available(avail_loc, TaintValue::Tainted { source, .. }) = local_state {
+                if let LocalState::Available(avail_loc, TaintValue::Tainted { source, .. }) =
+                    local_state
+                {
                     *local_state = LocalState::Available(
                         *avail_loc,
                         TaintValue::Validated {
@@ -2349,7 +2479,7 @@ impl TaintedTransferRecipientVerifierAI<'_> {
     fn collect_vars_from_exp(&self, exp: &Exp) -> Vec<Var> {
         use UnannotatedExp_ as E;
         let mut vars = Vec::new();
-        
+
         match &exp.exp.value {
             E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
                 vars.push(*var);
@@ -2374,7 +2504,7 @@ impl TaintedTransferRecipientVerifierAI<'_> {
             }
             _ => {}
         }
-        
+
         vars
     }
 }
@@ -2388,16 +2518,41 @@ fn is_address_type(ty: &SingleType) -> bool {
 }
 
 fn is_address_base_type(bt: &BaseType_) -> bool {
-    matches!(bt, BaseType_::Apply(_, type_name, _) 
-        if matches!(&type_name.value, TypeName_::Builtin(builtin) 
-            if matches!(builtin.value, BuiltinTypeName_::Address)))
+    matches!(
+        bt,
+        BaseType_::Apply(_, type_name, _)
+            if matches!(
+                &type_name.value,
+                TypeName_::Builtin(builtin) if matches!(builtin.value, BuiltinTypeName_::Address)
+            )
+    )
+}
+
+/// Check if a type is an amount type (u64, u128) that could be attacker-controlled
+fn is_amount_type(ty: &SingleType) -> bool {
+    match &ty.value {
+        SingleType_::Base(bt) => is_amount_base_type(&bt.value),
+        SingleType_::Ref(_, bt) => is_amount_base_type(&bt.value),
+    }
+}
+
+fn is_amount_base_type(bt: &BaseType_) -> bool {
+    matches!(
+        bt,
+        BaseType_::Apply(_, type_name, _)
+            if matches!(
+                &type_name.value,
+                TypeName_::Builtin(builtin)
+                    if matches!(builtin.value, BuiltinTypeName_::U64 | BuiltinTypeName_::U128)
+            )
+    )
 }
 
 impl SimpleDomain for TaintState {
     type Value = TaintValue;
 
     fn new(_context: &CFGContext, locals: BTreeMap<Var, LocalState<Self::Value>>) -> Self {
-        TaintState { 
+        TaintState {
             locals,
             validation_temps: BTreeMap::new(),
         }
@@ -2416,17 +2571,39 @@ impl SimpleDomain for TaintState {
         // Pessimistic: if ANY path is tainted (not validated), result is tainted
         match (v1, v2) {
             // Both validated = validated
-            (Validated { source, validation_loc }, Validated { .. }) => {
-                Validated { source: source.clone(), validation_loc: *validation_loc }
-            }
+            (
+                Validated {
+                    source,
+                    validation_loc,
+                },
+                Validated { .. },
+            ) => Validated {
+                source: source.clone(),
+                validation_loc: *validation_loc,
+            },
             // Tainted wins over validated (pessimistic - all paths must validate)
-            (Tainted { source, loc }, _) | (_, Tainted { source, loc }) => {
-                Tainted { source: source.clone(), loc: *loc }
-            }
+            (Tainted { source, loc }, _) | (_, Tainted { source, loc }) => Tainted {
+                source: source.clone(),
+                loc: *loc,
+            },
             // Validated over untainted
-            (Validated { source, validation_loc }, Untainted) | (Untainted, Validated { source, validation_loc }) => {
-                Validated { source: source.clone(), validation_loc: *validation_loc }
-            }
+            (
+                Validated {
+                    source,
+                    validation_loc,
+                },
+                Untainted,
+            )
+            | (
+                Untainted,
+                Validated {
+                    source,
+                    validation_loc,
+                },
+            ) => Validated {
+                source: source.clone(),
+                validation_loc: *validation_loc,
+            },
             // Both untainted
             (Untainted, Untainted) => Untainted,
         }
@@ -2435,7 +2612,10 @@ impl SimpleDomain for TaintState {
     fn join_impl(&mut self, other: &Self, _result: &mut JoinResult) {
         // Merge validation_temps from other
         for (var, validated_vars) in &other.validation_temps {
-            self.validation_temps.entry(*var).or_insert_with(Vec::new).extend(validated_vars.iter().cloned());
+            self.validation_temps
+                .entry(*var)
+                .or_insert_with(Vec::new)
+                .extend(validated_vars.iter().cloned());
         }
     }
 }
@@ -2451,11 +2631,11 @@ impl SimpleExecutionContext for TaintExecutionContext {
 // ============================================================================
 
 pub const ABSINT_CUSTOM_DIAG_CODE_MAP: &[(u8, &LintDescriptor)] = &[
-    (1, &PHANTOM_CAPABILITY),        // UNUSED_CAP_V2_DIAG
-    (2, &UNCHECKED_DIVISION_V2),     // UNCHECKED_DIV_V2_DIAG
-    (3, &PHANTOM_CAPABILITY),        // UNVALIDATED_CAP_V2_DIAG
-    (4, &DESTROY_ZERO_UNCHECKED_V2), // DESTROY_ZERO_UNCHECKED_V2_DIAG
-    (5, &FRESH_ADDRESS_REUSE_V2),    // FRESH_ADDRESS_REUSE_V2_DIAG
+    (1, &PHANTOM_CAPABILITY),         // UNUSED_CAP_V2_DIAG
+    (2, &UNCHECKED_DIVISION_V2),      // UNCHECKED_DIV_V2_DIAG
+    (3, &PHANTOM_CAPABILITY),         // UNVALIDATED_CAP_V2_DIAG
+    (4, &DESTROY_ZERO_UNCHECKED_V2),  // DESTROY_ZERO_UNCHECKED_V2_DIAG
+    (5, &FRESH_ADDRESS_REUSE_V2),     // FRESH_ADDRESS_REUSE_V2_DIAG
     (6, &TAINTED_TRANSFER_RECIPIENT), // TAINTED_TRANSFER_RECIPIENT_DIAG
 ];
 
