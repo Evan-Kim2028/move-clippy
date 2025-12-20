@@ -158,6 +158,20 @@ pub static UNUSED_RETURN_VALUE: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::ApiMisuse),
 };
 
+/// Detects division operations where the divisor hasn't been validated as non-zero.
+///
+/// Division by zero will abort the transaction. This lint helps catch potential
+/// division-by-zero bugs before runtime.
+pub static UNCHECKED_DIVISION: LintDescriptor = LintDescriptor {
+    name: "unchecked_division",
+    category: LintCategory::Security,
+    description: "Division may divide by zero - consider adding non-zero assertion (type-based)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::ArithmeticSafety),
+};
+
 /// Detects entry functions that return non-unit values.
 ///
 /// In Sui Move, entry function return values are discarded by the runtime.
@@ -683,6 +697,7 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     // Security (preview, type-based)
     &SHARED_CAPABILITY_OBJECT,
     &UNUSED_RETURN_VALUE,
+    &UNCHECKED_DIVISION,
     &DROPPABLE_HOT_POTATO_V2,
     &CAPABILITY_TRANSFER_LITERAL_ADDRESS,
     &MUT_KEY_PARAM_MISSING_AUTHORITY,
@@ -2918,7 +2933,7 @@ mod full {
                         push_diag(
                             out,
                             settings,
-                            &UNUSED_RETURN_VALUE,
+                            &UNCHECKED_DIVISION,
                             file,
                             span,
                             contents.as_ref(),
