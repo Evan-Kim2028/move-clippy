@@ -1,0 +1,7 @@
+[package]
+name = "tainted_transfer_recipient_pkg"
+edition = "2024"
+
+[addresses]
+tainted_transfer_recipient_pkg = "0x0"
+sui = "0x2"

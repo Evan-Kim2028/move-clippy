@@ -1044,10 +1044,7 @@ impl UncheckedDivisionVerifierAI<'_> {
             | UnannotatedExp_::Copy { var, .. }
             | UnannotatedExp_::BorrowLocal(_, var) => matches!(
                 state.locals.get(var),
-                Some(LocalState::Available(
-                    _,
-                    DivisorValue::Validated | DivisorValue::Constant
-                ))
+                Some(LocalState::Available(_, DivisorValue::Validated | DivisorValue::Constant))
             ),
             UnannotatedExp_::Cast(inner, _ty) => self.is_divisor_safe(state, inner),
             UnannotatedExp_::BinopExp(lhs, op, rhs)
@@ -1509,7 +1506,7 @@ impl DestroyZeroVerifierAI<'_> {
                     matches!(&e.exp.value, UnannotatedExp_::Value(v) if v.value.is_zero())
                 };
 
-                let (var_side, is_zero_side, var_on_lhs) = if is_zero_literal(rhs) {
+                let (var_side, _is_zero_side, _var_on_lhs) = if is_zero_literal(rhs) {
                     (lhs, true, true)
                 } else if is_zero_literal(lhs) {
                     (rhs, true, false)
@@ -1838,6 +1835,407 @@ impl SimpleExecutionContext for FreshAddressExecutionContext {
 }
 
 // ============================================================================
+// 5. Tainted Transfer Recipient (CFG-aware taint analysis)
+// ============================================================================
+
+const TAINTED_TRANSFER_RECIPIENT_DIAG: DiagnosticInfo = custom(
+    LINT_WARNING_PREFIX,
+    Severity::Warning,
+    CLIPPY_CATEGORY,
+    6, // tainted_transfer_recipient
+    "untrusted address used as transfer recipient",
+);
+
+pub static TAINTED_TRANSFER_RECIPIENT: LintDescriptor = LintDescriptor {
+    name: "tainted_transfer_recipient",
+    category: LintCategory::Security,
+    description: "Entry function address parameter flows to transfer recipient without validation (type-based CFG-aware, requires --mode full --preview)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBasedCFG,
+    gap: Some(TypeSystemGap::ValueFlow),
+};
+
+pub struct TaintedTransferRecipientVerifier;
+
+pub struct TaintedTransferRecipientVerifierAI<'a> {
+    info: &'a TypingProgramInfo,
+    context: &'a CFGContext<'a>,
+    /// Entry address params that are taint sources
+    tainted_params: Vec<(Var, Loc)>,
+    /// Labels whose blocks immediately exit (abort/return)
+    exit_blocks: BTreeSet<Label>,
+}
+
+/// Taint source classification
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TaintSource {
+    /// Entry function address parameter
+    EntryAddressParam { var: Var, loc: Loc },
+}
+
+/// Abstract value for taint tracking
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
+pub enum TaintValue {
+    #[default]
+    Untainted,
+    /// Value is tainted from an untrusted source
+    Tainted { source: TaintSource, loc: Loc },
+    /// Value was tainted but has been validated through a guard
+    Validated { source: TaintSource, validation_loc: Loc },
+}
+
+/// Abstract state for taint analysis
+#[derive(Clone, Debug)]
+pub struct TaintState {
+    locals: BTreeMap<Var, LocalState<TaintValue>>,
+}
+
+/// Execution context for taint analysis
+pub struct TaintExecutionContext {
+    diags: CompilerDiagnostics,
+}
+
+impl SimpleAbsIntConstructor for TaintedTransferRecipientVerifier {
+    type AI<'a> = TaintedTransferRecipientVerifierAI<'a>;
+
+    fn new<'a>(
+        context: &'a CFGContext<'a>,
+        cfg: &ImmForwardCFG,
+        init_state: &mut TaintState,
+    ) -> Option<Self::AI<'a>> {
+        // Skip test functions
+        if context.attributes.is_test_or_test_only() {
+            return None;
+        }
+
+        // Only analyze entry functions - they receive untrusted input
+        if context.entry.is_none() {
+            return None;
+        }
+
+        // Find address-typed parameters (taint sources)
+        let tainted_params: Vec<(Var, Loc)> = context
+            .signature
+            .parameters
+            .iter()
+            .filter_map(|(_, var, ty)| {
+                // Skip underscore-prefixed params (intentional escape hatch)
+                if var.starts_with_underscore() {
+                    return None;
+                }
+                // Check if parameter is address type
+                if is_address_type(ty) {
+                    Some((*var, var.0.loc))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if tainted_params.is_empty() {
+            return None; // No taint sources
+        }
+
+        // Initialize tainted params as Tainted in initial state
+        for (var, loc) in &tainted_params {
+            if let Some(local_state) = init_state.locals.get_mut(var) {
+                if let LocalState::Available(avail_loc, _) = local_state {
+                    *local_state = LocalState::Available(
+                        *avail_loc,
+                        TaintValue::Tainted {
+                            source: TaintSource::EntryAddressParam { var: *var, loc: *loc },
+                            loc: *loc,
+                        },
+                    );
+                }
+            }
+        }
+
+        // Precompute exit blocks for guard detection
+        let mut exit_blocks = BTreeSet::new();
+        for lbl in cfg.block_labels() {
+            if is_immediate_exit_block(cfg, lbl) {
+                exit_blocks.insert(lbl);
+            }
+        }
+
+        Some(TaintedTransferRecipientVerifierAI {
+            info: context.info,
+            context,
+            tainted_params,
+            exit_blocks,
+        })
+    }
+}
+
+impl SimpleAbsInt for TaintedTransferRecipientVerifierAI<'_> {
+    type State = TaintState;
+    type ExecutionContext = TaintExecutionContext;
+
+    fn finish(
+        &mut self,
+        _final_states: BTreeMap<Label, Self::State>,
+        diags: CompilerDiagnostics,
+    ) -> CompilerDiagnostics {
+        diags
+    }
+
+    fn start_command(&self, _pre: &mut Self::State) -> Self::ExecutionContext {
+        TaintExecutionContext {
+            diags: CompilerDiagnostics::new(),
+        }
+    }
+
+    fn finish_command(
+        &self,
+        context: Self::ExecutionContext,
+        _state: &mut Self::State,
+    ) -> CompilerDiagnostics {
+        context.diags
+    }
+
+    fn command_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        cmd: &Command,
+    ) -> bool {
+        use Command_ as C;
+
+        match &cmd.value {
+            C::JumpIf { cond, if_true, if_false } => {
+                // Visit condition first
+                self.exp(context, state, cond);
+
+                // Check if one branch is an exit (abort) - this is a guard pattern
+                let true_is_abort = self.exit_blocks.contains(if_true);
+                let false_is_abort = self.exit_blocks.contains(if_false);
+
+                if true_is_abort ^ false_is_abort {
+                    // This is a guard pattern - mark any tainted variables in condition as validated
+                    self.mark_validated_in_condition(state, cond, cmd.loc);
+                }
+
+                true // Handled
+            }
+            C::Assign(_case, lvalues, rhs) => {
+                // Collect taint from RHS expression
+                let rhs_taints = self.exp(context, state, rhs);
+                let rhs_taint = rhs_taints.into_iter().find(|t| matches!(t, TaintValue::Tainted { .. }));
+
+                // Propagate taint to LHS variables
+                for lvalue in lvalues {
+                    if let LValue_::Var { var, .. } = &lvalue.value {
+                        if let Some(ref taint) = rhs_taint {
+                            if let TaintValue::Tainted { source, .. } = taint {
+                                if let Some(local_state) = state.locals.get_mut(var) {
+                                    if let LocalState::Available(avail_loc, _) = local_state {
+                                        *local_state = LocalState::Available(
+                                            *avail_loc,
+                                            TaintValue::Tainted {
+                                                source: source.clone(),
+                                                loc: lvalue.loc,
+                                            },
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                false // Let default handling continue
+            }
+            _ => false,
+        }
+    }
+
+    fn exp_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        e: &Exp,
+    ) -> Option<Vec<TaintValue>> {
+        use UnannotatedExp_ as E;
+
+        match &e.exp.value {
+            // Variable access - propagate taint
+            E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
+                if let Some(LocalState::Available(_, taint)) = state.locals.get(var) {
+                    return Some(vec![taint.clone()]);
+                }
+            }
+            _ => {}
+        }
+
+        None // Use default traversal
+    }
+
+    fn call_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        loc: &Loc,
+        _return_ty: &Type,
+        call: &ModuleCall,
+        args: Vec<TaintValue>,
+    ) -> Option<Vec<TaintValue>> {
+        // Check if this is a transfer function with tainted recipient
+        if let Some(recipient_idx) = self.get_transfer_recipient_index(call) {
+            if let Some(TaintValue::Tainted { source, loc: taint_loc }) = args.get(recipient_idx) {
+                // Tainted address reaching transfer sink!
+                let (source_name, source_loc) = match source {
+                    TaintSource::EntryAddressParam { var, loc } => (var.value().as_str().to_owned(), *loc),
+                };
+                
+                let msg = format!(
+                    "Untrusted address parameter `{}` flows to transfer recipient without validation",
+                    source_name
+                );
+                let help = "Add validation: `assert!(recipient == ctx.sender(), E_UNAUTHORIZED)` or use `_recipient` to suppress";
+                let note = "Entry function parameters can be controlled by attackers";
+                
+                context.add_diag(diag!(
+                    TAINTED_TRANSFER_RECIPIENT_DIAG,
+                    (*loc, msg),
+                    (source_loc, note),
+                    (call.name.0.loc, help),
+                ));
+            }
+        }
+
+        None
+    }
+}
+
+impl TaintedTransferRecipientVerifierAI<'_> {
+    fn get_transfer_recipient_index(&self, call: &ModuleCall) -> Option<usize> {
+        // transfer::public_transfer(obj, recipient) -> recipient is index 1
+        // transfer::transfer(obj, recipient) -> recipient is index 1
+        if call.is(&SUI_ADDR, "transfer", "public_transfer")
+            || call.is(&SUI_ADDR, "transfer", "transfer")
+        {
+            Some(1) // recipient is second argument
+        } else {
+            None
+        }
+    }
+
+    fn mark_validated_in_condition(&self, state: &mut TaintState, cond: &Exp, validation_loc: Loc) {
+        // Collect all variables referenced in the condition
+        let vars = self.collect_vars_from_exp(cond);
+        
+        for var in vars {
+            if let Some(local_state) = state.locals.get_mut(&var) {
+                if let LocalState::Available(avail_loc, TaintValue::Tainted { source, .. }) = local_state {
+                    *local_state = LocalState::Available(
+                        *avail_loc,
+                        TaintValue::Validated {
+                            source: source.clone(),
+                            validation_loc,
+                        },
+                    );
+                }
+            }
+        }
+    }
+
+    fn collect_vars_from_exp(&self, exp: &Exp) -> Vec<Var> {
+        use UnannotatedExp_ as E;
+        let mut vars = Vec::new();
+        
+        match &exp.exp.value {
+            E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
+                vars.push(*var);
+            }
+            E::BinopExp(lhs, _, rhs) => {
+                vars.extend(self.collect_vars_from_exp(lhs));
+                vars.extend(self.collect_vars_from_exp(rhs));
+            }
+            E::UnaryExp(_, inner) => {
+                vars.extend(self.collect_vars_from_exp(inner));
+            }
+            E::Cast(inner, _) => {
+                vars.extend(self.collect_vars_from_exp(inner));
+            }
+            E::Borrow(_, inner, _, _) => {
+                vars.extend(self.collect_vars_from_exp(inner));
+            }
+            E::Multiple(exps) => {
+                for e in exps {
+                    vars.extend(self.collect_vars_from_exp(e));
+                }
+            }
+            _ => {}
+        }
+        
+        vars
+    }
+}
+
+/// Check if a type is `address`
+fn is_address_type(ty: &SingleType) -> bool {
+    match &ty.value {
+        SingleType_::Base(bt) => is_address_base_type(&bt.value),
+        SingleType_::Ref(_, bt) => is_address_base_type(&bt.value),
+    }
+}
+
+fn is_address_base_type(bt: &BaseType_) -> bool {
+    matches!(bt, BaseType_::Apply(_, type_name, _) 
+        if matches!(&type_name.value, TypeName_::Builtin(builtin) 
+            if matches!(builtin.value, BuiltinTypeName_::Address)))
+}
+
+impl SimpleDomain for TaintState {
+    type Value = TaintValue;
+
+    fn new(_context: &CFGContext, locals: BTreeMap<Var, LocalState<Self::Value>>) -> Self {
+        TaintState { locals }
+    }
+
+    fn locals_mut(&mut self) -> &mut BTreeMap<Var, LocalState<Self::Value>> {
+        &mut self.locals
+    }
+
+    fn locals(&self) -> &BTreeMap<Var, LocalState<Self::Value>> {
+        &self.locals
+    }
+
+    fn join_value(v1: &Self::Value, v2: &Self::Value) -> Self::Value {
+        use TaintValue::*;
+        // Pessimistic join: if ANY path is tainted (not validated), result is tainted
+        match (v1, v2) {
+            // Both validated = validated
+            (Validated { source, validation_loc }, Validated { .. }) => {
+                Validated { source: source.clone(), validation_loc: *validation_loc }
+            }
+            // Tainted wins over validated (pessimistic - all paths must validate)
+            (Tainted { source, loc }, _) | (_, Tainted { source, loc }) => {
+                Tainted { source: source.clone(), loc: *loc }
+            }
+            // Validated over untainted
+            (Validated { source, validation_loc }, Untainted) | (Untainted, Validated { source, validation_loc }) => {
+                Validated { source: source.clone(), validation_loc: *validation_loc }
+            }
+            // Both untainted
+            (Untainted, Untainted) => Untainted,
+        }
+    }
+
+    fn join_impl(&mut self, _other: &Self, _result: &mut JoinResult) {
+        // No additional state beyond locals
+    }
+}
+
+impl SimpleExecutionContext for TaintExecutionContext {
+    fn add_diag(&mut self, d: CompilerDiagnostic) {
+        self.diags.add(d);
+    }
+}
+
+// ============================================================================
 // Public API
 // ============================================================================
 
@@ -1847,6 +2245,7 @@ pub const ABSINT_CUSTOM_DIAG_CODE_MAP: &[(u8, &LintDescriptor)] = &[
     (3, &PHANTOM_CAPABILITY),        // UNVALIDATED_CAP_V2_DIAG
     (4, &DESTROY_ZERO_UNCHECKED_V2), // DESTROY_ZERO_UNCHECKED_V2_DIAG
     (5, &FRESH_ADDRESS_REUSE_V2),    // FRESH_ADDRESS_REUSE_V2_DIAG
+    (6, &TAINTED_TRANSFER_RECIPIENT), // TAINTED_TRANSFER_RECIPIENT_DIAG
 ];
 
 pub fn descriptor_for_diag_code(code: u8) -> Option<&'static LintDescriptor> {
@@ -1860,6 +2259,7 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &UNCHECKED_DIVISION_V2,
     &DESTROY_ZERO_UNCHECKED_V2,
     &FRESH_ADDRESS_REUSE_V2,
+    &TAINTED_TRANSFER_RECIPIENT,
 ];
 
 /// Return all Phase II lint descriptors
@@ -1891,6 +2291,7 @@ pub fn create_visitors(
         visitors.push(Box::new(UncheckedDivisionVerifier) as Box<dyn AbstractInterpreterVisitor>);
         visitors.push(Box::new(DestroyZeroVerifier) as Box<dyn AbstractInterpreterVisitor>);
         visitors.push(Box::new(FreshAddressReuseVerifier) as Box<dyn AbstractInterpreterVisitor>);
+        visitors.push(Box::new(TaintedTransferRecipientVerifier) as Box<dyn AbstractInterpreterVisitor>);
     }
 
     if experimental {
