@@ -1,0 +1,7 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+witness_antipatterns:sources/witness_antipatterns.move:4: 19: warning: Witness struct `UserWitness` has `copy` ability. This allows the witness to be duplicated, defeating the proof-of-ownership pattern. Remove `copy` from the abilities.
+witness_antipatterns:sources/witness_antipatterns.move:6: 19: warning: Witness struct `StoredWitness` has `store` ability. This allows the witness to be persisted and replayed. Remove `store` from the abilities.
+witness_antipatterns:sources/witness_antipatterns.move:8: 5: warning: Public function `create_user_witness` returns witness type `UserWitness`. Witnesses should only be constructible within their module. Make this function private or package-internal.

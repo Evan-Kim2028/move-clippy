@@ -1,0 +1,7 @@
+[package]
+name = "witness_antipatterns_pkg"
+edition = "2024"
+
+[addresses]
+witness_antipatterns_pkg = "0x0"
+sui = "0x2"

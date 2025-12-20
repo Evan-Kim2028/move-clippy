@@ -195,6 +195,17 @@ pub static EVENT_EMIT_TYPE_SANITY: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::ApiMisuse),
 };
 
+/// Detects event structs named with present tense verbs instead of past tense.
+pub static EVENT_PAST_TENSE: LintDescriptor = LintDescriptor {
+    name: "event_past_tense",
+    category: LintCategory::Style,
+    description: "Event name uses present tense instead of past tense (type-based, requires --mode full)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: None,
+};
+
 /// Detects sharing of objects with `key + store` abilities.
 ///
 /// # Security Rationale
@@ -560,6 +571,39 @@ pub static MISSING_WITNESS_DROP_V2: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
+/// Detects one-time witness (OTW) structs that violate Sui Adapter rules.
+pub static INVALID_OTW: LintDescriptor = LintDescriptor {
+    name: "invalid_otw",
+    category: LintCategory::Security,
+    description: "One-time witness violates Sui Adapter rules - has wrong abilities, fields, or is generic (type-based)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
+};
+
+/// Detects witness structs with antipatterns that may indicate security issues.
+pub static WITNESS_ANTIPATTERNS: LintDescriptor = LintDescriptor {
+    name: "witness_antipatterns",
+    category: LintCategory::Security,
+    description: "Witness struct has copy/store/key ability or public constructor - may defeat proof pattern (type-based)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::AbilityMismatch),
+};
+
+/// Detects capability structs with security antipatterns.
+pub static CAPABILITY_ANTIPATTERNS: LintDescriptor = LintDescriptor {
+    name: "capability_antipatterns",
+    category: LintCategory::Security,
+    description: "Capability struct has copy ability, public constructor, or missing key - security vulnerability (type-based)",
+    group: RuleGroup::Stable,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBased,
+    gap: Some(TypeSystemGap::CapabilityEscape),
+};
+
 /// Detects usage of unsafe oracle price functions from known oracle providers.
 ///
 /// Uses type-based detection to verify the call is to a known oracle module.
@@ -608,13 +652,17 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &FREEZING_CAPABILITY,
     // Security (stable, type-grounded)
     &EVENT_EMIT_TYPE_SANITY,
+    &EVENT_PAST_TENSE,
     &ENTRY_FUNCTION_RETURNS_VALUE,
     &PRIVATE_ENTRY_FUNCTION,
     &COPYABLE_CAPABILITY,
     &DROPPABLE_CAPABILITY,
+    &CAPABILITY_ANTIPATTERNS,
     &NON_TRANSFERABLE_FUNGIBLE_OBJECT,
     &PUBLIC_RANDOM_ACCESS_V2,
     &MISSING_WITNESS_DROP_V2,
+    &INVALID_OTW,
+    &WITNESS_ANTIPATTERNS,
     &STALE_ORACLE_PRICE_V2,
     // Security (preview, type-based)
     &SHARED_CAPABILITY_OBJECT,

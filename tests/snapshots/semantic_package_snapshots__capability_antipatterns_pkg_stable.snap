@@ -1,0 +1,7 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+capability_antipatterns:sources/capability_antipatterns.move:18: 19: warning: Capability struct `CopyCap` has `copy` ability. This allows the capability to be duplicated, defeating access control. Remove `copy` from the abilities.
+capability_antipatterns:sources/capability_antipatterns.move:20: 19: warning: Capability struct `StoreCap` has `store` but no `key` ability. Capabilities should be Sui objects with `key` for proper ownership tracking. Add `key` ability and include `id: UID` as the first field.
+capability_antipatterns:sources/capability_antipatterns.move:26: 5: warning: Public function `mint_cap` returns capability type `MintCap`. Capabilities should only be created in `init` or internal functions. Make this function `public(package)` or private.

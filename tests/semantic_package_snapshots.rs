@@ -127,6 +127,30 @@ fn non_transferable_fungible_object_pkg_stable() {
     assert_snapshot!(out);
 }
 
+#[test]
+fn event_past_tense_pkg_stable() {
+    let out = lint_fixture_package("tests/fixtures/phase2/event_past_tense_pkg", false);
+    assert_snapshot!(out);
+}
+
+#[test]
+fn invalid_otw_pkg_stable() {
+    let out = lint_fixture_package("tests/fixtures/phase2/invalid_otw_pkg", false);
+    assert_snapshot!(out);
+}
+
+#[test]
+fn witness_antipatterns_pkg_stable() {
+    let out = lint_fixture_package("tests/fixtures/phase2/witness_antipatterns_pkg", false);
+    assert_snapshot!(out);
+}
+
+#[test]
+fn capability_antipatterns_pkg_stable() {
+    let out = lint_fixture_package("tests/fixtures/phase2/capability_antipatterns_pkg", false);
+    assert_snapshot!(out);
+}
+
 // =============================================================================
 // Phase 4 Preview/Experimental Fixture Tests
 // =============================================================================
