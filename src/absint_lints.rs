@@ -147,7 +147,7 @@ pub struct UnusedCapabilityVerifierAI<'a> {
     has_privileged_sink: Cell<bool>,
     /// Tracks whether each capability was referenced anywhere during analysis.
     cap_used_anywhere: RefCell<BTreeMap<String, bool>>,
-    /// Tracks whether each capability was validated through a guard
+    /// Tracks whether each capability was validated (survives Move)
     cap_validated_anywhere: RefCell<BTreeMap<String, bool>>,
 }
 
@@ -1243,8 +1243,8 @@ impl SimpleDomain for DivState {
 }
 
 impl SimpleExecutionContext for DivExecutionContext {
-    fn add_diag(&mut self, diag: CompilerDiagnostic) {
-        self.diags.add(diag)
+    fn add_diag(&mut self, d: CompilerDiagnostic) {
+        self.diags.add(d);
     }
 }
 
@@ -1889,6 +1889,10 @@ pub enum TaintValue {
 #[derive(Clone, Debug)]
 pub struct TaintState {
     locals: BTreeMap<Var, LocalState<TaintValue>>,
+    /// Maps temporary variables to the tainted variables they validate.
+    /// When we see `$tmp = (tainted_var == something)`, we record $tmp -> tainted_var
+    /// so that when JumpIf uses $tmp, we can mark tainted_var as validated.
+    validation_temps: BTreeMap<Var, Vec<Var>>,
 }
 
 /// Execution context for taint analysis
@@ -2012,14 +2016,23 @@ impl SimpleAbsInt for TaintedTransferRecipientVerifierAI<'_> {
                 let true_is_abort = self.exit_blocks.contains(if_true);
                 let false_is_abort = self.exit_blocks.contains(if_false);
 
-                if true_is_abort ^ false_is_abort {
+                // Trigger validation if at least one branch is an abort (guard pattern)
+                // Note: Both can be abort in some CFG structures from assert! compilation
+                if true_is_abort || false_is_abort {
                     // This is a guard pattern - mark any tainted variables in condition as validated
-                    self.mark_validated_in_condition(state, cond, cmd.loc);
+                    // Also check if the condition ITSELF is a comparison with tainted vars
+                    self.mark_validated_from_guard(state, cond, cmd.loc);
+                    // Also try to validate directly from condition if it contains comparison
+                    self.track_validation_in_exp(state, cond, cmd.loc);
                 }
 
                 true // Handled
             }
             C::Assign(_case, lvalues, rhs) => {
+                // First, check if this is a comparison involving a tainted variable
+                // If so, record the LHS as a "validation temp" for that tainted var
+                self.track_validation_comparison(state, lvalues, rhs);
+
                 // Collect taint from RHS expression
                 let rhs_taints = self.exp(context, state, rhs);
                 let rhs_taint = rhs_taints.into_iter().find(|t| matches!(t, TaintValue::Tainted { .. }));
@@ -2064,6 +2077,15 @@ impl SimpleAbsInt for TaintedTransferRecipientVerifierAI<'_> {
             E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
                 if let Some(LocalState::Available(_, taint)) = state.locals.get(var) {
                     return Some(vec![taint.clone()]);
+                }
+            }
+            // Detect assert! calls and mark tainted variables in condition as validated
+            E::ModuleCall(call) => {
+                if self.is_assert_call(call) {
+                    if let Some(cond) = call.arguments.first() {
+                        // Track validation comparison in the assert condition
+                        self.track_validation_in_exp(state, cond, e.exp.loc);
+                    }
                 }
             }
             _ => {}
@@ -2122,11 +2144,194 @@ impl TaintedTransferRecipientVerifierAI<'_> {
         }
     }
 
-    fn mark_validated_in_condition(&self, state: &mut TaintState, cond: &Exp, validation_loc: Loc) {
-        // Collect all variables referenced in the condition
-        let vars = self.collect_vars_from_exp(cond);
+    fn is_assert_call(&self, call: &ModuleCall) -> bool {
+        let func_sym = call.name.value();
+        let func_name = func_sym.as_str();
+        func_name == "assert" || func_name.contains("assert")
+    }
+
+    /// Track validation in an expression (e.g., assert! condition).
+    /// Recursively finds comparisons involving tainted vars and marks them validated.
+    fn track_validation_in_exp(&self, state: &mut TaintState, exp: &Exp, validation_loc: Loc) {
+        use UnannotatedExp_ as E;
+
+        match &exp.exp.value {
+            // Direct comparison - mark tainted vars as validated
+            E::BinopExp(lhs, op, rhs) => {
+                if matches!(op.value, BinOp_::Eq | BinOp_::Neq) {
+                    // Mark any tainted vars in this comparison as validated
+                    let tainted_vars = self.find_tainted_vars_deep(state, exp);
+                    for var in tainted_vars {
+                        if let Some(local_state) = state.locals.get_mut(&var) {
+                            if let LocalState::Available(avail_loc, TaintValue::Tainted { source, .. }) = local_state {
+                                *local_state = LocalState::Available(
+                                    *avail_loc,
+                                    TaintValue::Validated {
+                                        source: source.clone(),
+                                        validation_loc,
+                                    },
+                                );
+                            }
+                        }
+                    }
+                } else if matches!(op.value, BinOp_::And | BinOp_::Or) {
+                    // Recurse into && and || 
+                    self.track_validation_in_exp(state, lhs, validation_loc);
+                    self.track_validation_in_exp(state, rhs, validation_loc);
+                }
+            }
+            E::UnaryExp(_, inner) => {
+                self.track_validation_in_exp(state, inner, validation_loc);
+            }
+            // If the condition is a variable, check if it's a validation temp
+            E::Move { var, .. } | E::Copy { var, .. } => {
+                if let Some(validated_vars) = state.validation_temps.get(var).cloned() {
+                    for tainted_var in validated_vars {
+                        if let Some(local_state) = state.locals.get_mut(&tainted_var) {
+                            if let LocalState::Available(avail_loc, TaintValue::Tainted { source, .. }) = local_state {
+                                *local_state = LocalState::Available(
+                                    *avail_loc,
+                                    TaintValue::Validated {
+                                        source: source.clone(),
+                                        validation_loc,
+                                    },
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Track when a comparison result is assigned to a temporary.
+    /// e.g., `$tmp = (recipient == ctx.sender())` -> record $tmp validates recipient
+    fn track_validation_comparison(&self, state: &mut TaintState, lvalues: &[LValue], rhs: &Exp) {
+        use UnannotatedExp_ as E;
         
-        for var in vars {
+        // Recursively find tainted vars in the RHS expression and track them
+        let tainted_vars = self.find_tainted_vars_deep(state, rhs);
+        
+        // Check if RHS contains a comparison (Eq, Neq) - for validation temps
+        if self.expression_contains_comparison(rhs) && !tainted_vars.is_empty() {
+            // Record that the LHS variable(s) validate these tainted vars
+            for lvalue in lvalues {
+                if let LValue_::Var { var, .. } = &lvalue.value {
+                    state.validation_temps.insert(*var, tainted_vars.clone());
+                }
+            }
+        }
+    }
+
+    /// Check if an expression contains a comparison operation
+    fn expression_contains_comparison(&self, exp: &Exp) -> bool {
+        use UnannotatedExp_ as E;
+        match &exp.exp.value {
+            E::BinopExp(lhs, op, rhs) => {
+                if matches!(op.value, BinOp_::Eq | BinOp_::Neq) {
+                    return true;
+                }
+                self.expression_contains_comparison(lhs) || self.expression_contains_comparison(rhs)
+            }
+            E::UnaryExp(_, inner) | E::Cast(inner, _) | E::Freeze(inner) | E::Dereference(inner) => {
+                self.expression_contains_comparison(inner)
+            }
+            _ => false,
+        }
+    }
+
+    /// Recursively find all tainted variables in an expression
+    fn find_tainted_vars_deep(&self, state: &TaintState, exp: &Exp) -> Vec<Var> {
+        use UnannotatedExp_ as E;
+        let mut result = Vec::new();
+        
+        match &exp.exp.value {
+            E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
+                if let Some(LocalState::Available(_, TaintValue::Tainted { .. })) = state.locals.get(var) {
+                    result.push(*var);
+                }
+            }
+            E::BinopExp(lhs, _, rhs) => {
+                result.extend(self.find_tainted_vars_deep(state, lhs));
+                result.extend(self.find_tainted_vars_deep(state, rhs));
+            }
+            E::UnaryExp(_, inner) | E::Cast(inner, _) | E::Freeze(inner) | E::Dereference(inner) => {
+                result.extend(self.find_tainted_vars_deep(state, inner));
+            }
+            E::Borrow(_, inner, _, _) => {
+                result.extend(self.find_tainted_vars_deep(state, inner));
+            }
+            E::ModuleCall(call) => {
+                for arg in &call.arguments {
+                    result.extend(self.find_tainted_vars_deep(state, arg));
+                }
+            }
+            E::Multiple(exps) => {
+                for e in exps {
+                    result.extend(self.find_tainted_vars_deep(state, e));
+                }
+            }
+            E::Vector(_, _, _, exps) => {
+                for e in exps {
+                    result.extend(self.find_tainted_vars_deep(state, e));
+                }
+            }
+            _ => {}
+        }
+        
+        result
+    }
+
+    /// Collect variables that are currently tainted from an expression
+    fn collect_tainted_vars_from_exp(&self, state: &TaintState, exp: &Exp) -> Vec<Var> {
+        use UnannotatedExp_ as E;
+        let mut result = Vec::new();
+        
+        match &exp.exp.value {
+            E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
+                if let Some(LocalState::Available(_, TaintValue::Tainted { .. })) = state.locals.get(var) {
+                    result.push(*var);
+                }
+            }
+            E::BinopExp(lhs, _, rhs) => {
+                result.extend(self.collect_tainted_vars_from_exp(state, lhs));
+                result.extend(self.collect_tainted_vars_from_exp(state, rhs));
+            }
+            E::UnaryExp(_, inner) | E::Cast(inner, _) => {
+                result.extend(self.collect_tainted_vars_from_exp(state, inner));
+            }
+            E::Borrow(_, inner, _, _) => {
+                result.extend(self.collect_tainted_vars_from_exp(state, inner));
+            }
+            _ => {}
+        }
+        
+        result
+    }
+
+    /// Mark tainted variables as validated when we see a guard pattern.
+    /// Handles both direct variable references and validation temporaries.
+    fn mark_validated_from_guard(&self, state: &mut TaintState, cond: &Exp, validation_loc: Loc) {
+        use UnannotatedExp_ as E;
+        
+        // Collect vars directly in the condition
+        let direct_vars = self.collect_vars_from_exp(cond);
+        
+        // Also check if the condition references a validation temp
+        let mut vars_to_validate: Vec<Var> = Vec::new();
+        
+        for var in &direct_vars {
+            // Check if this var is a validation temp
+            if let Some(validated_vars) = state.validation_temps.get(var) {
+                vars_to_validate.extend(validated_vars.iter().cloned());
+            }
+            // Also add the var itself if it's directly tainted
+            vars_to_validate.push(*var);
+        }
+        
+        // Mark all collected vars as validated
+        for var in vars_to_validate {
             if let Some(local_state) = state.locals.get_mut(&var) {
                 if let LocalState::Available(avail_loc, TaintValue::Tainted { source, .. }) = local_state {
                     *local_state = LocalState::Available(
@@ -2192,7 +2397,10 @@ impl SimpleDomain for TaintState {
     type Value = TaintValue;
 
     fn new(_context: &CFGContext, locals: BTreeMap<Var, LocalState<Self::Value>>) -> Self {
-        TaintState { locals }
+        TaintState { 
+            locals,
+            validation_temps: BTreeMap::new(),
+        }
     }
 
     fn locals_mut(&mut self) -> &mut BTreeMap<Var, LocalState<Self::Value>> {
@@ -2205,7 +2413,7 @@ impl SimpleDomain for TaintState {
 
     fn join_value(v1: &Self::Value, v2: &Self::Value) -> Self::Value {
         use TaintValue::*;
-        // Pessimistic join: if ANY path is tainted (not validated), result is tainted
+        // Pessimistic: if ANY path is tainted (not validated), result is tainted
         match (v1, v2) {
             // Both validated = validated
             (Validated { source, validation_loc }, Validated { .. }) => {
@@ -2224,8 +2432,11 @@ impl SimpleDomain for TaintState {
         }
     }
 
-    fn join_impl(&mut self, _other: &Self, _result: &mut JoinResult) {
-        // No additional state beyond locals
+    fn join_impl(&mut self, other: &Self, _result: &mut JoinResult) {
+        // Merge validation_temps from other
+        for (var, validated_vars) in &other.validation_temps {
+            self.validation_temps.entry(*var).or_insert_with(Vec::new).extend(validated_vars.iter().cloned());
+        }
     }
 }
 
