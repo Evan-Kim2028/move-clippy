@@ -180,7 +180,13 @@ mod full {
                 lint_droppable_hot_potato_v2(&mut out, settings, &file_map, &typing_info)?;
                 lint_droppable_flash_loan_receipt(&mut out, settings, &file_map, &typing_ast)?;
                 lint_receipt_missing_phantom_type(&mut out, settings, &file_map, &typing_ast)?;
-                lint_copyable_fungible_type(&mut out, settings, &file_map, &typing_ast, &typing_info)?;
+                lint_copyable_fungible_type(
+                    &mut out,
+                    settings,
+                    &file_map,
+                    &typing_ast,
+                    &typing_info,
+                )?;
                 lint_capability_transfer_v2(&mut out, settings, &file_map, &typing_ast)?;
                 lint_generic_type_witness_unused(&mut out, settings, &file_map, &typing_ast)?;
             }

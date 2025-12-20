@@ -63,8 +63,11 @@ fn lint_fixture_package_with_experimental(rel: &str, preview: bool, experimental
 
 #[test]
 fn unchecked_div_pkg_preview() {
-    let out =
-        lint_fixture_package_with_experimental("tests/fixtures/phase2/unchecked_div_pkg", true, true);
+    let out = lint_fixture_package_with_experimental(
+        "tests/fixtures/phase2/unchecked_div_pkg",
+        true,
+        true,
+    );
     assert_snapshot!(out);
 }
 

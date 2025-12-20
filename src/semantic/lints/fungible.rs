@@ -7,8 +7,8 @@ use move_compiler::shared::Identifier;
 use move_compiler::shared::{files::MappedFiles, program_info::TypingProgramInfo};
 use move_compiler::typing::ast as T;
 
-use super::super::{COPYABLE_FUNGIBLE_TYPE, NON_TRANSFERABLE_FUNGIBLE_OBJECT};
 use super::super::util::{diag_from_loc, push_diag};
+use super::super::{COPYABLE_FUNGIBLE_TYPE, NON_TRANSFERABLE_FUNGIBLE_OBJECT};
 use super::shared::strip_refs;
 
 type Result<T> = ClippyResult<T>;

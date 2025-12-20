@@ -28,9 +28,14 @@ fn is_root_module_type(prog: &T::Program, type_name: &N::TypeName_) -> bool {
     let N::TypeName_::ModuleType(mident, _) = type_name else {
         return false;
     };
-    prog.modules
-        .get(mident)
-        .is_some_and(|mdef| matches!(mdef.target_kind, TargetKind::Source { is_root_package: true }))
+    prog.modules.get(mident).is_some_and(|mdef| {
+        matches!(
+            mdef.target_kind,
+            TargetKind::Source {
+                is_root_package: true
+            }
+        )
+    })
 }
 
 fn type_param_ids_in_type(ty: &N::Type_) -> std::collections::BTreeSet<N::TParamID> {
@@ -208,10 +213,8 @@ pub(crate) fn lint_receipt_missing_phantom_type(
                     used_params.extend(type_param_ids_in_type(&arg.value));
                 }
 
-                let missing: Vec<N::TParamID> = coin_type_params
-                    .difference(&used_params)
-                    .cloned()
-                    .collect();
+                let missing: Vec<N::TParamID> =
+                    coin_type_params.difference(&used_params).cloned().collect();
                 if missing.is_empty() {
                     continue;
                 }
