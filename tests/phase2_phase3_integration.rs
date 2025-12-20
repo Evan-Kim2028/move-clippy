@@ -122,6 +122,7 @@ mod phase2 {
         assert!(names.contains(&"unchecked_division_v2"));
         assert!(names.contains(&"destroy_zero_unchecked_v2"));
         assert!(names.contains(&"fresh_address_reuse_v2"));
+        assert!(names.contains(&"tainted_transfer_recipient"));
     }
 
     #[test]
@@ -132,15 +133,15 @@ mod phase2 {
         let visitors = absint_lints::create_visitors(true, false);
         assert_eq!(
             visitors.len(),
-            3,
-            "Should create 3 Phase II preview visitors"
+            4,
+            "Should create 4 Phase II preview visitors (including tainted_transfer_recipient)"
         );
 
         let visitors = absint_lints::create_visitors(true, true);
         assert_eq!(
             visitors.len(),
-            4,
-            "Should create 4 Phase II visitors when experimental is enabled"
+            5,
+            "Should create 5 Phase II visitors when experimental is enabled"
         );
     }
 }
