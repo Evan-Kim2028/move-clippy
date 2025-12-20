@@ -2627,6 +2627,500 @@ impl SimpleExecutionContext for TaintExecutionContext {
 }
 
 // ============================================================================
+// 6. Capability Escape Analysis (CFG-aware)
+// ============================================================================
+//
+// Detects when capability objects (key+store, no copy/drop) escape to
+// potentially unauthorized contexts:
+// - Transferred to address from function parameter (suspicious)
+// - Passed to external module function (dangerous)
+// - Stored in shared object (dangerous)
+//
+// Safe escapes:
+// - Returned to caller
+// - Transferred to fixed/constant address
+// - Stored in owned object
+
+const CAPABILITY_ESCAPE_DIAG: DiagnosticInfo = custom(
+    LINT_WARNING_PREFIX,
+    Severity::Warning,
+    CLIPPY_CATEGORY,
+    7, // capability_escape
+    "capability object escapes to potentially unauthorized context",
+);
+
+pub static CAPABILITY_ESCAPE: LintDescriptor = LintDescriptor {
+    name: "capability_escape",
+    category: LintCategory::Security,
+    description: "Capability object escapes to potentially unauthorized context (CFG-aware, requires --mode full --experimental)",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBasedCFG,
+    gap: Some(TypeSystemGap::CapabilityEscape),
+};
+
+pub struct CapabilityEscapeVerifier;
+
+pub struct CapabilityEscapeVerifierAI<'a> {
+    cap_vars: Vec<(Var, Loc)>,
+    addr_params: BTreeSet<Var>,
+    info: &'a TypingProgramInfo,
+    context: &'a CFGContext<'a>,
+    escapes: RefCell<Vec<(Loc, String, EscapeKind)>>,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum EscapeKind {
+    ToParameterAddress,
+    ToExternalModule,
+    ToSharedObject,
+    UnconditionalTransfer,
+}
+
+impl EscapeKind {
+    fn severity(&self) -> &'static str {
+        match self {
+            EscapeKind::ToParameterAddress => "suspicious",
+            EscapeKind::ToExternalModule => "dangerous",
+            EscapeKind::ToSharedObject => "dangerous",
+            EscapeKind::UnconditionalTransfer => "warning",
+        }
+    }
+
+    fn description(&self) -> &'static str {
+        match self {
+            EscapeKind::ToParameterAddress => "capability transferred to address from function parameter",
+            EscapeKind::ToExternalModule => "capability passed to external module function",
+            EscapeKind::ToSharedObject => "capability stored in shared object",
+            EscapeKind::UnconditionalTransfer => "capability transferred without authorization check",
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
+pub enum EscapeValue {
+    #[default]
+    NotTracked,
+    Contained(Loc),
+    Validated(Loc),
+    EscapedSafe(Loc),
+    EscapedSuspicious(Loc),
+    EscapedDangerous(Loc),
+}
+
+pub struct EscapeExecutionContext {
+    diags: CompilerDiagnostics,
+}
+
+#[derive(Clone, Debug)]
+pub struct EscapeState {
+    locals: BTreeMap<Var, LocalState<EscapeValue>>,
+    validated_caps: BTreeSet<String>,
+}
+
+impl SimpleAbsIntConstructor for CapabilityEscapeVerifier {
+    type AI<'a> = CapabilityEscapeVerifierAI<'a>;
+
+    fn new<'a>(
+        context: &'a CFGContext<'a>,
+        _cfg: &ImmForwardCFG,
+        init_state: &mut EscapeState,
+    ) -> Option<Self::AI<'a>> {
+        if context.attributes.is_test_or_test_only() {
+            return None;
+        }
+
+        let mut cap_vars: Vec<(Var, Loc)> = Vec::new();
+        let mut addr_params: BTreeSet<Var> = BTreeSet::new();
+
+        for (_, var, ty) in &context.signature.parameters {
+            if is_address_type_escape(ty) {
+                addr_params.insert(*var);
+            }
+            if is_capability_by_value_escape(ty) {
+                cap_vars.push((*var, var.0.loc));
+                if let Some(LocalState::Available(_, value)) = init_state.locals.get_mut(var) {
+                    *value = EscapeValue::Contained(var.0.loc);
+                }
+            }
+        }
+
+        if cap_vars.is_empty() {
+            return None;
+        }
+
+        Some(CapabilityEscapeVerifierAI {
+            cap_vars,
+            addr_params,
+            info: context.info,
+            context,
+            escapes: RefCell::new(Vec::new()),
+        })
+    }
+}
+
+impl SimpleAbsInt for CapabilityEscapeVerifierAI<'_> {
+    type State = EscapeState;
+    type ExecutionContext = EscapeExecutionContext;
+
+    fn finish(
+        &mut self,
+        _final_states: BTreeMap<Label, Self::State>,
+        mut diags: CompilerDiagnostics,
+    ) -> CompilerDiagnostics {
+        for (loc, cap_name, kind) in self.escapes.borrow().iter() {
+            let msg = format!(
+                "Capability `{}` {}: {}",
+                cap_name,
+                kind.severity(),
+                kind.description()
+            );
+            let help = match kind {
+                EscapeKind::ToParameterAddress => {
+                    "Consider requiring an authorization capability parameter to validate the recipient"
+                }
+                EscapeKind::ToExternalModule => {
+                    "Ensure the external module is trusted, or add authorization before the call"
+                }
+                EscapeKind::ToSharedObject => {
+                    "Storing capabilities in shared objects allows anyone to access them"
+                }
+                EscapeKind::UnconditionalTransfer => {
+                    "Add an authorization check (e.g., assert with capability validation) before transfer"
+                }
+            };
+            diags.add(diag!(CAPABILITY_ESCAPE_DIAG, (*loc, msg), (*loc, help)));
+        }
+        diags
+    }
+
+    fn start_command(&self, _pre: &mut Self::State) -> Self::ExecutionContext {
+        EscapeExecutionContext {
+            diags: CompilerDiagnostics::new(),
+        }
+    }
+
+    fn finish_command(
+        &self,
+        context: Self::ExecutionContext,
+        _state: &mut Self::State,
+    ) -> CompilerDiagnostics {
+        context.diags
+    }
+
+    fn command_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        cmd: &Command,
+    ) -> bool {
+        match &cmd.value {
+            Command_::JumpIf { cond, .. } => {
+                self.exp(context, state, cond);
+                self.track_validation_in_condition(state, cond);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    fn exp_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        e: &Exp,
+    ) -> Option<Vec<EscapeValue>> {
+        use UnannotatedExp_ as E;
+
+        match &e.exp.value {
+            E::ModuleCall(call) => {
+                if self.is_transfer_call(call) {
+                    self.check_transfer_escape(state, call, e.exp.loc);
+                } else if self.is_share_object_call(call) {
+                    self.check_share_escape(state, call, e.exp.loc);
+                } else if self.is_external_module_call(call) {
+                    self.check_external_call_escape(state, call, e.exp.loc);
+                }
+            }
+            _ => {}
+        }
+        None
+    }
+}
+
+impl CapabilityEscapeVerifierAI<'_> {
+    fn is_tracked_cap(&self, var: &Var) -> bool {
+        self.cap_vars.iter().any(|(v, _)| v.value() == var.value())
+    }
+
+    fn get_cap_name(&self, var: &Var) -> String {
+        var.value().as_str().to_owned()
+    }
+
+    fn is_addr_param(&self, var: &Var) -> bool {
+        self.addr_params.contains(var)
+    }
+
+    fn is_validated(&self, state: &EscapeState, var: &Var) -> bool {
+        state.validated_caps.contains(&self.get_cap_name(var))
+    }
+
+    fn is_root_source_loc(&self) -> bool {
+        !self.context.env.package_config(self.context.package).is_dependency
+    }
+
+    fn track_validation_in_condition(&self, state: &mut EscapeState, cond: &Exp) {
+        let accessed = self.extract_capability_accesses(cond);
+        for (var, _) in accessed {
+            if self.is_tracked_cap(&var) {
+                state.validated_caps.insert(self.get_cap_name(&var));
+            }
+        }
+    }
+
+    fn extract_capability_accesses(&self, exp: &Exp) -> Vec<(Var, Loc)> {
+        let mut accesses = Vec::new();
+        self.collect_cap_accesses(exp, &mut accesses);
+        accesses
+    }
+
+    fn collect_cap_accesses(&self, exp: &Exp, accesses: &mut Vec<(Var, Loc)>) {
+        use UnannotatedExp_ as E;
+        match &exp.exp.value {
+            E::Borrow(_, inner, _, _) => {
+                if let E::BorrowLocal(_, var) | E::Copy { var, .. } | E::Move { var, .. } = &inner.exp.value {
+                    if self.is_tracked_cap(var) {
+                        accesses.push((*var, exp.exp.loc));
+                    }
+                }
+                self.collect_cap_accesses(inner, accesses);
+            }
+            E::BorrowLocal(_, var) | E::Copy { var, .. } | E::Move { var, .. } => {
+                if self.is_tracked_cap(var) {
+                    accesses.push((*var, exp.exp.loc));
+                }
+            }
+            E::BinopExp(lhs, _, rhs) => {
+                self.collect_cap_accesses(lhs, accesses);
+                self.collect_cap_accesses(rhs, accesses);
+            }
+            E::UnaryExp(_, inner) | E::Dereference(inner) | E::Freeze(inner) | E::Cast(inner, _) => {
+                self.collect_cap_accesses(inner, accesses);
+            }
+            E::ModuleCall(call) => {
+                for arg in &call.arguments {
+                    self.collect_cap_accesses(arg, accesses);
+                }
+            }
+            E::Vector(_, _, _, args) => {
+                for arg in args {
+                    self.collect_cap_accesses(arg, accesses);
+                }
+            }
+            E::Multiple(es) => {
+                for e in es {
+                    self.collect_cap_accesses(e, accesses);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn is_transfer_call(&self, call: &ModuleCall) -> bool {
+        call.is(&SUI_ADDR, "transfer", "transfer")
+            || call.is(&SUI_ADDR, "transfer", "public_transfer")
+    }
+
+    fn is_share_object_call(&self, call: &ModuleCall) -> bool {
+        call.is(&SUI_ADDR, "transfer", "share_object")
+            || call.is(&SUI_ADDR, "transfer", "public_share_object")
+    }
+
+    fn is_external_module_call(&self, call: &ModuleCall) -> bool {
+        // Check if call is to a different module than the current one
+        let call_module = &call.module.value;
+        let current_module = &self.context.module.value;
+        
+        // Same module = not external
+        if call_module == current_module {
+            return false;
+        }
+
+        // Check if it's sui framework (trusted)
+        let is_framework = match &call_module.address {
+            move_compiler::expansion::ast::Address::Numerical { value, .. } => {
+                is_sui_framework_addr_escape(&value.value)
+            }
+            move_compiler::expansion::ast::Address::NamedUnassigned(_) => false,
+        };
+
+        if is_framework {
+            return false;
+        }
+
+        self.has_capability_argument(call)
+    }
+
+    fn has_capability_argument(&self, call: &ModuleCall) -> bool {
+        for arg in &call.arguments {
+            if let Some(var) = self.extract_var(arg) {
+                if self.is_tracked_cap(&var) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn check_transfer_escape(&self, state: &EscapeState, call: &ModuleCall, loc: Loc) {
+        if !self.is_root_source_loc() {
+            return;
+        }
+        if call.arguments.len() < 2 {
+            return;
+        }
+
+        let cap_arg = &call.arguments[0];
+        let recipient_arg = &call.arguments[1];
+
+        let cap_var = match self.extract_var(cap_arg) {
+            Some(v) if self.is_tracked_cap(&v) => v,
+            _ => return,
+        };
+
+        if let Some(recipient_var) = self.extract_var(recipient_arg) {
+            if self.is_addr_param(&recipient_var) && !self.is_validated(state, &cap_var) {
+                self.escapes.borrow_mut().push((loc, self.get_cap_name(&cap_var), EscapeKind::ToParameterAddress));
+                return;
+            }
+        }
+
+        if self.is_constant_address(recipient_arg) {
+            return;
+        }
+
+        if !self.is_validated(state, &cap_var) {
+            self.escapes.borrow_mut().push((loc, self.get_cap_name(&cap_var), EscapeKind::UnconditionalTransfer));
+        }
+    }
+
+    fn check_share_escape(&self, state: &EscapeState, call: &ModuleCall, loc: Loc) {
+        if !self.is_root_source_loc() {
+            return;
+        }
+        for arg in &call.arguments {
+            if let Some(var) = self.extract_var(arg) {
+                if self.is_tracked_cap(&var) && matches!(&arg.exp.value, UnannotatedExp_::Move { .. }) {
+                    self.escapes.borrow_mut().push((loc, self.get_cap_name(&var), EscapeKind::ToSharedObject));
+                }
+            }
+        }
+    }
+
+    fn check_external_call_escape(&self, state: &EscapeState, call: &ModuleCall, loc: Loc) {
+        if !self.is_root_source_loc() {
+            return;
+        }
+        for arg in &call.arguments {
+            if let Some(var) = self.extract_var(arg) {
+                if self.is_tracked_cap(&var) && matches!(&arg.exp.value, UnannotatedExp_::Move { .. }) {
+                    self.escapes.borrow_mut().push((loc, self.get_cap_name(&var), EscapeKind::ToExternalModule));
+                }
+            }
+        }
+    }
+
+    fn extract_var(&self, e: &Exp) -> Option<Var> {
+        match &e.exp.value {
+            UnannotatedExp_::Move { var, .. }
+            | UnannotatedExp_::Copy { var, .. }
+            | UnannotatedExp_::BorrowLocal(_, var) => Some(*var),
+            _ => None,
+        }
+    }
+
+    fn is_constant_address(&self, e: &Exp) -> bool {
+        matches!(&e.exp.value, UnannotatedExp_::Value(_) | UnannotatedExp_::Constant(_))
+    }
+}
+
+fn is_address_type_escape(ty: &SingleType) -> bool {
+    match &ty.value {
+        SingleType_::Base(bt) | SingleType_::Ref(_, bt) => {
+            if let BaseType_::Apply(_, type_name, _) = &bt.value {
+                if let TypeName_::Builtin(b) = &type_name.value {
+                    return matches!(b.value, BuiltinTypeName_::Address);
+                }
+            }
+            false
+        }
+    }
+}
+
+fn is_capability_by_value_escape(ty: &SingleType) -> bool {
+    match &ty.value {
+        SingleType_::Base(bt) => is_capability_base_type_escape(&bt.value),
+        SingleType_::Ref(_, _) => false,
+    }
+}
+
+fn is_capability_base_type_escape(bt: &BaseType_) -> bool {
+    matches!(bt, BaseType_::Apply(abilities, _, _) 
+        if abilities.has_ability_(Ability_::Key)
+            && abilities.has_ability_(Ability_::Store)
+            && !abilities.has_ability_(Ability_::Copy)
+            && !abilities.has_ability_(Ability_::Drop))
+}
+
+fn is_sui_framework_addr_escape(addr: &NumericalAddress) -> bool {
+    let bytes = addr.into_inner();
+    bytes[..31].iter().all(|&b| b == 0) && (bytes[31] == 1 || bytes[31] == 2)
+}
+
+impl SimpleDomain for EscapeState {
+    type Value = EscapeValue;
+
+    fn new(_context: &CFGContext, locals: BTreeMap<Var, LocalState<Self::Value>>) -> Self {
+        EscapeState {
+            locals,
+            validated_caps: BTreeSet::new(),
+        }
+    }
+
+    fn locals_mut(&mut self) -> &mut BTreeMap<Var, LocalState<Self::Value>> {
+        &mut self.locals
+    }
+
+    fn locals(&self) -> &BTreeMap<Var, LocalState<Self::Value>> {
+        &self.locals
+    }
+
+    fn join_value(v1: &Self::Value, v2: &Self::Value) -> Self::Value {
+        use EscapeValue::*;
+        match (v1, v2) {
+            (EscapedDangerous(loc), _) | (_, EscapedDangerous(loc)) => EscapedDangerous(*loc),
+            (EscapedSuspicious(loc), _) | (_, EscapedSuspicious(loc)) => EscapedSuspicious(*loc),
+            (EscapedSafe(loc), _) | (_, EscapedSafe(loc)) => EscapedSafe(*loc),
+            (Validated(loc), _) | (_, Validated(loc)) => Validated(*loc),
+            (Contained(loc), _) | (_, Contained(loc)) => Contained(*loc),
+            (NotTracked, NotTracked) => NotTracked,
+        }
+    }
+
+    fn join_impl(&mut self, other: &Self, _result: &mut JoinResult) {
+        for cap in &other.validated_caps {
+            self.validated_caps.insert(cap.clone());
+        }
+    }
+}
+
+impl SimpleExecutionContext for EscapeExecutionContext {
+    fn add_diag(&mut self, d: CompilerDiagnostic) {
+        self.diags.add(d);
+    }
+}
+
+// ============================================================================
 // Public API
 // ============================================================================
 
@@ -2637,6 +3131,7 @@ pub const ABSINT_CUSTOM_DIAG_CODE_MAP: &[(u8, &LintDescriptor)] = &[
     (4, &DESTROY_ZERO_UNCHECKED_V2),  // DESTROY_ZERO_UNCHECKED_V2_DIAG
     (5, &FRESH_ADDRESS_REUSE_V2),     // FRESH_ADDRESS_REUSE_V2_DIAG
     (6, &TAINTED_TRANSFER_RECIPIENT), // TAINTED_TRANSFER_RECIPIENT_DIAG
+    (7, &CAPABILITY_ESCAPE),          // CAPABILITY_ESCAPE_DIAG
 ];
 
 pub fn descriptor_for_diag_code(code: u8) -> Option<&'static LintDescriptor> {
@@ -2651,6 +3146,7 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &DESTROY_ZERO_UNCHECKED_V2,
     &FRESH_ADDRESS_REUSE_V2,
     &TAINTED_TRANSFER_RECIPIENT,
+    &CAPABILITY_ESCAPE,
 ];
 
 /// Return all Phase II lint descriptors
@@ -2687,6 +3183,7 @@ pub fn create_visitors(
 
     if experimental {
         visitors.push(Box::new(UnusedCapabilityVerifier) as Box<dyn AbstractInterpreterVisitor>);
+        visitors.push(Box::new(CapabilityEscapeVerifier) as Box<dyn AbstractInterpreterVisitor>);
     }
 
     visitors
