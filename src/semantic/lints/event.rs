@@ -113,12 +113,9 @@ const PRESENT_TENSE_VERBS: &[(&str, &str)] = &[
 
 fn check_present_tense_event(name: &str) -> Option<(&'static str, String)> {
     for (present, past) in PRESENT_TENSE_VERBS {
-        if name.starts_with(present) {
-            let noun = &name[present.len()..];
-            if !noun.is_empty() {
-                let suggested = format!("{noun}{past}");
-                return Some((present, suggested));
-            }
+        if let Some(noun) = name.strip_prefix(present) && !noun.is_empty() {
+            let suggested = format!("{noun}{past}");
+            return Some((present, suggested));
         }
     }
     None
@@ -195,34 +192,34 @@ fn check_event_past_tense_in_exp(
             .iter()
             .any(|(mod_pat, fn_pat)| module_name == *mod_pat && call_name == *fn_pat);
 
-        if is_emit_call && let Some(type_arg) = call.type_arguments.first() {
-            if let N::Type_::Apply(_, type_name, _) = &type_arg.value
-                && let N::TypeName_::ModuleType(_, struct_name) = &type_name.value
-            {
-                let struct_sym = struct_name.value();
-                let event_name = struct_sym.as_str();
+        if is_emit_call
+            && let Some(type_arg) = call.type_arguments.first()
+            && let N::Type_::Apply(_, type_name, _) = &type_arg.value
+            && let N::TypeName_::ModuleType(_, struct_name) = &type_name.value
+        {
+            let struct_sym = struct_name.value();
+            let event_name = struct_sym.as_str();
 
-                if let Some((verb, suggested)) = check_present_tense_event(event_name) {
-                    let loc = exp.exp.loc;
-                    let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                        return;
-                    };
-                    let anchor = loc.start() as usize;
+            if let Some((verb, suggested)) = check_present_tense_event(event_name) {
+                let loc = exp.exp.loc;
+                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
+                    return;
+                };
+                let anchor = loc.start() as usize;
 
-                    push_diag(
-                        out,
-                        settings,
-                        &EVENT_PAST_TENSE,
-                        file,
-                        span,
-                        contents.as_ref(),
-                        anchor,
-                        format!(
-                            "Event `{event_name}` uses present tense (starts with `{verb}`). \
-                             Events describe things that happened, use past tense like `{suggested}`."
-                        ),
-                    );
-                }
+                push_diag(
+                    out,
+                    settings,
+                    &EVENT_PAST_TENSE,
+                    file,
+                    span,
+                    contents.as_ref(),
+                    anchor,
+                    format!(
+                        "Event `{event_name}` uses present tense (starts with `{verb}`). \
+                         Events describe things that happened, use past tense like `{suggested}`."
+                    ),
+                );
             }
         }
     }
