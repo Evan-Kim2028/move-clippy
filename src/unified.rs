@@ -269,6 +269,8 @@ pub(crate) fn build_syntactic_registry() -> LintRegistry {
         .with_rule(crate::rules::OtwPatternViolationLint)
         .with_rule(crate::rules::DigestAsRandomnessLint)
         .with_rule(crate::rules::FreshAddressReuseLint)
+        // Anti-pattern detection (Issue #65)
+        .with_rule(crate::rules::SuggestCapabilityPatternLint)
 }
 
 /// Build a unified registry from all lint phases.

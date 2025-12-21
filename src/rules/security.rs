@@ -1128,7 +1128,7 @@ fn check_otw_pattern(
         "function_definition" => {
             let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
 
-            // Check if this function calls create_currency
+            // Check if this calls create_currency
             if func_text.contains("create_currency")
                 && let Some(mod_name) = module_name
             {
@@ -1439,6 +1439,195 @@ fn check_fresh_address_reuse(node: Node, source: &str, ctx: &mut LintContext<'_>
     for child in node.children(&mut cursor) {
         check_fresh_address_reuse(child, source, ctx);
     }
+}
+
+// ============================================================================
+// suggest_capability_pattern - Detects address-based authorization anti-pattern
+// ============================================================================
+
+/// Detects address-based authorization patterns and suggests capability-based alternatives.
+///
+/// # Security References
+///
+/// - **Move Book**: Capability pattern is the idiomatic authorization mechanism
+/// - **Sui Security Best Practices**: Prefer object capabilities over address checks
+///
+/// # Why This Matters
+///
+/// Address-based authorization (`sender(ctx) == ADMIN`) is an anti-pattern because:
+/// 1. **Fragile**: Hardcoded addresses can't be rotated/transferred
+/// 2. **Inflexible**: Can't delegate authority temporarily
+/// 3. **Error-prone**: Easy to misconfigure or leak admin addresses
+/// 4. **Not composable**: Functions can't require &AdminCap as proof
+///
+/// The capability pattern is superior because:
+/// 1. **Transferable**: Capabilities can be transferred to new owners
+/// 2. **Type-safe**: Compiler enforces authorization requirements
+/// 3. **Composable**: Functions can require &AdminCap as proof
+/// 4. **Revocable**: Capabilities can be destroyed to revoke access
+///
+/// # Detection Criteria
+///
+/// Flags patterns like:
+/// - `assert!(tx_context::sender(ctx) == ADMIN, ...)`
+/// - `assert!(sender(ctx) == config.owner, ...)`
+/// - `if (sender(ctx) != admin) { abort ... }`
+///
+/// # Exceptions (NOT flagged)
+///
+/// - Sui framework system checks (`@0x0`)
+/// - Test code
+/// - Ownership verification for non-admin operations (e.g., NFT ownership)
+///
+/// # Example
+///
+/// ```move
+/// // ANTI-PATTERN - flagged
+/// const ADMIN: address = @0x123;
+///
+/// public fun admin_action(ctx: &TxContext) {
+///     assert!(tx_context::sender(ctx) == ADMIN, E_NOT_ADMIN);
+///     // ...
+/// }
+///
+/// // SUGGESTED - capability pattern
+/// public fun admin_action(_cap: &AdminCap) {
+///     // Authorization is structural, not runtime
+/// }
+/// ```
+///
+/// # Stability
+///
+/// EXPERIMENTAL: Advisory lint for developer education. May flag intentional
+/// patterns in legacy code.
+pub static SUGGEST_CAPABILITY_PATTERN: LintDescriptor = LintDescriptor {
+    name: "suggest_capability_pattern",
+    category: LintCategory::Security,
+    description: "Address-based authorization detected - consider using capability pattern for safer access control",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::CapabilityEscape),
+};
+
+pub struct SuggestCapabilityPatternLint;
+
+impl LintRule for SuggestCapabilityPatternLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &SUGGEST_CAPABILITY_PATTERN
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        // Skip test modules at the top level
+        if is_test_only_module(root, source) {
+            return;
+        }
+        check_address_based_auth(root, source, ctx);
+    }
+}
+
+fn check_address_based_auth(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for assert! statements with sender comparisons
+    // tree-sitter-move uses "macro_call_expression" for assert! statements
+    if node.kind() == "macro_call_expression" || node.kind() == "call_expression" {
+        let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+
+        // Check if this is a sender address comparison
+        if node_text.contains("assert!") && is_sender_address_check(node_text) {
+            // Skip Sui system address checks (@0x0)
+            if node_text.contains("@0x0") {
+                // Recurse and return
+                let mut cursor = node.walk();
+                for child in node.children(&mut cursor) {
+                    check_address_based_auth(child, source, ctx);
+                }
+                return;
+            }
+
+            // Determine the type of address check
+            let (severity, suggestion) = classify_address_check(node_text);
+
+            ctx.report_node(
+                &SUGGEST_CAPABILITY_PATTERN,
+                node,
+                format!(
+                    "{}. {}",
+                    severity,
+                    suggestion
+                ),
+            );
+        }
+    }
+
+    // Also check for if statements with sender checks leading to abort
+    if node.kind() == "if_expression" {
+        let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+
+        if is_sender_address_check(node_text)
+            && (node_text.contains("abort") || node_text.contains("return"))
+        {
+            // Skip system address checks
+            if node_text.contains("@0x0") {
+                let mut cursor = node.walk();
+                for child in node.children(&mut cursor) {
+                    check_address_based_auth(child, source, ctx);
+                }
+                return;
+            }
+
+            ctx.report_node(
+                &SUGGEST_CAPABILITY_PATTERN,
+                node,
+                "Address-based authorization in if-condition. Consider using capability pattern: \
+                 replace address check with a capability parameter like `_cap: &AdminCap`."
+                    .to_string(),
+            );
+        }
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_address_based_auth(child, source, ctx);
+    }
+}
+
+/// Check if text contains a sender-to-address comparison pattern
+fn is_sender_address_check(text: &str) -> bool {
+    // Patterns: sender(ctx) == ..., sender(ctx) != ..., ... == sender(ctx)
+    let has_sender = text.contains("sender(") || text.contains("tx_context::sender(");
+    let has_comparison = text.contains(" == ") || text.contains(" != ");
+
+    has_sender && has_comparison
+}
+
+/// Classify the address check and return severity + suggestion
+fn classify_address_check(text: &str) -> (&'static str, &'static str) {
+    // Check for constant/literal address comparison (worse)
+    if text.contains("== @") || text.contains("!= @") {
+        return (
+            "Hardcoded address comparison detected - this is fragile and non-transferable",
+            "Consider using capability pattern: add a capability struct (e.g., `AdminCap`) \
+             and require `_cap: &AdminCap` parameter instead of checking sender address."
+        );
+    }
+
+    // Check for field comparison (slightly better but still not ideal)
+    if text.contains(".admin") || text.contains(".owner") || text.contains(".creator") {
+        return (
+            "Stored address comparison detected for authorization",
+            "While checking against a stored address is better than hardcoded, \
+             capability pattern is still preferred. Consider storing an AdminCap \
+             in the owner's account instead of an address in your shared object."
+        );
+    }
+
+    // Generic sender check
+    (
+        "Address-based authorization detected",
+        "Consider using capability pattern: define a capability struct with `key, store` \
+         abilities and require it as a parameter for privileged operations."
+    )
 }
 
 // ============================================================================

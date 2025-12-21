@@ -24,8 +24,8 @@ pub use security::{
     CapabilityLeakLint, DestroyZeroUncheckedLint, DigestAsRandomnessLint, DivideByZeroLiteralLint,
     FreshAddressReuseLint, IgnoredBooleanReturnLint, MissingWitnessDropLint,
     OtwPatternViolationLint, PublicRandomAccessLint, SingleStepOwnershipTransferLint,
-    StaleOraclePriceLint, SuspiciousOverflowCheckLint, UncheckedCoinSplitLint,
-    UncheckedWithdrawalLint,
+    StaleOraclePriceLint, SuggestCapabilityPatternLint, SuspiciousOverflowCheckLint,
+    UncheckedCoinSplitLint, UncheckedWithdrawalLint,
 };
 
 // Style lints
