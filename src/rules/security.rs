@@ -299,11 +299,20 @@ fn check_stale_oracle_price(node: Node, source: &str, ctx: &mut LintContext<'_>)
 ///     exchange.pending_admin = option::none();
 /// }
 /// ```
+/// DEPRECATED: This lint has a ~50% false positive rate due to syntactic matching.
+/// Issues with the current approach:
+/// - Matches function names like `set_authority` without analyzing actual behavior
+/// - Flags vendored dependencies (e.g., switchboard_std) and framework code (kiosk)
+/// - Cannot detect if module already has a two-step pattern elsewhere
+/// 
+/// A CFG-aware upgrade was attempted but the pattern matching for field mutations
+/// in Move's HLIR proved complex - `obj.field = value` compiles to patterns that
+/// require tracking through multiple AST nodes.
 pub static SINGLE_STEP_OWNERSHIP_TRANSFER: LintDescriptor = LintDescriptor {
     name: "single_step_ownership_transfer",
     category: LintCategory::Security,
-    description: "Single-step ownership transfer is dangerous - use two-step pattern (see: OpenZeppelin Ownable2Step)",
-    group: RuleGroup::Stable,
+    description: "DEPRECATED: High false positive rate. Single-step ownership transfer detection (syntactic pattern matching)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::TemporalOrdering),
@@ -705,11 +714,19 @@ fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_
 ///     assert!(vector::contains(&authority.whitelist, &tx_context::sender(ctx)), E_UNAUTHORIZED);
 /// }
 /// ```
+/// DEPRECATED: This lint has a high false positive rate (~70% in framework/test code).
+/// The syntactic approach cannot distinguish between:
+/// - Security-critical boolean checks that should be enforced
+/// - Legitimate ignored returns in test code or non-security contexts
+/// 
+/// A CFG-aware upgrade was attempted but proved infeasible - tracking boolean
+/// values through arbitrary control flow to determine if they ever reach a
+/// guard condition requires complex dataflow analysis.
 pub static IGNORED_BOOLEAN_RETURN: LintDescriptor = LintDescriptor {
     name: "ignored_boolean_return",
     category: LintCategory::Security,
-    description: "Boolean-returning function result is ignored, may indicate missing authorization check (see: Typus Finance hack)",
-    group: RuleGroup::Experimental,
+    description: "DEPRECATED: High false positive rate. Boolean-returning function result ignored (syntactic pattern matching)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::ValueFlow),
