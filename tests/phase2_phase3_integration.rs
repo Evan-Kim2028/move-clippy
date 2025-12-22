@@ -141,7 +141,7 @@ mod phase2 {
         assert_eq!(
             visitors.len(),
             7,
-            "Should create 7 Phase II visitors when experimental is enabled"
+            "Should create 7 Phase II visitors when experimental is enabled (5 preview + 2 experimental)"
         );
     }
 }

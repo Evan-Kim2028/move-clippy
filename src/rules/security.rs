@@ -606,11 +606,14 @@ fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_
 ///     // Use result internally, don't return it
 /// }
 /// ```
+/// DEPRECATED: Use `public_random_access_v2` (type-based, --mode full) which correctly
+/// filters to `sui::random::Random` only. This syntactic lint matches any type containing
+/// "random" in the name, causing false positives on custom PRNGs.
 pub static PUBLIC_RANDOM_ACCESS: LintDescriptor = LintDescriptor {
     name: "public_random_access",
     category: LintCategory::Security,
-    description: "Public function exposes Random object, enabling front-running (see: Sui randomness docs)",
-    group: RuleGroup::Stable,
+    description: "Public function exposes Random object (deprecated: use v2 with --mode full for accurate detection)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::ApiMisuse),
