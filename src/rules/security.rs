@@ -17,24 +17,6 @@ use crate::rules::util::is_test_only_module;
 use tree_sitter::Node;
 
 // ============================================================================
-// Helper functions for syntax-based ability checking
-// ============================================================================
-
-/// Check if a struct definition node has the `drop` ability (syntax-based).
-fn has_drop_ability(node: Node, source: &str) -> bool {
-    let struct_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-    struct_text.contains("has drop")
-        || struct_text.contains("has key, drop")
-        || struct_text.contains("has drop, key")
-        || struct_text.contains("has store, drop")
-        || struct_text.contains("has drop, store")
-        || struct_text.contains("has copy, drop")
-        || struct_text.contains("has drop, copy")
-        || struct_text.contains("drop,")
-        || struct_text.contains(", drop")
-}
-
-// ============================================================================
 // suspicious_overflow_check - Detects potentially incorrect manual overflow checks
 // ============================================================================
 
@@ -496,11 +478,22 @@ impl LintRule for UncheckedCoinSplitLint {
 ///     // witness is dropped automatically
 /// }
 /// ```
+///
+/// # Deprecation Notice
+///
+/// DEPRECATED: The Sui compiler already enforces OTW rules at compile time.
+/// If you define a struct intended to be an OTW but with wrong abilities,
+/// you'll get a compile error when you try to use it in `init()`.
+///
+/// This syntactic lint used a heuristic (SCREAMING_CASE + empty body) that
+/// incorrectly flagged type markers like `GT`, `T`, `S` which are not OTWs.
+/// We cannot determine *intent* - whether a struct is meant to be an OTW -
+/// through syntactic analysis alone.
 pub static MISSING_WITNESS_DROP: LintDescriptor = LintDescriptor {
     name: "missing_witness_drop",
     category: LintCategory::Security,
-    description: "One-time witness struct missing `drop` ability (see: Sui OTW pattern docs)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Sui compiler enforces OTW rules - heuristic detection has high false positive rate on type markers",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::AbilityMismatch),
@@ -513,55 +506,10 @@ impl LintRule for MissingWitnessDropLint {
         &MISSING_WITNESS_DROP
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        // Skip test modules - OTW pattern is irrelevant in tests
-        if is_test_only_module(root, source) {
-            return;
-        }
-        check_missing_witness_drop(root, source, ctx);
-    }
-}
-
-fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for struct definitions
-    if node.kind() == "struct_definition"
-        && let Some(name_node) = node.child_by_field_name("name")
-    {
-        let struct_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // OTW pattern: SCREAMING_SNAKE_CASE, same as module name, empty body
-        // Check if it looks like an OTW (all uppercase with underscores)
-        let is_screaming_case = struct_name.chars().all(|c| c.is_uppercase() || c == '_');
-
-        if is_screaming_case && !struct_name.is_empty() {
-            // Check if it has empty body (no fields)
-            let struct_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-            let has_empty_body = struct_text.contains("{}") || struct_text.contains("{ }");
-
-            if has_empty_body {
-                // Check if it has drop ability
-                let has_drop = has_drop_ability(node, source);
-
-                if !has_drop {
-                    ctx.report_node(
-                            &MISSING_WITNESS_DROP,
-                            node,
-                            format!(
-                                "Struct `{}` appears to be a one-time witness (OTW) but is missing \
-                                 the `drop` ability. OTW structs must have `drop` so they can be \
-                                 consumed after use in the init function. Add `has drop` to the struct.",
-                                struct_name
-                            ),
-                        );
-                }
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_missing_witness_drop(child, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: Sui compiler already enforces OTW rules at compile time.
+        // The heuristic (SCREAMING_CASE + empty body) incorrectly flags type markers
+        // like GT, T, S, R which are not intended to be OTWs.
     }
 }
 
@@ -606,11 +554,19 @@ fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_
 ///     // Use result internally, don't return it
 /// }
 /// ```
+///
+/// # Deprecation Notice
+///
+/// DEPRECATED: The Sui compiler has a built-in `public_random` lint that performs
+/// proper type-based detection of `sui::random::Random`. This syntactic lint uses
+/// case-insensitive string matching ("random") which incorrectly flags functions
+/// that don't actually use the Random type (e.g., functions with "random" in
+/// variable names or unrelated contexts).
 pub static PUBLIC_RANDOM_ACCESS: LintDescriptor = LintDescriptor {
     name: "public_random_access",
     category: LintCategory::Security,
-    description: "Public function exposes Random object, enabling front-running (see: Sui randomness docs)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Sui compiler has built-in public_random lint with proper type detection - string matching has high false positive rate",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::ApiMisuse),
@@ -623,53 +579,10 @@ impl LintRule for PublicRandomAccessLint {
         &PUBLIC_RANDOM_ACCESS
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_public_random_access(root, source, ctx);
-    }
-}
-
-fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for function definitions
-    if node.kind() == "function_definition" {
-        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // Check if function is public (not entry)
-        let is_public = func_text.starts_with("public fun") || func_text.contains("public fun ");
-        let is_entry = func_text.contains("entry ");
-
-        // Entry functions are OK because they can't be composed
-        if is_public && !is_entry {
-            // Check if function takes Random as parameter or returns random value
-            let func_lower = func_text.to_lowercase();
-            let has_random_param =
-                func_lower.contains("&random") || func_lower.contains(": random");
-            let returns_random = func_lower.contains("-> u64")
-                && (func_lower.contains("generate") || func_lower.contains("random"));
-
-            if has_random_param || returns_random {
-                let func_name = node
-                    .child_by_field_name("name")
-                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
-                    .unwrap_or("unknown");
-
-                ctx.report_node(
-                    &PUBLIC_RANDOM_ACCESS,
-                    node,
-                    format!(
-                        "Function `{}` is public and exposes Random. This enables front-running \
-                         attacks where validators can see random values before inclusion. \
-                         Use `entry` functions or consume random values internally.",
-                        func_name
-                    ),
-                );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_public_random_access(child, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: Sui compiler has built-in public_random lint with proper type detection.
+        // This syntactic lint used string matching which incorrectly flagged functions
+        // that don't actually use sui::random::Random.
     }
 }
 // ============================================================================
@@ -2465,11 +2378,13 @@ module example::stake {
     }
 
     // =========================================================================
-    // MissingWitnessDropLint tests
+    // MissingWitnessDropLint tests (DEPRECATED)
     // =========================================================================
 
     #[test]
-    fn test_missing_witness_drop_detected() {
+    fn test_missing_witness_drop_deprecated_no_diagnostics() {
+        // DEPRECATED: Sui compiler already enforces OTW rules at compile time.
+        // This lint had high false positive rate on type markers like GT, T, S.
         let source = r#"
 module example::token {
     struct MY_TOKEN {}
@@ -2477,42 +2392,18 @@ module example::token {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("MY_TOKEN"));
-        assert!(messages[0].contains("one-time witness"));
-    }
-
-    #[test]
-    fn test_witness_with_drop_ok() {
-        let source = r#"
-module example::token {
-    struct MY_TOKEN has drop {}
-}
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
-    }
-
-    #[test]
-    fn test_regular_struct_not_witness_ok() {
-        // Not all caps, so not detected as OTW
-        let source = r#"
-module example::data {
-    struct UserData {}
-}
-        "#;
-
-        let messages = lint_source(source);
+        // Deprecated lint should produce no findings
         assert!(messages.is_empty());
     }
 
     // =========================================================================
-    // PublicRandomAccessLint tests
+    // PublicRandomAccessLint tests (DEPRECATED)
     // =========================================================================
 
     #[test]
-    fn test_public_random_access_detected() {
+    fn test_public_random_access_deprecated_no_diagnostics() {
+        // DEPRECATED: Sui compiler has built-in public_random lint with proper type detection.
+        // This syntactic lint used string matching which had high false positive rate.
         let source = r#"
 module example::game {
     public fun get_random_number(r: &Random) {
@@ -2522,24 +2413,7 @@ module example::game {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("Random"));
-        assert!(messages[0].contains("front-running"));
-    }
-
-    #[test]
-    fn test_entry_random_ok() {
-        // entry functions are OK for Random
-        let source = r#"
-module example::game {
-    entry fun roll_dice(r: &Random, ctx: &mut TxContext) {
-        let result = random::new_generator(r, ctx).generate_bool();
-    }
-}
-        "#;
-
-        let messages = lint_source(source);
-        // Should not fire for entry functions
+        // Deprecated lint should produce no findings
         assert!(messages.is_empty());
     }
 
