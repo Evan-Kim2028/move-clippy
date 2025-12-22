@@ -161,11 +161,12 @@ pub static UNUSED_RETURN_VALUE: LintDescriptor = LintDescriptor {
 /// Detects entry functions that return non-unit values.
 ///
 /// In Sui Move, entry function return values are discarded by the runtime.
+/// This is a principled, zero-false-positive lint based on compiler semantics.
 pub static ENTRY_FUNCTION_RETURNS_VALUE: LintDescriptor = LintDescriptor {
     name: "entry_function_returns_value",
     category: LintCategory::Suspicious,
     description: "Entry function returns a value that will be discarded by the runtime (type-based)",
-    group: RuleGroup::Preview,
+    group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::ValueFlow),
@@ -282,11 +283,13 @@ pub static SHARED_CAPABILITY_OBJECT: LintDescriptor = LintDescriptor {
 /// Detects capability-like transfers to literal addresses.
 ///
 /// Narrow by design: only flags literal recipients to keep false positives low.
+/// Uses ability-based detection (key+store, no copy/drop) combined with literal
+/// address check for principled, low-false-positive detection.
 pub static CAPABILITY_TRANSFER_LITERAL_ADDRESS: LintDescriptor = LintDescriptor {
     name: "capability_transfer_literal_address",
     category: LintCategory::Security,
-    description: "Capability-like object transferred to a literal address - likely authorization leak (type-based, preview)",
-    group: RuleGroup::Preview,
+    description: "Capability-like object transferred to a literal address - likely authorization leak (type-based)",
+    group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::CapabilityEscape),
