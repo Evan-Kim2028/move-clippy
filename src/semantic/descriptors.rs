@@ -593,12 +593,25 @@ pub static WITNESS_ANTIPATTERNS: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
-/// Detects capability structs with security antipatterns.
+/// Detects public functions returning capability types.
+///
+/// DEPRECATED: This lint cannot be implemented with principled detection.
+///
+/// - Name-based detection (`*Cap`) produces false positives on non-capabilities
+///   and false negatives on capabilities with different naming conventions.
+/// - Ability-based detection (key+store, no copy/drop) is too broad - it flags
+///   ALL public object factory functions (pools, positions, accounts), not just
+///   security-sensitive capability creation.
+///
+/// The important security cases are covered by dedicated, principled lints:
+/// - `copyable_capability`: key+store+copy (allows duplication)
+/// - `droppable_capability`: key+store+drop (allows silent discard)
+/// - `capability_transfer_v2`: transfer to literal address
 pub static CAPABILITY_ANTIPATTERNS: LintDescriptor = LintDescriptor {
     name: "capability_antipatterns",
     category: LintCategory::Security,
-    description: "Capability struct has copy ability, public constructor, or missing key - security vulnerability (type-based)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Public function returns capability - superseded by copyable_capability and droppable_capability",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::CapabilityEscape),
