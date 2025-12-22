@@ -84,11 +84,11 @@ fn fresh_address_reuse_pkg_preview() {
 }
 
 #[test]
-fn share_owned_authority_pkg_experimental() {
+fn share_owned_authority_pkg_preview() {
     let out = lint_fixture_package_with_experimental(
         "tests/fixtures/phase2/share_owned_authority_pkg",
-        false,
-        true,
+        true,  // preview = true (now Preview tier)
+        false, // experimental = false (no longer needs experimental)
     );
     assert_snapshot!(out);
 }

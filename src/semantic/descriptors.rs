@@ -260,7 +260,7 @@ pub static SHARE_OWNED_AUTHORITY: LintDescriptor = LintDescriptor {
     name: "share_owned_authority",
     category: LintCategory::Security,
     description: "Sharing key+store object makes it publicly accessible - dangerous for authority objects (type-based)",
-    group: RuleGroup::Experimental,
+    group: RuleGroup::Preview,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::OwnershipViolation),
