@@ -2,7 +2,7 @@
 
 A Move linter for Sui, inspired by Rust Clippy.
 
-> **Research Project** — This is a personal project built with AI assistance (Claude). Use at your own risk. Not a substitute for security audits.
+> **Research Project** — This was built agentically with Claude Opus 4.5 and Factory Cli as the harness. Not a substitute for security audits.
 
 ## Quick Start
 
