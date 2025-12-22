@@ -2689,10 +2689,14 @@ impl EscapeKind {
 
     fn description(&self) -> &'static str {
         match self {
-            EscapeKind::ToParameterAddress => "capability transferred to address from function parameter",
+            EscapeKind::ToParameterAddress => {
+                "capability transferred to address from function parameter"
+            }
             EscapeKind::ToExternalModule => "capability passed to external module function",
             EscapeKind::ToSharedObject => "capability stored in shared object",
-            EscapeKind::UnconditionalTransfer => "capability transferred without authorization check",
+            EscapeKind::UnconditionalTransfer => {
+                "capability transferred without authorization check"
+            }
         }
     }
 }
@@ -2832,17 +2836,14 @@ impl SimpleAbsInt for CapabilityEscapeVerifierAI<'_> {
     ) -> Option<Vec<EscapeValue>> {
         use UnannotatedExp_ as E;
 
-        match &e.exp.value {
-            E::ModuleCall(call) => {
-                if self.is_transfer_call(call) {
-                    self.check_transfer_escape(state, call, e.exp.loc);
-                } else if self.is_share_object_call(call) {
-                    self.check_share_escape(state, call, e.exp.loc);
-                } else if self.is_external_module_call(call) {
-                    self.check_external_call_escape(state, call, e.exp.loc);
-                }
+        if let E::ModuleCall(call) = &e.exp.value {
+            if self.is_transfer_call(call) {
+                self.check_transfer_escape(state, call, e.exp.loc);
+            } else if self.is_share_object_call(call) {
+                self.check_share_escape(state, call, e.exp.loc);
+            } else if self.is_external_module_call(call) {
+                self.check_external_call_escape(state, call, e.exp.loc);
             }
-            _ => {}
         }
         None
     }
@@ -2866,7 +2867,11 @@ impl CapabilityEscapeVerifierAI<'_> {
     }
 
     fn is_root_source_loc(&self) -> bool {
-        !self.context.env.package_config(self.context.package).is_dependency
+        !self
+            .context
+            .env
+            .package_config(self.context.package)
+            .is_dependency
     }
 
     fn track_validation_in_condition(&self, state: &mut EscapeState, cond: &Exp) {
@@ -2888,7 +2893,9 @@ impl CapabilityEscapeVerifierAI<'_> {
         use UnannotatedExp_ as E;
         match &exp.exp.value {
             E::Borrow(_, inner, _, _) => {
-                if let E::BorrowLocal(_, var) | E::Copy { var, .. } | E::Move { var, .. } = &inner.exp.value {
+                if let E::BorrowLocal(_, var) | E::Copy { var, .. } | E::Move { var, .. } =
+                    &inner.exp.value
+                {
                     if self.is_tracked_cap(var) {
                         accesses.push((*var, exp.exp.loc));
                     }
@@ -2904,7 +2911,10 @@ impl CapabilityEscapeVerifierAI<'_> {
                 self.collect_cap_accesses(lhs, accesses);
                 self.collect_cap_accesses(rhs, accesses);
             }
-            E::UnaryExp(_, inner) | E::Dereference(inner) | E::Freeze(inner) | E::Cast(inner, _) => {
+            E::UnaryExp(_, inner)
+            | E::Dereference(inner)
+            | E::Freeze(inner)
+            | E::Cast(inner, _) => {
                 self.collect_cap_accesses(inner, accesses);
             }
             E::ModuleCall(call) => {
@@ -2940,7 +2950,7 @@ impl CapabilityEscapeVerifierAI<'_> {
         // Check if call is to a different module than the current one
         let call_module = &call.module.value;
         let current_module = &self.context.module.value;
-        
+
         // Same module = not external
         if call_module == current_module {
             return false;
@@ -2990,7 +3000,11 @@ impl CapabilityEscapeVerifierAI<'_> {
 
         if let Some(recipient_var) = self.extract_var(recipient_arg) {
             if self.is_addr_param(&recipient_var) && !self.is_validated(state, &cap_var) {
-                self.escapes.borrow_mut().push((loc, self.get_cap_name(&cap_var), EscapeKind::ToParameterAddress));
+                self.escapes.borrow_mut().push((
+                    loc,
+                    self.get_cap_name(&cap_var),
+                    EscapeKind::ToParameterAddress,
+                ));
                 return;
             }
         }
@@ -3000,7 +3014,11 @@ impl CapabilityEscapeVerifierAI<'_> {
         }
 
         if !self.is_validated(state, &cap_var) {
-            self.escapes.borrow_mut().push((loc, self.get_cap_name(&cap_var), EscapeKind::UnconditionalTransfer));
+            self.escapes.borrow_mut().push((
+                loc,
+                self.get_cap_name(&cap_var),
+                EscapeKind::UnconditionalTransfer,
+            ));
         }
     }
 
@@ -3010,8 +3028,14 @@ impl CapabilityEscapeVerifierAI<'_> {
         }
         for arg in &call.arguments {
             if let Some(var) = self.extract_var(arg) {
-                if self.is_tracked_cap(&var) && matches!(&arg.exp.value, UnannotatedExp_::Move { .. }) {
-                    self.escapes.borrow_mut().push((loc, self.get_cap_name(&var), EscapeKind::ToSharedObject));
+                if self.is_tracked_cap(&var)
+                    && matches!(&arg.exp.value, UnannotatedExp_::Move { .. })
+                {
+                    self.escapes.borrow_mut().push((
+                        loc,
+                        self.get_cap_name(&var),
+                        EscapeKind::ToSharedObject,
+                    ));
                 }
             }
         }
@@ -3023,8 +3047,14 @@ impl CapabilityEscapeVerifierAI<'_> {
         }
         for arg in &call.arguments {
             if let Some(var) = self.extract_var(arg) {
-                if self.is_tracked_cap(&var) && matches!(&arg.exp.value, UnannotatedExp_::Move { .. }) {
-                    self.escapes.borrow_mut().push((loc, self.get_cap_name(&var), EscapeKind::ToExternalModule));
+                if self.is_tracked_cap(&var)
+                    && matches!(&arg.exp.value, UnannotatedExp_::Move { .. })
+                {
+                    self.escapes.borrow_mut().push((
+                        loc,
+                        self.get_cap_name(&var),
+                        EscapeKind::ToExternalModule,
+                    ));
                 }
             }
         }
@@ -3040,7 +3070,10 @@ impl CapabilityEscapeVerifierAI<'_> {
     }
 
     fn is_constant_address(&self, e: &Exp) -> bool {
-        matches!(&e.exp.value, UnannotatedExp_::Value(_) | UnannotatedExp_::Constant(_))
+        matches!(
+            &e.exp.value,
+            UnannotatedExp_::Value(_) | UnannotatedExp_::Constant(_)
+        )
     }
 }
 
@@ -3065,7 +3098,7 @@ fn is_capability_by_value_escape(ty: &SingleType) -> bool {
 }
 
 fn is_capability_base_type_escape(bt: &BaseType_) -> bool {
-    matches!(bt, BaseType_::Apply(abilities, _, _) 
+    matches!(bt, BaseType_::Apply(abilities, _, _)
         if abilities.has_ability_(Ability_::Key)
             && abilities.has_ability_(Ability_::Store)
             && !abilities.has_ability_(Ability_::Copy)

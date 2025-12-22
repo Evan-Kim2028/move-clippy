@@ -1550,11 +1550,7 @@ fn check_address_based_auth(node: Node, source: &str, ctx: &mut LintContext<'_>)
             ctx.report_node(
                 &SUGGEST_CAPABILITY_PATTERN,
                 node,
-                format!(
-                    "{}. {}",
-                    severity,
-                    suggestion
-                ),
+                format!("{}. {}", severity, suggestion),
             );
         }
     }
@@ -1608,7 +1604,7 @@ fn classify_address_check(text: &str) -> (&'static str, &'static str) {
         return (
             "Hardcoded address comparison detected - this is fragile and non-transferable",
             "Consider using capability pattern: add a capability struct (e.g., `AdminCap`) \
-             and require `_cap: &AdminCap` parameter instead of checking sender address."
+             and require `_cap: &AdminCap` parameter instead of checking sender address.",
         );
     }
 
@@ -1618,7 +1614,7 @@ fn classify_address_check(text: &str) -> (&'static str, &'static str) {
             "Stored address comparison detected for authorization",
             "While checking against a stored address is better than hardcoded, \
              capability pattern is still preferred. Consider storing an AdminCap \
-             in the owner's account instead of an address in your shared object."
+             in the owner's account instead of an address in your shared object.",
         );
     }
 
@@ -1626,7 +1622,7 @@ fn classify_address_check(text: &str) -> (&'static str, &'static str) {
     (
         "Address-based authorization detected",
         "Consider using capability pattern: define a capability struct with `key, store` \
-         abilities and require it as a parameter for privileged operations."
+         abilities and require it as a parameter for privileged operations.",
     )
 }
 
@@ -1706,7 +1702,7 @@ fn check_boolean_state_flags(node: Node, source: &str, ctx: &mut LintContext<'_>
     // Look for struct definitions with boolean fields matching state patterns
     if node.kind() == "struct_definition" {
         let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check for boolean fields with state-like names
         for pattern in STATE_FLAG_PATTERNS {
             if node_text.contains(pattern) && node_text.contains(": bool") {
@@ -1720,7 +1716,7 @@ fn check_boolean_state_flags(node: Node, source: &str, ctx: &mut LintContext<'_>
                 } else {
                     "state tracking"
                 };
-                
+
                 ctx.report_node(
                     &SUGGEST_SEQUENCED_WITNESS,
                     node,
@@ -1827,20 +1823,20 @@ fn check_counter_based_supply(node: Node, source: &str, ctx: &mut LintContext<'_
     if node.kind() == "function_definition" {
         let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
         let node_text_lower = node_text.to_lowercase();
-        
+
         // Check for mint-like functions with counter patterns
         let has_counter = COUNTER_PATTERNS.iter().any(|p| node_text_lower.contains(p));
         let has_max = MAX_PATTERNS.iter().any(|p| node_text_lower.contains(p));
         let has_increment = node_text.contains("+ 1") || node_text.contains("+= 1");
         let has_comparison = node_text.contains(" < ") || node_text.contains(" <= ");
-        
+
         // If we have counter + max + increment + comparison, likely a counter-based supply
         if has_counter && has_max && has_increment && has_comparison {
             let func_name = node
                 .child_by_field_name("name")
                 .and_then(|n| n.utf8_text(source.as_bytes()).ok())
                 .unwrap_or("unknown");
-            
+
             ctx.report_node(
                 &SUGGEST_COUNTED_CAPABILITY,
                 node,
@@ -1928,16 +1924,16 @@ fn check_bookend_invariants(node: Node, source: &str, ctx: &mut LintContext<'_>)
     // Look for functions with before/after variable pairs
     if node.kind() == "function_definition" {
         let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        
+
         // Check for before/after pattern pairs
         let has_before = node_text.contains("_before") || node_text.contains("before_");
         let has_after = node_text.contains("_after") || node_text.contains("after_");
         let has_assert = node_text.contains("assert!");
-        
+
         // If we have both before and after variables with an assert, likely a bookend check
         if has_before && has_after && has_assert {
             // Additional check: look for invariant-related naming
-            let is_invariant_check = node_text.contains("k_before") 
+            let is_invariant_check = node_text.contains("k_before")
                 || node_text.contains("k_after")
                 || node_text.contains("balance_before")
                 || node_text.contains("balance_after")
@@ -1945,13 +1941,13 @@ fn check_bookend_invariants(node: Node, source: &str, ctx: &mut LintContext<'_>)
                 || node_text.contains("reserve_after")
                 || node_text.contains("value_before")
                 || node_text.contains("value_after");
-            
+
             if is_invariant_check {
                 let func_name = node
                     .child_by_field_name("name")
                     .and_then(|n| n.utf8_text(source.as_bytes()).ok())
                     .unwrap_or("unknown");
-                
+
                 ctx.report_node(
                     &SUGGEST_BALANCED_RECEIPT,
                     node,
