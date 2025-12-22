@@ -1204,8 +1204,8 @@ fn check_otw_pattern(
 pub static DIGEST_AS_RANDOMNESS: LintDescriptor = LintDescriptor {
     name: "digest_as_randomness",
     category: LintCategory::Security,
-    description: "tx_context::digest used as randomness source - predictable and manipulable (needs taint analysis for low FP)",
-    group: RuleGroup::Experimental,
+    description: "DEPRECATED: Use sui::random instead. tx_context::digest as randomness is insecure.",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::ApiMisuse),

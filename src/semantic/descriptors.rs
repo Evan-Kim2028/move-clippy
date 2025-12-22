@@ -165,7 +165,7 @@ pub static ENTRY_FUNCTION_RETURNS_VALUE: LintDescriptor = LintDescriptor {
     name: "entry_function_returns_value",
     category: LintCategory::Suspicious,
     description: "Entry function returns a value that will be discarded by the runtime (type-based)",
-    group: RuleGroup::Stable,
+    group: RuleGroup::Preview,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::ValueFlow),
