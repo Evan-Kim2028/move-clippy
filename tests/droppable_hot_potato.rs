@@ -1,34 +1,22 @@
-//! Exhaustive spec-driven tests for `droppable_hot_potato` lint.
+//! Exhaustive spec-driven tests for `droppable_hot_potato` lint (DEPRECATED).
 //!
-//! # Formal Specification
+//! # Deprecation Notice
+//!
+//! The `droppable_hot_potato_v2` lint has been DEPRECATED because it flags
+//! legitimate drop-only types like comparator results, builder patterns,
+//! transfer policy rules, and rating structs.
+//!
+//! Use `droppable_flash_loan_receipt` instead for accurate flash loan detection.
+//!
+//! # Original Specification (for reference)
 //!
 //! ```text
 //! INVARIANT:
 //!   For struct S with abilities A and fields F:
 //!     WARN if: abilities(S) = {drop} AND |fields(S)| > 0
-//!
-//!   Equivalently:
-//!     has_drop(A) ∧ ¬has_copy(A) ∧ ¬has_key(A) ∧ ¬has_store(A) ∧ field_count(S) > 0
 //! ```
 //!
-//! # Input Dimensions
-//!
-//! | Dimension | Values |
-//! |-----------|--------|
-//! | drop      | {present, absent} |
-//! | copy      | {present, absent} |
-//! | key       | {present, absent} |
-//! | store     | {present, absent} |
-//! | fields    | {0, 1+} |
-//!
-//! Total: 2^4 × 2 = 32 test cases
-//!
-//! # Expected Result
-//!
-//! Only ONE case should trigger a warning:
-//! - abilities = {drop}, fields = 1+
-//!
-//! This proves zero false positives by exhaustion.
+//! Since the lint is now a no-op, these tests verify that NO warnings are produced.
 
 #[cfg(feature = "full")]
 #[path = "support/mod.rs"]
@@ -146,8 +134,8 @@ const TEST_MATRIX: &[TestCase] = &[
     TestCase {
         abilities: &["drop"],
         field_count: 1,
-        expected_warn: true, // <-- ONLY CASE THAT SHOULD WARN
-        rationale: "BROKEN HOT POTATO - has drop but has fields, defeats consumption guarantee",
+        expected_warn: false, // DEPRECATED: Lint is now a no-op (too many false positives)
+        rationale: "DEPRECATED - would flag comparator results, builder patterns, rules, etc.",
     },
     // =========================================================================
     // ONLY COPY (2 cases)
@@ -409,18 +397,13 @@ fn spec_droppable_hot_potato_exhaustive() {
     println!("Failed: {}", failed);
     println!("Cases that triggered warning: {:?}", warn_cases);
 
-    // Verify exactly 1 case triggers warning (case index 3)
+    // Since the lint is deprecated, NO cases should trigger warnings
     assert_eq!(
         warn_cases.len(),
-        1,
-        "Expected exactly 1 case to trigger warning, got {} cases: {:?}",
+        0,
+        "droppable_hot_potato_v2 is deprecated - expected 0 warnings, got {}: {:?}",
         warn_cases.len(),
         warn_cases
-    );
-    assert_eq!(
-        warn_cases[0], 3,
-        "Expected case 3 (drop-only with fields) to warn, got case {}",
-        warn_cases[0]
     );
 
     assert_eq!(
@@ -440,11 +423,11 @@ fn spec_matrix_is_complete() {
         TEST_MATRIX.len()
     );
 
-    // Count expected warnings
+    // Since the lint is deprecated, all cases should expect NO warning
     let warn_count = TEST_MATRIX.iter().filter(|tc| tc.expected_warn).count();
     assert_eq!(
-        warn_count, 1,
-        "Expected exactly 1 warning case in matrix, got {}",
+        warn_count, 0,
+        "droppable_hot_potato_v2 is deprecated - expected 0 warning cases, got {}",
         warn_count
     );
 }

@@ -387,12 +387,19 @@ pub static DROPPABLE_FLASH_LOAN_RECEIPT: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
-/// Detects receipt structs that fail to preserve coin type via phantom parameters.
+/// DEPRECATED: This lint has high false positive rate.
+///
+/// The heuristic "function takes Coin<T> and returns something without T"
+/// flags many legitimate patterns like pool creation, position creation,
+/// game outcomes, and vesting wallet creation.
+///
+/// Use `droppable_flash_loan_receipt` for accurate flash loan detection.
+#[allow(dead_code)]
 pub static RECEIPT_MISSING_PHANTOM_TYPE: LintDescriptor = LintDescriptor {
     name: "receipt_missing_phantom_type",
     category: LintCategory::Security,
-    description: "Receipt returned without phantom coin type enables type confusion (type-based, experimental)",
-    group: RuleGroup::Experimental,
+    description: "DEPRECATED: Use droppable_flash_loan_receipt for flash loan detection",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::TypeConfusion),
@@ -674,9 +681,9 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &UNCHECKED_DIVISION,
     &UNUSED_RETURN_VALUE,
     // NOTE: SHARE_OWNED_AUTHORITY deprecated - cannot distinguish capabilities from shared state
-    &DROPPABLE_HOT_POTATO_V2,
+    // NOTE: DROPPABLE_HOT_POTATO_V2 deprecated - flags legitimate drop-only types (comparators, builders, rules)
     &DROPPABLE_FLASH_LOAN_RECEIPT,
-    &RECEIPT_MISSING_PHANTOM_TYPE,
+    // NOTE: RECEIPT_MISSING_PHANTOM_TYPE deprecated - flags legitimate non-receipt returns (pools, positions)
     &COPYABLE_FUNGIBLE_TYPE,
     &CAPABILITY_TRANSFER_V2,
     &GENERIC_TYPE_WITNESS_UNUSED,
