@@ -1,15 +1,13 @@
 use crate::diagnostics::Diagnostic;
 use crate::error::Result as ClippyResult;
 use crate::lint::LintSettings;
-use move_compiler::naming::ast as N;
 use move_compiler::parser::ast::TargetKind;
 use move_compiler::shared::Identifier;
 use move_compiler::shared::files::MappedFiles;
 use move_compiler::typing::ast as T;
 
 use super::super::util::{diag_from_loc, push_diag};
-use super::super::{SHARE_OWNED_AUTHORITY, UNCHECKED_DIVISION, UNUSED_RETURN_VALUE};
-use super::shared::format_type;
+use super::super::{UNCHECKED_DIVISION, UNUSED_RETURN_VALUE};
 
 type Result<T> = ClippyResult<T>;
 
@@ -548,165 +546,21 @@ fn check_unused_return_in_exp(
 // Share Owned Authority Lint (type-grounded)
 // =========================================================================
 
-/// Lint for sharing objects with `key + store` abilities.
+/// DEPRECATED: This lint cannot be implemented with principled detection.
 ///
-/// Objects with `key + store` represent "transferable authority" and sharing
-/// them makes them publicly accessible. This is type-grounded, not name-based.
+/// The ability pattern `key + store + !copy + !drop` matches ALL valuable Sui objects,
+/// not just capabilities. This produces ~78% false positive rate on intentional
+/// shared state patterns (pools, registries, kiosks, TransferPolicy).
+///
+/// Sui's built-in `share_owned` lint provides principled detection using dataflow
+/// analysis to flag sharing of objects received as parameters (likely already owned).
+#[allow(unused_variables)]
 pub(crate) fn lint_share_owned_authority(
-    out: &mut Vec<Diagnostic>,
-    settings: &LintSettings,
-    file_map: &MappedFiles,
-    prog: &T::Program,
+    _out: &mut Vec<Diagnostic>,
+    _settings: &LintSettings,
+    _file_map: &MappedFiles,
+    _prog: &T::Program,
 ) -> Result<()> {
-    // TODO(infra): Move to crate::framework_catalog and match on fully-qualified IDs.
-    // Share functions to detect
-    const SHARE_FUNCTIONS: &[(&str, &str)] = &[
-        ("transfer", "share_object"),
-        ("transfer", "public_share_object"),
-    ];
-
-    for (_mident, mdef) in prog.modules.key_cloned_iter() {
-        match mdef.target_kind {
-            TargetKind::Source {
-                is_root_package: true,
-            } => {}
-            _ => continue,
-        }
-
-        for (fname, fdef) in mdef.functions.key_cloned_iter() {
-            let T::FunctionBody_::Defined((_use_funs, seq_items)) = &fdef.body.value else {
-                continue;
-            };
-
-            for item in seq_items.iter() {
-                check_share_owned_in_seq_item(
-                    item,
-                    SHARE_FUNCTIONS,
-                    out,
-                    settings,
-                    file_map,
-                    fname.value().as_str(),
-                );
-            }
-        }
-    }
-
+    // DEPRECATED: No-op. See docstring for rationale.
     Ok(())
-}
-
-/// Check for share_object calls on key+store types in a sequence item.
-fn check_share_owned_in_seq_item(
-    item: &T::SequenceItem,
-    share_fns: &[(&str, &str)],
-    out: &mut Vec<Diagnostic>,
-    settings: &LintSettings,
-    file_map: &MappedFiles,
-    func_name: &str,
-) {
-    match &item.value {
-        T::SequenceItem_::Seq(exp) => {
-            check_share_owned_in_exp(exp, share_fns, out, settings, file_map, func_name);
-        }
-        T::SequenceItem_::Bind(_, _, exp) => {
-            check_share_owned_in_exp(exp, share_fns, out, settings, file_map, func_name);
-        }
-        _ => {}
-    }
-}
-
-/// Check for share_object calls on key+store types in an expression.
-fn check_share_owned_in_exp(
-    exp: &T::Exp,
-    share_fns: &[(&str, &str)],
-    out: &mut Vec<Diagnostic>,
-    settings: &LintSettings,
-    file_map: &MappedFiles,
-    func_name: &str,
-) {
-    if let T::UnannotatedExp_::ModuleCall(call) = &exp.exp.value {
-        let module_sym = call.module.value.module.value();
-        let module_name = module_sym.as_str();
-        let call_sym = call.name.value();
-        let call_name = call_sym.as_str();
-
-        let is_share_call = share_fns
-            .iter()
-            .any(|(mod_pat, fn_pat)| module_name == *mod_pat && call_name == *fn_pat);
-
-        if is_share_call
-            && let Some(type_arg) = call.type_arguments.first()
-            && crate::type_classifier::is_key_store_type(&type_arg.value)
-        {
-            let loc = exp.exp.loc;
-            let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                return;
-            };
-            let anchor = loc.start() as usize;
-
-            // Get the type name for the message
-            let type_name = format_type(&type_arg.value);
-
-            push_diag(
-                out,
-                settings,
-                &SHARE_OWNED_AUTHORITY,
-                file,
-                span,
-                contents.as_ref(),
-                anchor,
-                format!(
-                    "Sharing `{type_name}` (has key+store) in `{func_name}` makes it publicly accessible. \
-                     This is dangerous for authority objects (capabilities). \
-                     If this is intentional shared state, suppress with #[ext(move_clippy(allow(share_owned_authority)))]."
-                ),
-            );
-        }
-    }
-
-    // Recurse into subexpressions
-    match &exp.exp.value {
-        T::UnannotatedExp_::ModuleCall(call) => {
-            // arguments is Box<Exp>, not iterable - recurse into it directly
-            check_share_owned_in_exp(
-                &call.arguments,
-                share_fns,
-                out,
-                settings,
-                file_map,
-                func_name,
-            );
-        }
-        T::UnannotatedExp_::Block((_, seq_items)) => {
-            for item in seq_items.iter() {
-                check_share_owned_in_seq_item(item, share_fns, out, settings, file_map, func_name);
-            }
-        }
-        T::UnannotatedExp_::IfElse(cond, if_body, else_body) => {
-            check_share_owned_in_exp(cond, share_fns, out, settings, file_map, func_name);
-            check_share_owned_in_exp(if_body, share_fns, out, settings, file_map, func_name);
-            if let Some(else_e) = else_body {
-                check_share_owned_in_exp(else_e, share_fns, out, settings, file_map, func_name);
-            }
-        }
-        T::UnannotatedExp_::While(_, cond, body) => {
-            check_share_owned_in_exp(cond, share_fns, out, settings, file_map, func_name);
-            check_share_owned_in_exp(body, share_fns, out, settings, file_map, func_name);
-        }
-        T::UnannotatedExp_::Loop { body, .. } => {
-            check_share_owned_in_exp(body, share_fns, out, settings, file_map, func_name);
-        }
-        _ => {}
-    }
-}
-
-/// Extract abilities from a Type (using naming::ast::Type_ structure).
-/// The typing AST re-exports Type_ from naming::ast.
-#[allow(dead_code)]
-fn get_type_abilities(ty: &N::Type_) -> Option<move_compiler::expansion::ast::AbilitySet> {
-    match ty {
-        N::Type_::Apply(abilities, _, _) => abilities.clone(),
-        N::Type_::Ref(_, inner) => get_type_abilities(&inner.value),
-        N::Type_::Param(tp) => Some(tp.abilities.clone()),
-        _ => None,
-    }
 }

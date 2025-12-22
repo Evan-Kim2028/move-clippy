@@ -243,27 +243,26 @@ mod phase3 {
 }
 
 // ============================================================================
-// Semantic Lint Tests: share_owned_authority (TypeBased)
+// Semantic Lint Tests: share_owned_authority (DEPRECATED)
 // ============================================================================
+
+// NOTE: share_owned_authority and shared_capability_object lints have been DEPRECATED.
+//
+// Reason: The ability pattern `key + store + !copy + !drop` matches ALL valuable Sui objects,
+// not just authority-granting capabilities. This produces ~78% false positive rate on
+// intentional shared state patterns (pools, registries, kiosks, TransferPolicy).
+//
+// Sui's built-in `share_owned` lint provides principled detection using dataflow analysis
+// to flag sharing of objects received as parameters (likely already owned).
+//
+// The tests below verify the lint is properly deprecated and no longer produces findings.
 
 mod share_owned_authority_tests {
     use super::*;
 
     #[test]
-    fn test_share_owned_authority_descriptor_exists() {
-        use move_clippy::semantic;
-
-        let descriptors = semantic::descriptors();
-        let names: Vec<&str> = descriptors.iter().map(|d| d.name).collect();
-        assert!(
-            names.contains(&"share_owned_authority"),
-            "share_owned_authority should be registered"
-        );
-    }
-
-    #[test]
-    fn test_share_owned_authority_fires_on_key_store_share() {
-        // Test that the lint fires when sharing objects with key+store
+    fn test_share_owned_authority_is_deprecated() {
+        // The lint should no longer produce any findings since it's deprecated
         let findings =
             lint_fixture_package_with_experimental("phase2", "share_owned_authority_pkg", true);
 
@@ -273,119 +272,15 @@ mod share_owned_authority_tests {
             return;
         }
 
-        // Should fire share_owned_authority for positive cases
-        assert!(
-            has_lint(&findings, "share_owned_authority"),
-            "Should detect key+store sharing: {findings:?}"
-        );
-    }
-
-    #[test]
-    fn test_share_owned_authority_positive_cases() {
-        let findings =
-            lint_fixture_package_with_experimental("phase2", "share_owned_authority_pkg", true);
-
-        // Debug: print all findings to understand what's returned
-        eprintln!("All findings: {:?}", findings);
-
-        // Skip test if we get errors or 0 findings due to parallel test interference
-        // (Move compiler build directories may conflict when multiple tests
-        // run against the same fixture simultaneously)
-        if findings
-            .iter()
-            .any(|f| f == "No findings." || f.starts_with("ERROR:"))
-            || findings.is_empty()
-        {
-            eprintln!(
-                "WARNING: Got error or 0 findings - likely parallel test interference. Skipping assertion."
-            );
-            return;
-        }
-
-        // Count share_owned_authority findings
+        // Verify no share_owned_authority findings (lint is deprecated and is a no-op)
         let authority_findings: Vec<_> = findings
             .iter()
             .filter(|f| f.contains("share_owned_authority"))
             .collect();
 
-        // Should fire multiple times for positive cases:
-        // - share_admin_cap (AdminCap)
-        // - share_treasury_cap (TreasuryCap)
-        // - public_share_authority (Authority)
-        // - bad_init (AdminCap)
-        // Plus create_shared_kiosk (Kiosk) which lacks Move-level suppression support
         assert!(
-            authority_findings.len() >= 4,
-            "Should detect at least 4 positive cases, found {}: {:?}\nAll findings: {:?}",
-            authority_findings.len(),
-            authority_findings,
-            findings
-        );
-    }
-
-    #[test]
-    fn test_share_owned_authority_message_content() {
-        let findings =
-            lint_fixture_package_with_experimental("phase2", "share_owned_authority_pkg", true);
-
-        // Skip test if we get errors due to parallel test interference
-        if findings.iter().any(|f| f.starts_with("ERROR:")) {
-            eprintln!("WARNING: Got error - likely parallel test interference. Skipping test.");
-            return;
-        }
-
-        let authority_findings: Vec<_> = findings
-            .iter()
-            .filter(|f| f.contains("share_owned_authority"))
-            .collect();
-
-        // Skip if no findings (parallel test interference)
-        if authority_findings.is_empty() {
-            eprintln!(
-                "WARNING: Got 0 authority findings - likely parallel test interference. Skipping test."
-            );
-            return;
-        }
-
-        // Verify message contains type-grounded explanation
-        for finding in &authority_findings {
-            assert!(
-                finding.contains("key+store"),
-                "Message should mention key+store: {finding}"
-            );
-            assert!(
-                finding.contains("publicly accessible"),
-                "Message should warn about public access: {finding}"
-            );
-        }
-    }
-
-    #[test]
-    fn test_share_owned_authority_no_fire_on_key_only() {
-        // key-only objects (no store) are intentional shared state
-        // The lint should NOT fire on these
-        let findings =
-            lint_fixture_package_with_experimental("phase2", "share_owned_authority_pkg", true);
-
-        // Skip test if we get errors due to parallel test interference
-        if findings.iter().any(|f| f.starts_with("ERROR:")) {
-            eprintln!("WARNING: Got error - likely parallel test interference. Skipping test.");
-            return;
-        }
-
-        // Check that key-only SharedState doesn't trigger
-        // This is tested implicitly - the fixture has SharedState with key-only
-        // and share_state() which shares it. If there were FPs, we'd see more findings.
-        let authority_findings: Vec<_> = findings
-            .iter()
-            .filter(|f| f.contains("share_owned_authority"))
-            .collect();
-
-        // Should not exceed expected positive cases (4)
-        // If key-only triggered, we'd have more
-        assert!(
-            authority_findings.len() <= 6,
-            "Should not have false positives on key-only: {:?}",
+            authority_findings.is_empty(),
+            "share_owned_authority is deprecated and should produce no findings: {:?}",
             authority_findings
         );
     }
