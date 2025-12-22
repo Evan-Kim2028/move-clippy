@@ -1,0 +1,10 @@
+---
+source: tests/semantic_package_snapshots.rs
+expression: out
+---
+public_random:sources/public_random_access_v2.move:120: 45: warning: Risky use of 'sui::random': 'public' function 'suppressed_random_access' accepts 'Random' as a parameter
+public_random:sources/public_random_access_v2.move:45: 38: warning: Risky use of 'sui::random': 'public' function 'get_random_number' accepts 'Random' as a parameter
+public_random:sources/public_random_access_v2.move:52: 39: warning: Risky use of 'sui::random': 'public' function 'mutate_with_random' accepts 'Random' as a parameter
+public_random:sources/public_random_access_v2.move:68: 35: warning: Risky use of 'sui::random': 'public' function 'flip_coin' accepts 'Random' as a parameter
+public_random_access_v2:sources/public_random_access_v2.move:45: 5: warning: Public function `get_random_number` exposes `sui::random::Random` object. This enables front-running attacks where validators can see random values before including transactions. Use `entry` visibility instead, or make the function private/package-internal.
+public_random_access_v2:sources/public_random_access_v2.move:52: 5: warning: Public function `mutate_with_random` exposes `sui::random::Random` object. This enables front-running attacks where validators can see random values before including transactions. Use `entry` visibility instead, or make the function private/package-internal.

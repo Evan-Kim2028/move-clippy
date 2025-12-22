@@ -156,7 +156,7 @@ mod full {
             lint_non_transferable_fungible_object(&mut out, settings, &file_map, &typing_info)?;
             lint_public_random_access_v2(&mut out, settings, &file_map, &typing_ast)?;
             lint_missing_witness_drop_v2(&mut out, settings, &file_map, &typing_info)?;
-            lint_invalid_otw(&mut out, settings, &file_map, &typing_info)?;
+            lint_invalid_otw(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
             lint_witness_antipatterns(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
             lint_stale_oracle_price_v2(&mut out, settings, &file_map, &typing_ast)?;
             // Phase 4 security lints (type-based, preview)

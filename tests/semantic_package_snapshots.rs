@@ -151,6 +151,12 @@ fn capability_antipatterns_pkg_stable() {
     assert_snapshot!(out);
 }
 
+#[test]
+fn public_random_access_v2_pkg_stable() {
+    let out = lint_fixture_package("tests/fixtures/phase2/public_random_access_v2_pkg", false);
+    assert_snapshot!(out);
+}
+
 // =============================================================================
 // Phase 4 Preview/Experimental Fixture Tests
 // =============================================================================

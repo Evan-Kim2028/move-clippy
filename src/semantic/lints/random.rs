@@ -1,6 +1,7 @@
 use crate::diagnostics::Diagnostic;
 use crate::error::Result as ClippyResult;
 use crate::lint::LintSettings;
+use move_compiler::expansion::ast::Address;
 use move_compiler::naming::ast as N;
 use move_compiler::parser::ast::TargetKind;
 use move_compiler::shared::Identifier;
@@ -27,7 +28,7 @@ pub(crate) fn lint_public_random_access_v2(
     file_map: &MappedFiles,
     prog: &T::Program,
 ) -> Result<()> {
-    for (_mident, mdef) in prog.modules.key_cloned_iter() {
+    for (mident, mdef) in prog.modules.key_cloned_iter() {
         match mdef.target_kind {
             TargetKind::Source {
                 is_root_package: true,
@@ -36,6 +37,11 @@ pub(crate) fn lint_public_random_access_v2(
         }
 
         for (fname, fdef) in mdef.functions.key_cloned_iter() {
+            let fn_name_sym = fname.value();
+            let fn_name = fn_name_sym.as_str();
+            let module_sym = mident.value.module.value();
+            let module_name = module_sym.as_str();
+
             // Only check public non-entry functions
             // Entry functions are allowed to take Random
             if fdef.entry.is_some() {
@@ -52,6 +58,10 @@ pub(crate) fn lint_public_random_access_v2(
                 continue;
             }
 
+            if is_framework_random_allowlisted(module_name, &mident.value.address, fn_name) {
+                continue;
+            }
+
             // Check if any parameter is sui::random::Random
             for (_, _, param_ty) in fdef.signature.parameters.iter() {
                 if is_random_type(&param_ty.value) {
@@ -60,9 +70,6 @@ pub(crate) fn lint_public_random_access_v2(
                         continue;
                     };
                     let anchor = loc.start() as usize;
-
-                    let fn_name_sym = fname.value();
-                    let fn_name = fn_name_sym.as_str();
 
                     push_diag(
                         out,
@@ -88,6 +95,34 @@ pub(crate) fn lint_public_random_access_v2(
     Ok(())
 }
 
+fn is_framework_random_allowlisted(module_name: &str, address: &Address, fn_name: &str) -> bool {
+    const ALLOWLISTED_RANDOM_FNS: &[&str] = &["new_generator"];
+
+    if module_name != "random" {
+        return false;
+    }
+
+    if !ALLOWLISTED_RANDOM_FNS.iter().any(|name| *name == fn_name) {
+        return false;
+    }
+
+    is_sui_framework_address(address)
+}
+
+fn is_sui_framework_address(addr: &Address) -> bool {
+    match addr {
+        Address::Numerical {
+            value: addr_value, ..
+        } => {
+            let bytes = addr_value.value.into_bytes();
+            bytes.iter().take(31).all(|&b| b == 0) && bytes[31] == 2
+        }
+        Address::NamedUnassigned(name) => {
+            name.value.as_str() == "sui" || name.value.as_str() == "0x2"
+        }
+    }
+}
+
 /// Check if a type is sui::random::Random (including references).
 fn is_random_type(ty: &N::Type_) -> bool {
     match ty {
@@ -97,22 +132,9 @@ fn is_random_type(ty: &N::Type_) -> bool {
                 let module_sym = mident.value.module.value();
                 let struct_sym = struct_name.value();
 
-                // Check for 0x2::random::Random
-                // The address should be the Sui framework address (0x2)
-                let is_sui_addr = match addr {
-                    move_compiler::expansion::ast::Address::Numerical {
-                        value: addr_value, ..
-                    } => {
-                        // Check if address bytes end with 0x02
-                        let bytes = addr_value.value.into_bytes();
-                        bytes.iter().take(31).all(|&b| b == 0) && bytes[31] == 2
-                    }
-                    move_compiler::expansion::ast::Address::NamedUnassigned(name) => {
-                        name.value.as_str() == "sui" || name.value.as_str() == "0x2"
-                    }
-                };
-
-                is_sui_addr && module_sym.as_str() == "random" && struct_sym.as_str() == "Random"
+                is_sui_framework_address(addr)
+                    && module_sym.as_str() == "random"
+                    && struct_sym.as_str() == "Random"
             } else {
                 false
             }

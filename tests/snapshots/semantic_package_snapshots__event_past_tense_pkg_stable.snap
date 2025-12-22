@@ -2,5 +2,5 @@
 source: tests/semantic_package_snapshots.rs
 expression: out
 ---
-event_past_tense:sources/event_past_tense.move:23: 9: warning: Event `CreateItem` uses present tense (starts with `Create`). Events describe things that happened, use past tense like `ItemCreated`.
-event_past_tense:sources/event_past_tense.move:25: 9: warning: Event `MintToken` uses present tense (starts with `Mint`). Events describe things that happened, use past tense like `TokenMinted`.
+event_past_tense:sources/event_past_tense.move:31: 9: warning: Event `CreateItem` uses present tense (starts with `Create`). Events describe things that happened, use past tense like `ItemCreated`.
+event_past_tense:sources/event_past_tense.move:35: 9: warning: Event `MintToken` uses present tense (starts with `Mint`). Events describe things that happened, use past tense like `TokenMinted`.

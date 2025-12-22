@@ -111,7 +111,48 @@ const PRESENT_TENSE_VERBS: &[(&str, &str)] = &[
     ("Finalize", "Finalized"),
 ];
 
+const PAST_TENSE_SUFFIXES: &[&str] = &[
+    "Created",
+    "Destroyed",
+    "Updated",
+    "Deleted",
+    "Removed",
+    "Added",
+    "Transferred",
+    "Minted",
+    "Burned",
+    "Deposited",
+    "Withdrawn",
+    "Claimed",
+    "Staked",
+    "Unstaked",
+    "Swapped",
+    "Locked",
+    "Unlocked",
+    "Registered",
+    "Unregistered",
+    "Approved",
+    "Revoked",
+    "Executed",
+    "Cancelled",
+    "Paused",
+    "Unpaused",
+    "Initialized",
+    "Finalized",
+    "Set",
+];
+
+fn is_past_tense_event(name: &str) -> bool {
+    PAST_TENSE_SUFFIXES
+        .iter()
+        .any(|suffix| name.ends_with(suffix))
+}
+
 fn check_present_tense_event(name: &str) -> Option<(&'static str, String)> {
+    if is_past_tense_event(name) {
+        return None;
+    }
+
     for (present, past) in PRESENT_TENSE_VERBS {
         if let Some(noun) = name.strip_prefix(present)
             && !noun.is_empty()
