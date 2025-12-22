@@ -1049,10 +1049,24 @@ fn check_divide_by_zero(node: Node, source: &str, ctx: &mut LintContext<'_>) {
 
     // Check for division/modulo by literal 0
     if node.kind() == "binary_expression" {
+        // Strip comments from node text before checking to avoid false positives
+        // e.g., "// 0-9" in a comment should not trigger
+        let code_only = node_text
+            .lines()
+            .map(|line| {
+                if let Some(pos) = line.find("//") {
+                    &line[..pos]
+                } else {
+                    line
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+
         // Look for patterns like "/ 0" or "% 0"
-        if (node_text.contains("/ 0") || node_text.contains("% 0"))
-            && !node_text.contains("/ 0x")  // Exclude hex
-            && !node_text.contains("% 0x")
+        if (code_only.contains("/ 0") || code_only.contains("% 0"))
+            && !code_only.contains("/ 0x") // Exclude hex
+            && !code_only.contains("% 0x")
         {
             ctx.report_node(
                 &DIVIDE_BY_ZERO_LITERAL,
