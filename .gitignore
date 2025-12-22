@@ -28,10 +28,8 @@
 /tests/ecosystem_validation/
 !/tests/ecosystem_validation/README.md
 
-# Internal scripts (except benchmark scripts)
+# Internal scripts
 /scripts/
-!/scripts/ecosystem_benchmark.py
-!/scripts/compare_baselines.py
 
 # Triage databases (can be regenerated, not version controlled)
 triage.json
