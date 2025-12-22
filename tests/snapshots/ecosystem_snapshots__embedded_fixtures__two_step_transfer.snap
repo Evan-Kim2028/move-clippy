@@ -11,4 +11,6 @@ expression: messages
     "public_mut_tx_context: TxContext parameters should use `&mut TxContext`",
     "typed_abort_code: Prefer named error constant over numeric abort code `1`",
     "typed_abort_code: Prefer named error constant over numeric abort code `2`",
+    "suggest_capability_pattern: Stored address comparison detected for authorization. While checking against a stored address is better than hardcoded, capability pattern is still preferred. Consider storing an AdminCap in the owner's account instead of an address in your shared object.",
+    "suggest_capability_pattern: Address-based authorization detected. Consider using capability pattern: define a capability struct with `key, store` abilities and require it as a parameter for privileged operations.",
 ]

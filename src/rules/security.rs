@@ -1128,7 +1128,7 @@ fn check_otw_pattern(
         "function_definition" => {
             let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
 
-            // Check if this function calls create_currency
+            // Check if this calls create_currency
             if func_text.contains("create_currency")
                 && let Some(mod_name) = module_name
             {
@@ -1438,6 +1438,535 @@ fn check_fresh_address_reuse(node: Node, source: &str, ctx: &mut LintContext<'_>
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         check_fresh_address_reuse(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// suggest_capability_pattern - Detects address-based authorization anti-pattern
+// ============================================================================
+
+/// Detects address-based authorization patterns and suggests capability-based alternatives.
+///
+/// # Security References
+///
+/// - **Move Book**: Capability pattern is the idiomatic authorization mechanism
+/// - **Sui Security Best Practices**: Prefer object capabilities over address checks
+///
+/// # Why This Matters
+///
+/// Address-based authorization (`sender(ctx) == ADMIN`) is an anti-pattern because:
+/// 1. **Fragile**: Hardcoded addresses can't be rotated/transferred
+/// 2. **Inflexible**: Can't delegate authority temporarily
+/// 3. **Error-prone**: Easy to misconfigure or leak admin addresses
+/// 4. **Not composable**: Functions can't require &AdminCap as proof
+///
+/// The capability pattern is superior because:
+/// 1. **Transferable**: Capabilities can be transferred to new owners
+/// 2. **Type-safe**: Compiler enforces authorization requirements
+/// 3. **Composable**: Functions can require &AdminCap as proof
+/// 4. **Revocable**: Capabilities can be destroyed to revoke access
+///
+/// # Detection Criteria
+///
+/// Flags patterns like:
+/// - `assert!(tx_context::sender(ctx) == ADMIN, ...)`
+/// - `assert!(sender(ctx) == config.owner, ...)`
+/// - `if (sender(ctx) != admin) { abort ... }`
+///
+/// # Exceptions (NOT flagged)
+///
+/// - Sui framework system checks (`@0x0`)
+/// - Test code
+/// - Ownership verification for non-admin operations (e.g., NFT ownership)
+///
+/// # Example
+///
+/// ```move
+/// // ANTI-PATTERN - flagged
+/// const ADMIN: address = @0x123;
+///
+/// public fun admin_action(ctx: &TxContext) {
+///     assert!(tx_context::sender(ctx) == ADMIN, E_NOT_ADMIN);
+///     // ...
+/// }
+///
+/// // SUGGESTED - capability pattern
+/// public fun admin_action(_cap: &AdminCap) {
+///     // Authorization is structural, not runtime
+/// }
+/// ```
+///
+/// # Stability
+///
+/// EXPERIMENTAL: Advisory lint for developer education. May flag intentional
+/// patterns in legacy code.
+pub static SUGGEST_CAPABILITY_PATTERN: LintDescriptor = LintDescriptor {
+    name: "suggest_capability_pattern",
+    category: LintCategory::Security,
+    description: "Address-based authorization detected - consider using capability pattern for safer access control",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::CapabilityEscape),
+};
+
+pub struct SuggestCapabilityPatternLint;
+
+impl LintRule for SuggestCapabilityPatternLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &SUGGEST_CAPABILITY_PATTERN
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        // Skip test modules at the top level
+        if is_test_only_module(root, source) {
+            return;
+        }
+        check_address_based_auth(root, source, ctx);
+    }
+}
+
+fn check_address_based_auth(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for assert! statements with sender comparisons
+    // tree-sitter-move uses "macro_call_expression" for assert! statements
+    if node.kind() == "macro_call_expression" || node.kind() == "call_expression" {
+        let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+
+        // Check if this is a sender address comparison
+        if node_text.contains("assert!") && is_sender_address_check(node_text) {
+            // Skip Sui system address checks (@0x0)
+            if node_text.contains("@0x0") {
+                // Recurse and return
+                let mut cursor = node.walk();
+                for child in node.children(&mut cursor) {
+                    check_address_based_auth(child, source, ctx);
+                }
+                return;
+            }
+
+            // Determine the type of address check
+            let (severity, suggestion) = classify_address_check(node_text);
+
+            ctx.report_node(
+                &SUGGEST_CAPABILITY_PATTERN,
+                node,
+                format!("{}. {}", severity, suggestion),
+            );
+        }
+    }
+
+    // Also check for if statements with sender checks leading to abort
+    if node.kind() == "if_expression" {
+        let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+
+        if is_sender_address_check(node_text)
+            && (node_text.contains("abort") || node_text.contains("return"))
+        {
+            // Skip system address checks
+            if node_text.contains("@0x0") {
+                let mut cursor = node.walk();
+                for child in node.children(&mut cursor) {
+                    check_address_based_auth(child, source, ctx);
+                }
+                return;
+            }
+
+            ctx.report_node(
+                &SUGGEST_CAPABILITY_PATTERN,
+                node,
+                "Address-based authorization in if-condition. Consider using capability pattern: \
+                 replace address check with a capability parameter like `_cap: &AdminCap`."
+                    .to_string(),
+            );
+        }
+    }
+
+    // Recurse into children
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_address_based_auth(child, source, ctx);
+    }
+}
+
+/// Check if text contains a sender-to-address comparison pattern
+fn is_sender_address_check(text: &str) -> bool {
+    // Patterns: sender(ctx) == ..., sender(ctx) != ..., ... == sender(ctx)
+    let has_sender = text.contains("sender(") || text.contains("tx_context::sender(");
+    let has_comparison = text.contains(" == ") || text.contains(" != ");
+
+    has_sender && has_comparison
+}
+
+/// Classify the address check and return severity + suggestion
+fn classify_address_check(text: &str) -> (&'static str, &'static str) {
+    // Check for constant/literal address comparison (worse)
+    if text.contains("== @") || text.contains("!= @") {
+        return (
+            "Hardcoded address comparison detected - this is fragile and non-transferable",
+            "Consider using capability pattern: add a capability struct (e.g., `AdminCap`) \
+             and require `_cap: &AdminCap` parameter instead of checking sender address.",
+        );
+    }
+
+    // Check for field comparison (slightly better but still not ideal)
+    if text.contains(".admin") || text.contains(".owner") || text.contains(".creator") {
+        return (
+            "Stored address comparison detected for authorization",
+            "While checking against a stored address is better than hardcoded, \
+             capability pattern is still preferred. Consider storing an AdminCap \
+             in the owner's account instead of an address in your shared object.",
+        );
+    }
+
+    // Generic sender check
+    (
+        "Address-based authorization detected",
+        "Consider using capability pattern: define a capability struct with `key, store` \
+         abilities and require it as a parameter for privileged operations.",
+    )
+}
+
+// ============================================================================
+// suggest_sequenced_witness - Detects boolean state machine anti-pattern
+// ============================================================================
+
+/// Detects boolean flag state machines and suggests sequenced witness pattern.
+///
+/// # Why This Matters
+///
+/// Boolean flags for sequencing (`step_1_complete`, `is_initialized`) are fragile:
+/// 1. **Runtime-only enforcement**: Bugs can skip steps
+/// 2. **Not composable**: Other modules can't verify step completion
+/// 3. **Easy to forget**: Developer must remember to check each flag
+///
+/// The sequenced witness pattern uses proof types:
+/// - Each step returns a proof struct (e.g., `Step1Proof`)
+/// - Next step requires the proof as parameter
+/// - Compiler enforces ordering at compile time
+///
+/// # Example
+///
+/// ```move
+/// // ANTI-PATTERN
+/// struct State { step_1_complete: bool }
+/// public fun step_2(state: &State) {
+///     assert!(state.step_1_complete, E_STEP_1_REQUIRED);
+/// }
+///
+/// // SUGGESTED
+/// struct Step1Proof has drop {}
+/// public fun step_1(): Step1Proof { Step1Proof {} }
+/// public fun step_2(_proof: Step1Proof) { /* compiler enforces ordering */ }
+/// ```
+pub static SUGGEST_SEQUENCED_WITNESS: LintDescriptor = LintDescriptor {
+    name: "suggest_sequenced_witness",
+    category: LintCategory::Security,
+    description: "Boolean state flag detected - consider using sequenced witness pattern for compile-time ordering enforcement",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::TemporalOrdering),
+};
+
+pub struct SuggestSequencedWitnessLint;
+
+impl LintRule for SuggestSequencedWitnessLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &SUGGEST_SEQUENCED_WITNESS
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        if is_test_only_module(root, source) {
+            return;
+        }
+        check_boolean_state_flags(root, source, ctx);
+    }
+}
+
+/// Boolean field name patterns that suggest state machine usage
+const STATE_FLAG_PATTERNS: &[&str] = &[
+    "_complete",
+    "_done",
+    "_finished",
+    "_initialized",
+    "_started",
+    "_pending",
+    "is_active",
+    "is_paused",
+    "is_locked",
+    "has_",
+    "step_",
+];
+
+fn check_boolean_state_flags(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for struct definitions with boolean fields matching state patterns
+    if node.kind() == "struct_definition" {
+        let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+
+        // Check for boolean fields with state-like names
+        for pattern in STATE_FLAG_PATTERNS {
+            if node_text.contains(pattern) && node_text.contains(": bool") {
+                // Extract field name for better message
+                let field_hint = if node_text.contains("_complete") {
+                    "completion tracking"
+                } else if node_text.contains("_initialized") || node_text.contains("_started") {
+                    "initialization tracking"
+                } else if node_text.contains("step_") {
+                    "step sequencing"
+                } else {
+                    "state tracking"
+                };
+
+                ctx.report_node(
+                    &SUGGEST_SEQUENCED_WITNESS,
+                    node,
+                    format!(
+                        "Boolean field detected for {}. Consider using sequenced witness pattern: \
+                         return a proof struct from each step that the next step requires as a parameter. \
+                         This enforces ordering at compile time instead of runtime.",
+                        field_hint
+                    ),
+                );
+                break; // Only report once per struct
+            }
+        }
+    }
+
+    // Recurse
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_boolean_state_flags(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// suggest_counted_capability - Detects counter-based supply anti-pattern
+// ============================================================================
+
+/// Detects counter-based supply limiting and suggests counted capability pattern.
+///
+/// # Why This Matters
+///
+/// Counter-based supply (`minted < max_supply`) has issues:
+/// 1. **Runtime enforcement only**: Bugs can bypass the check
+/// 2. **Centralized state**: Counter must be atomically updated
+/// 3. **No proof of scarcity**: Can't verify supply limit externally
+///
+/// The counted capability pattern uses consumable tickets:
+/// - Create exactly `max_supply` tickets at init
+/// - Mint function consumes (unpacks) a ticket
+/// - Supply limit enforced by Move's linearity
+///
+/// # Example
+///
+/// ```move
+/// // ANTI-PATTERN
+/// struct MintState { minted: u64, max_supply: u64 }
+/// public fun mint(state: &mut MintState): NFT {
+///     assert!(state.minted < state.max_supply, E_MAX_SUPPLY);
+///     state.minted = state.minted + 1;
+///     NFT { }
+/// }
+///
+/// // SUGGESTED
+/// struct MintTicket has key, store { id: UID }
+/// public fun mint(ticket: MintTicket): NFT {
+///     let MintTicket { id } = ticket;
+///     object::delete(id);
+///     NFT { }
+/// }
+/// ```
+pub static SUGGEST_COUNTED_CAPABILITY: LintDescriptor = LintDescriptor {
+    name: "suggest_counted_capability",
+    category: LintCategory::Security,
+    description: "Counter-based supply limiting detected - consider using counted capability pattern for linearity-enforced scarcity",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::ValueFlow),
+};
+
+pub struct SuggestCountedCapabilityLint;
+
+impl LintRule for SuggestCountedCapabilityLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &SUGGEST_COUNTED_CAPABILITY
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        if is_test_only_module(root, source) {
+            return;
+        }
+        check_counter_based_supply(root, source, ctx);
+    }
+}
+
+/// Patterns indicating counter-based supply limiting
+const COUNTER_PATTERNS: &[&str] = &[
+    "minted",
+    "total_minted",
+    "mint_count",
+    "supply_count",
+    "num_minted",
+];
+
+const MAX_PATTERNS: &[&str] = &[
+    "max_supply",
+    "max_mint",
+    "supply_limit",
+    "mint_limit",
+    "cap",
+];
+
+fn check_counter_based_supply(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for functions with counter increment + max check pattern
+    if node.kind() == "function_definition" {
+        let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        let node_text_lower = node_text.to_lowercase();
+
+        // Check for mint-like functions with counter patterns
+        let has_counter = COUNTER_PATTERNS.iter().any(|p| node_text_lower.contains(p));
+        let has_max = MAX_PATTERNS.iter().any(|p| node_text_lower.contains(p));
+        let has_increment = node_text.contains("+ 1") || node_text.contains("+= 1");
+        let has_comparison = node_text.contains(" < ") || node_text.contains(" <= ");
+
+        // If we have counter + max + increment + comparison, likely a counter-based supply
+        if has_counter && has_max && has_increment && has_comparison {
+            let func_name = node
+                .child_by_field_name("name")
+                .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                .unwrap_or("unknown");
+
+            ctx.report_node(
+                &SUGGEST_COUNTED_CAPABILITY,
+                node,
+                format!(
+                    "Function `{}` uses counter-based supply limiting. Consider using counted capability pattern: \
+                     create a fixed number of 'ticket' objects at init, and require consuming one to mint. \
+                     This enforces scarcity through Move's linearity rather than runtime checks.",
+                    func_name
+                ),
+            );
+        }
+    }
+
+    // Recurse
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_counter_based_supply(child, source, ctx);
+    }
+}
+
+// ============================================================================
+// suggest_balanced_receipt - Detects bookend invariant check anti-pattern
+// ============================================================================
+
+/// Detects bookend invariant checks and suggests balanced receipt pattern.
+///
+/// # Why This Matters
+///
+/// Bookend invariant checks (`k_before` / `k_after`) are error-prone:
+/// 1. **Easy to forget**: Developer must remember the final assert
+/// 2. **Not enforced**: Compiler doesn't require the check
+/// 3. **Verbose**: Duplicated calculation logic
+///
+/// The balanced receipt pattern uses a hot potato:
+/// - Begin operation creates a receipt (no abilities = must be consumed)
+/// - Operations update the receipt's accumulators
+/// - Complete operation unpacks and verifies the receipt
+/// - Compiler enforces the complete call
+///
+/// # Example
+///
+/// ```move
+/// // ANTI-PATTERN
+/// public fun swap(pool: &mut Pool): Coin<B> {
+///     let k_before = pool.x * pool.y;
+///     // ... operations
+///     let k_after = pool.x * pool.y;
+///     assert!(k_after >= k_before, E_INVARIANT);
+///     coin_out
+/// }
+///
+/// // SUGGESTED
+/// struct SwapReceipt { /* no abilities */ }
+/// public fun begin_swap(pool: &Pool): SwapReceipt { ... }
+/// public fun complete_swap(receipt: SwapReceipt, pool: &Pool) {
+///     let SwapReceipt { ... } = receipt; // Unpacks and verifies
+/// }
+/// ```
+pub static SUGGEST_BALANCED_RECEIPT: LintDescriptor = LintDescriptor {
+    name: "suggest_balanced_receipt",
+    category: LintCategory::Security,
+    description: "Bookend invariant check detected - consider using balanced receipt (hot potato) pattern for compiler-enforced verification",
+    group: RuleGroup::Experimental,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::Syntactic,
+    gap: Some(TypeSystemGap::TemporalOrdering),
+};
+
+pub struct SuggestBalancedReceiptLint;
+
+impl LintRule for SuggestBalancedReceiptLint {
+    fn descriptor(&self) -> &'static LintDescriptor {
+        &SUGGEST_BALANCED_RECEIPT
+    }
+
+    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
+        if is_test_only_module(root, source) {
+            return;
+        }
+        check_bookend_invariants(root, source, ctx);
+    }
+}
+
+fn check_bookend_invariants(node: Node, source: &str, ctx: &mut LintContext<'_>) {
+    // Look for functions with before/after variable pairs
+    if node.kind() == "function_definition" {
+        let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
+
+        // Check for before/after pattern pairs
+        let has_before = node_text.contains("_before") || node_text.contains("before_");
+        let has_after = node_text.contains("_after") || node_text.contains("after_");
+        let has_assert = node_text.contains("assert!");
+
+        // If we have both before and after variables with an assert, likely a bookend check
+        if has_before && has_after && has_assert {
+            // Additional check: look for invariant-related naming
+            let is_invariant_check = node_text.contains("k_before")
+                || node_text.contains("k_after")
+                || node_text.contains("balance_before")
+                || node_text.contains("balance_after")
+                || node_text.contains("reserve_before")
+                || node_text.contains("reserve_after")
+                || node_text.contains("value_before")
+                || node_text.contains("value_after");
+
+            if is_invariant_check {
+                let func_name = node
+                    .child_by_field_name("name")
+                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
+                    .unwrap_or("unknown");
+
+                ctx.report_node(
+                    &SUGGEST_BALANCED_RECEIPT,
+                    node,
+                    format!(
+                        "Function `{}` uses bookend invariant checking (before/after pattern). \
+                         Consider using balanced receipt pattern: create a hot potato receipt at the start \
+                         that accumulates values and MUST be verified at completion. \
+                         This makes the verification compiler-enforced rather than developer-remembered.",
+                        func_name
+                    ),
+                );
+            }
+        }
+    }
+
+    // Recurse
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        check_bookend_invariants(child, source, ctx);
     }
 }
 
