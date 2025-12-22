@@ -9,8 +9,7 @@ use move_compiler::typing::ast as T;
 
 use super::super::util::{diag_from_loc, push_diag};
 use super::super::{
-    CAPABILITY_TRANSFER_LITERAL_ADDRESS, CAPABILITY_TRANSFER_V2,
-    SHARED_CAPABILITY_OBJECT,
+    CAPABILITY_TRANSFER_LITERAL_ADDRESS, CAPABILITY_TRANSFER_V2, SHARED_CAPABILITY_OBJECT,
 };
 use super::shared::{format_type, is_coin_type};
 
