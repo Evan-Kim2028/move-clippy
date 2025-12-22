@@ -706,7 +706,7 @@ pub static IGNORED_BOOLEAN_RETURN: LintDescriptor = LintDescriptor {
     name: "ignored_boolean_return",
     category: LintCategory::Security,
     description: "Boolean-returning function result is ignored, may indicate missing authorization check (see: Typus Finance hack)",
-    group: RuleGroup::Stable,
+    group: RuleGroup::Experimental,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::ValueFlow),
