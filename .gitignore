@@ -31,6 +31,10 @@
 # Internal scripts
 /scripts/
 
+# Benchmark infrastructure (local only)
+/baselines/
+/benchmark_repos/
+
 # Triage databases (can be regenerated, not version controlled)
 triage.json
 triage_*.json
