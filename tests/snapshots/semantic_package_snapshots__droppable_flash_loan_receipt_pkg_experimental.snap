@@ -2,6 +2,4 @@
 source: tests/semantic_package_snapshots.rs
 expression: out
 ---
-droppable_flash_loan_receipt:sources/droppable_flash_loan_receipt.move:57: 5: warning: Function `borrow_bad` returns a Coin/Balance with droppable `cases::FlashReceipt`. If this is a flash loan receipt, it must NOT have `drop`, or borrowers can ignore repayment.
-droppable_flash_loan_receipt:sources/droppable_flash_loan_receipt.move:63: 5: warning: Function `borrow_bad_balance` returns a Coin/Balance with droppable `cases::FlashReceipt`. If this is a flash loan receipt, it must NOT have `drop`, or borrowers can ignore repayment.
 droppable_hot_potato_v2:sources/droppable_flash_loan_receipt.move:48: 19: warning: Struct `FlashReceipt` has only `drop` ability (no copy/key/store). If this is a hot potato, remove `drop` to enforce consumption. If this is a witness, ensure it has no fields. See: https://blog.trailofbits.com/2025/09/10/how-sui-move-rethinks-flash-loan-security/
