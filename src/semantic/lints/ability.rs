@@ -18,11 +18,6 @@ type Result<T> = ClippyResult<T>;
 /// Detect structs with ONLY the `drop` ability (no other abilities).
 ///
 /// A struct with only `drop` is almost always a bug:
-/// 1. If it's a hot potato, it should have NO abilities
-/// 2. If it's a witness, it should be empty
-///
-/// This lint is type-based with zero false positives because:
-/// - Structs with `copy + drop` are events (legitimate)
 /// DEPRECATED: This lint has high false positive rate (~67%).
 ///
 /// The pattern "only drop ability" matches many legitimate types:

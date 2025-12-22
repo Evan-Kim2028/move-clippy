@@ -7,8 +7,8 @@ use move_compiler::shared::Identifier;
 use move_compiler::shared::files::MappedFiles;
 use move_compiler::typing::ast as T;
 
-use super::super::util::{diag_from_loc, push_diag};
 use super::super::DROPPABLE_FLASH_LOAN_RECEIPT;
+use super::super::util::{diag_from_loc, push_diag};
 use super::shared::{format_type, is_coin_or_balance_type, strip_refs};
 
 type Result<T> = ClippyResult<T>;
