@@ -111,6 +111,14 @@ const UNCHECKED_DIV_V2_DIAG: DiagnosticInfo = custom(
     "division without zero-check validation",
 );
 
+const STALE_ORACLE_PRICE_V3_DIAG: DiagnosticInfo = custom(
+    LINT_WARNING_PREFIX,
+    Severity::Warning,
+    CLIPPY_CATEGORY,
+    8, // stale_oracle_price_v3
+    "oracle price used without freshness validation",
+);
+
 // ============================================================================
 // Phase II Lint Descriptors (type-based with CFG analysis)
 // ============================================================================
@@ -133,6 +141,16 @@ pub static UNCHECKED_DIVISION_V2: LintDescriptor = LintDescriptor {
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBasedCFG,
     gap: Some(TypeSystemGap::ArithmeticSafety),
+};
+
+pub static STALE_ORACLE_PRICE_V3: LintDescriptor = LintDescriptor {
+    name: "stale_oracle_price_v3",
+    category: LintCategory::Security,
+    description: "Oracle price used without freshness validation (CFG-aware dataflow, requires --mode full --preview)",
+    group: RuleGroup::Preview,
+    fix: FixDescriptor::none(),
+    analysis: AnalysisKind::TypeBasedCFG,
+    gap: Some(TypeSystemGap::TemporalOrdering),
 };
 
 // ============================================================================
@@ -2497,11 +2515,6 @@ impl TaintedTransferRecipientVerifierAI<'_> {
             E::Borrow(_, inner, _, _) => {
                 vars.extend(self.collect_vars_from_exp(inner));
             }
-            E::Multiple(exps) => {
-                for e in exps {
-                    vars.extend(self.collect_vars_from_exp(e));
-                }
-            }
             _ => {}
         }
 
@@ -2692,7 +2705,9 @@ impl EscapeKind {
             EscapeKind::ToParameterAddress => {
                 "capability transferred to address from function parameter"
             }
-            EscapeKind::ToExternalModule => "capability passed to external module function",
+            EscapeKind::ToExternalModule => {
+                "capability passed to external module function"
+            }
             EscapeKind::ToSharedObject => "capability stored in shared object",
             EscapeKind::UnconditionalTransfer => {
                 "capability transferred without authorization check"
@@ -3154,6 +3169,393 @@ impl SimpleExecutionContext for EscapeExecutionContext {
 }
 
 // ============================================================================
+// 7. Stale Oracle Price V3 (CFG-aware dataflow analysis)
+// ============================================================================
+
+/// Verifies that oracle prices from `get_price_unsafe` are validated for freshness
+/// before being used in business logic.
+///
+/// Tracks Price values through the CFG and reports when they are used without
+/// passing through a freshness validation function.
+pub struct StaleOraclePriceVerifier;
+
+pub struct StaleOraclePriceVerifierAI<'a> {
+    info: &'a TypingProgramInfo,
+    context: &'a CFGContext<'a>,
+    /// Labels whose blocks immediately exit (abort/return)
+    exit_blocks: BTreeSet<Label>,
+}
+
+/// Abstract value: tracks whether a Price has been freshness-validated
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
+pub enum PriceValidationValue {
+    /// Not a tracked price value
+    #[default]
+    NotTracked,
+    /// Price from get_price_unsafe, not yet validated
+    Unvalidated(Loc),
+    /// Price has been validated for freshness
+    Validated(Loc),
+}
+
+pub struct PriceExecutionContext {
+    diags: CompilerDiagnostics,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct PriceState {
+    locals: BTreeMap<Var, LocalState<PriceValidationValue>>,
+}
+
+/// Oracle modules and their unsafe price functions
+const UNSAFE_ORACLE_CALLS: &[(&str, &str)] = &[
+    ("pyth", "get_price_unsafe"),
+    ("price_info", "get_price_unsafe"),
+    ("switchboard", "get_price_unsafe"),
+    ("supra", "get_price_unsafe"),
+];
+
+/// Functions that validate price freshness
+const FRESHNESS_VALIDATION_CALLS: &[&str] = &[
+    "check_price_is_fresh",
+    "check_freshness",
+    "get_price_no_older_than",
+    "validate_freshness",
+    "assert_fresh",
+];
+
+impl SimpleAbsIntConstructor for StaleOraclePriceVerifier {
+    type AI<'a> = StaleOraclePriceVerifierAI<'a>;
+
+    fn new<'a>(
+        context: &'a CFGContext<'a>,
+        cfg: &ImmForwardCFG,
+        _init_state: &mut PriceState,
+    ) -> Option<Self::AI<'a>> {
+        // Skip test functions
+        if context.attributes.is_test_or_test_only() {
+            return None;
+        }
+
+        // Precompute exit blocks for guard detection
+        let mut exit_blocks = BTreeSet::new();
+        for lbl in cfg.block_labels() {
+            if is_immediate_exit_block(cfg, lbl) {
+                exit_blocks.insert(lbl);
+            }
+        }
+
+        Some(StaleOraclePriceVerifierAI {
+            info: context.info,
+            context,
+            exit_blocks,
+        })
+    }
+}
+
+impl SimpleAbsInt for StaleOraclePriceVerifierAI<'_> {
+    type State = PriceState;
+    type ExecutionContext = PriceExecutionContext;
+
+    fn finish(
+        &mut self,
+        _final_states: BTreeMap<Label, Self::State>,
+        diags: CompilerDiagnostics,
+    ) -> CompilerDiagnostics {
+        diags
+    }
+
+    fn start_command(&self, _pre: &mut Self::State) -> Self::ExecutionContext {
+        PriceExecutionContext {
+            diags: CompilerDiagnostics::new(),
+        }
+    }
+
+    fn finish_command(
+        &self,
+        context: Self::ExecutionContext,
+        _state: &mut Self::State,
+    ) -> CompilerDiagnostics {
+        context.diags
+    }
+
+    fn command_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        cmd: &Command,
+    ) -> bool {
+        use Command_ as C;
+
+        match &cmd.value {
+            C::Assign(_case, lvalues, rhs) => {
+                // Evaluate RHS to get its price validation state
+                let rhs_values = self.exp(context, state, rhs);
+                
+                // Find if any RHS value is unvalidated
+                let rhs_unvalidated = rhs_values
+                    .iter()
+                    .find(|v| matches!(v, PriceValidationValue::Unvalidated(_)));
+                
+                // Propagate to LHS variables
+                for lvalue in lvalues {
+                    if let LValue_::Var { var, .. } = &lvalue.value {
+                        if let Some(PriceValidationValue::Unvalidated(source_loc)) = rhs_unvalidated {
+                            // Mark variable as holding unvalidated price
+                            if let Some(local_state) = state.locals.get_mut(var) {
+                                if let LocalState::Available(avail_loc, _) = local_state {
+                                    *local_state = LocalState::Available(
+                                        *avail_loc,
+                                        PriceValidationValue::Unvalidated(*source_loc),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+
+                false // Let default handling continue
+            }
+            C::JumpIf { cond, if_true, if_false } => {
+                // Visit condition
+                self.exp(context, state, cond);
+
+                // Check if one branch is an exit (abort) - this is a guard pattern
+                let true_is_abort = self.exit_blocks.contains(if_true);
+                let false_is_abort = self.exit_blocks.contains(if_false);
+
+                // If this is a guard pattern with freshness check, mark prices as validated
+                if true_is_abort || false_is_abort {
+                    self.mark_validated_from_guard(state, cond);
+                }
+
+                true // Handled
+            }
+            _ => false,
+        }
+    }
+
+    fn exp_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        e: &Exp,
+    ) -> Option<Vec<PriceValidationValue>> {
+        use UnannotatedExp_ as E;
+
+        match &e.exp.value {
+            // Variable access - return tracked state
+            E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => {
+                if let Some(LocalState::Available(_, value)) = state.locals.get(var) {
+                    return Some(vec![*value]);
+                }
+            }
+            // Module call - detect sources and handle validation
+            E::ModuleCall(call) => {
+                let module_sym = call.module.value.module.value();
+                let module_name = module_sym.as_str();
+                let func_sym = call.name.value();
+                let func_name = func_sym.as_str();
+
+                // Check if this is an unsafe oracle call (SOURCE)
+                let is_unsafe = UNSAFE_ORACLE_CALLS
+                    .iter()
+                    .any(|(m, f)| module_name == *m && func_name == *f);
+
+                if is_unsafe {
+                    // Mark the return value as unvalidated
+                    return Some(vec![PriceValidationValue::Unvalidated(e.exp.loc)]);
+                }
+
+                // Check if this is a freshness validation call
+                let is_validation = FRESHNESS_VALIDATION_CALLS
+                    .iter()
+                    .any(|f| func_name.contains(f));
+
+                if is_validation {
+                    // Process arguments - any unvalidated price passed here becomes validated
+                    for arg in &call.arguments {
+                        let arg_values = self.exp(context, state, arg);
+                        // Mark any variables passed as validated in state
+                        if let Some(var) = self.extract_var(arg) {
+                            if let Some(LocalState::Available(avail_loc, _)) = state.locals.get(&var) {
+                                state.locals.insert(
+                                    var,
+                                    LocalState::Available(*avail_loc, PriceValidationValue::Validated(e.exp.loc)),
+                                );
+                            }
+                        }
+                    }
+                    return Some(vec![PriceValidationValue::Validated(e.exp.loc)]);
+                }
+
+                // For other module calls, let call_custom handle sink detection
+                return None; // Use default handling which will call call_custom
+            }
+            _ => {}
+        }
+
+        None
+    }
+
+    fn call_custom(
+        &self,
+        context: &mut Self::ExecutionContext,
+        state: &mut Self::State,
+        loc: &Loc,
+        _return_ty: &Type,
+        call: &ModuleCall,
+        args: Vec<PriceValidationValue>,
+    ) -> Option<Vec<PriceValidationValue>> {
+        let module_sym = call.module.value.module.value();
+        let module_name = module_sym.as_str();
+        let func_sym = call.name.value();
+        let func_name = func_sym.as_str();
+
+        // Skip if this is an oracle call or validation call (handled in exp_custom)
+        let is_oracle = UNSAFE_ORACLE_CALLS
+            .iter()
+            .any(|(m, f)| module_name == *m && func_name == *f);
+        let is_validation = FRESHNESS_VALIDATION_CALLS
+            .iter()
+            .any(|f| func_name.contains(f));
+
+        if is_oracle || is_validation {
+            return None;
+        }
+
+        // Check if any argument is an unvalidated price (SINK detection)
+        for (idx, val) in args.iter().enumerate() {
+            if let PriceValidationValue::Unvalidated(source_loc) = val {
+                // Don't report if this is in dependency code
+                if self.is_root_source_loc(loc) {
+                    let msg = format!(
+                        "Unvalidated oracle price from `get_price_unsafe` passed to `{}::{}`. \
+                         The price may be stale. Consider validating freshness first with \
+                         `check_price_is_fresh` or use `get_price_no_older_than`.",
+                        module_name, func_name
+                    );
+                    let help = "Add freshness validation before using the price";
+                    let d = diag!(
+                        STALE_ORACLE_PRICE_V3_DIAG,
+                        (*loc, msg),
+                        (*source_loc, help),
+                    );
+                    context.add_diag(d);
+                }
+            }
+        }
+
+        None
+    }
+}
+
+impl StaleOraclePriceVerifierAI<'_> {
+    fn is_root_source_loc(&self, loc: &Loc) -> bool {
+        let is_dependency = self.context.env.package_config(self.context.package).is_dependency;
+        !is_dependency
+    }
+
+    /// Extract variable from an expression (for tracking through references)
+    fn extract_var(&self, e: &Exp) -> Option<Var> {
+        use UnannotatedExp_ as E;
+        match &e.exp.value {
+            E::Move { var, .. } | E::Copy { var, .. } | E::BorrowLocal(_, var) => Some(*var),
+            E::Dereference(inner) | E::Borrow(_, inner, _, _) => self.extract_var(inner),
+            _ => None,
+        }
+    }
+
+    /// Mark any unvalidated prices in the guard condition as validated
+    /// This handles patterns like: assert!(check_price_is_fresh(&price, max_age), E_STALE)
+    fn mark_validated_from_guard(&self, state: &mut PriceState, cond: &Exp) {
+        use UnannotatedExp_ as E;
+        match &cond.exp.value {
+            // Function call in condition - check if it's a validation function
+            E::ModuleCall(call) => {
+                let func_sym = call.name.value();
+                let func_name = func_sym.as_str();
+
+                let is_validation = FRESHNESS_VALIDATION_CALLS
+                    .iter()
+                    .any(|f| func_name.contains(f));
+
+                if is_validation {
+                    // Mark any price variables passed to this function as validated
+                    for arg in &call.arguments {
+                        if let Some(var) = self.extract_var(arg) {
+                            if let Some(LocalState::Available(avail_loc, val)) = state.locals.get(&var) {
+                                if matches!(val, PriceValidationValue::Unvalidated(_)) {
+                                    state.locals.insert(
+                                        var,
+                                        LocalState::Available(*avail_loc, PriceValidationValue::Validated(cond.exp.loc)),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Recursively check inside unary/binary expressions
+            E::UnaryExp(_, inner) => {
+                self.mark_validated_from_guard(state, inner);
+            }
+            E::BinopExp(lhs, _, rhs) => {
+                self.mark_validated_from_guard(state, lhs);
+                self.mark_validated_from_guard(state, rhs);
+            }
+            _ => {}
+        }
+    }
+}
+
+impl SimpleDomain for PriceState {
+    type Value = PriceValidationValue;
+
+    fn new(_context: &CFGContext, locals: BTreeMap<Var, LocalState<Self::Value>>) -> Self {
+        PriceState { locals }
+    }
+
+    fn locals(&self) -> &BTreeMap<Var, LocalState<Self::Value>> {
+        &self.locals
+    }
+
+    fn locals_mut(&mut self) -> &mut BTreeMap<Var, LocalState<Self::Value>> {
+        &mut self.locals
+    }
+
+    fn join_value(v1: &Self::Value, v2: &Self::Value) -> Self::Value {
+        use PriceValidationValue::*;
+        match (v1, v2) {
+            // Validated wins (optimistic - if any path validates, we're ok)
+            (Validated(loc), _) | (_, Validated(loc)) => Validated(*loc),
+            // Unvalidated is concerning
+            (Unvalidated(loc), _) | (_, Unvalidated(loc)) => Unvalidated(*loc),
+            // Not tracked
+            (NotTracked, NotTracked) => NotTracked,
+        }
+    }
+
+    fn join_impl(&mut self, other: &Self, _result: &mut JoinResult) {
+        for (var, other_state) in &other.locals {
+            if let Some(self_state) = self.locals.get_mut(var) {
+                if let (LocalState::Available(_, v1), LocalState::Available(_, v2)) =
+                    (self_state, other_state)
+                {
+                    *v1 = Self::join_value(v1, v2);
+                }
+            }
+        }
+    }
+}
+
+impl SimpleExecutionContext for PriceExecutionContext {
+    fn add_diag(&mut self, d: CompilerDiagnostic) {
+        self.diags.add(d);
+    }
+}
+
+// ============================================================================
 // Public API
 // ============================================================================
 
@@ -3165,6 +3567,7 @@ pub const ABSINT_CUSTOM_DIAG_CODE_MAP: &[(u8, &LintDescriptor)] = &[
     (5, &FRESH_ADDRESS_REUSE_V2),     // FRESH_ADDRESS_REUSE_V2_DIAG
     (6, &TAINTED_TRANSFER_RECIPIENT), // TAINTED_TRANSFER_RECIPIENT_DIAG
     (7, &CAPABILITY_ESCAPE),          // CAPABILITY_ESCAPE_DIAG
+    (8, &STALE_ORACLE_PRICE_V3),      // STALE_ORACLE_PRICE_V3_DIAG
 ];
 
 pub fn descriptor_for_diag_code(code: u8) -> Option<&'static LintDescriptor> {
@@ -3180,6 +3583,7 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &FRESH_ADDRESS_REUSE_V2,
     &TAINTED_TRANSFER_RECIPIENT,
     &CAPABILITY_ESCAPE,
+    &STALE_ORACLE_PRICE_V3,
 ];
 
 /// Return all Phase II lint descriptors
@@ -3212,6 +3616,7 @@ pub fn create_visitors(
         visitors.push(Box::new(DestroyZeroVerifier) as Box<dyn AbstractInterpreterVisitor>);
         visitors.push(Box::new(FreshAddressReuseVerifier) as Box<dyn AbstractInterpreterVisitor>);
         visitors.push(Box::new(TaintedTransferRecipientVerifier) as Box<dyn AbstractInterpreterVisitor>);
+        visitors.push(Box::new(StaleOraclePriceVerifier) as Box<dyn AbstractInterpreterVisitor>);
     }
 
     if experimental {

@@ -133,15 +133,15 @@ mod phase2 {
         let visitors = absint_lints::create_visitors(true, false);
         assert_eq!(
             visitors.len(),
-            4,
-            "Should create 4 Phase II preview visitors (including tainted_transfer_recipient)"
+            5,
+            "Should create 5 Phase II preview visitors (including stale_oracle_price_v3)"
         );
 
         let visitors = absint_lints::create_visitors(true, true);
         assert_eq!(
             visitors.len(),
-            5,
-            "Should create 5 Phase II visitors when experimental is enabled"
+            7,
+            "Should create 7 Phase II visitors when experimental is enabled"
         );
     }
 }

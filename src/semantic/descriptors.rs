@@ -607,11 +607,14 @@ pub static CAPABILITY_ANTIPATTERNS: LintDescriptor = LintDescriptor {
 /// Detects usage of unsafe oracle price functions from known oracle providers.
 ///
 /// Uses type-based detection to verify the call is to a known oracle module.
+/// 
+/// DEPRECATED: Superseded by stale_oracle_price_v3 which uses CFG-aware dataflow
+/// analysis to track whether prices are validated before use.
 pub static STALE_ORACLE_PRICE_V2: LintDescriptor = LintDescriptor {
     name: "stale_oracle_price_v2",
     category: LintCategory::Security,
-    description: "Using get_price_unsafe from known oracle may return stale prices (type-based, requires --mode full)",
-    group: RuleGroup::Stable,
+    description: "Using get_price_unsafe from known oracle may return stale prices (deprecated: use v3 with --preview)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::TemporalOrdering),

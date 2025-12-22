@@ -199,11 +199,14 @@ fn check_suspicious_overflow(node: Node, source: &str, ctx: &mut LintContext<'_>
 ///
 /// This lint has near-zero false positives because the function is explicitly
 /// named "unsafe" in the Pyth API.
+/// 
+/// DEPRECATED: Use stale_oracle_price_v3 (CFG-aware, --mode full) for rigorous detection.
+/// This syntactic lint is kept for fast-mode feedback but has known false positives.
 pub static STALE_ORACLE_PRICE: LintDescriptor = LintDescriptor {
     name: "stale_oracle_price",
     category: LintCategory::Security,
-    description: "Using get_price_unsafe may return stale prices (see: Bluefin Audit 2024, Pyth docs)",
-    group: RuleGroup::Stable,
+    description: "Using get_price_unsafe may return stale prices - use --mode full for rigorous detection (deprecated)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::TemporalOrdering),
@@ -1651,6 +1654,7 @@ fn classify_address_check(text: &str) -> (&'static str, &'static str) {
 /// struct State { step_1_complete: bool }
 /// public fun step_2(state: &State) {
 ///     assert!(state.step_1_complete, E_STEP_1_REQUIRED);
+///     // proceeds without checking ordering...
 /// }
 ///
 /// // SUGGESTED
@@ -1824,7 +1828,7 @@ fn check_counter_based_supply(node: Node, source: &str, ctx: &mut LintContext<'_
         let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
         let node_text_lower = node_text.to_lowercase();
 
-        // Check for mint-like functions with counter patterns
+        // Check for counter patterns
         let has_counter = COUNTER_PATTERNS.iter().any(|p| node_text_lower.contains(p));
         let has_max = MAX_PATTERNS.iter().any(|p| node_text_lower.contains(p));
         let has_increment = node_text.contains("+ 1") || node_text.contains("+= 1");
@@ -2535,6 +2539,7 @@ module example::game {
         "#;
 
         let messages = lint_source(source);
+        // Should not fire for entry functions
         assert!(messages.is_empty());
     }
 
