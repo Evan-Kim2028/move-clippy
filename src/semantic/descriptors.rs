@@ -207,74 +207,49 @@ pub static EVENT_PAST_TENSE: LintDescriptor = LintDescriptor {
     gap: None,
 };
 
-/// Detects sharing of objects with `key + store` abilities.
+/// DEPRECATED: This lint cannot be implemented with principled detection.
 ///
-/// # Security Rationale
+/// The ability pattern `key + store + !copy + !drop` describes ALL valuable Sui objects,
+/// not just authority-granting capabilities. This includes:
+/// - Capabilities (AdminCap, TreasuryCap) - should flag
+/// - DeFi pools (Fountain, Vault) - should NOT flag (intentional sharing)
+/// - Sui standard objects (Kiosk, TransferPolicy) - should NOT flag
+/// - Registries and configs - should NOT flag
 ///
-/// Objects with `key + store` abilities represent "transferable authority" in Sui Move:
-/// - `key` = the object has identity (UID)
-/// - `store` = the object can be transferred to another owner
+/// There is no principled, heuristic-free way to distinguish "authority objects" from
+/// "shared state objects" based on the type system alone. Both have identical ability
+/// patterns because the semantic meaning is in developer intent, not type structure.
 ///
-/// When such objects are shared via `share_object()` or `public_share_object()`,
-/// they become publicly accessible. This is dangerous for authority
-/// objects (capabilities) but may be intentional for shared state objects.
+/// Ecosystem testing showed ~78% false positive rate (28/36 findings were false positives).
 ///
-/// # Type System Grounding
-///
-/// This lint is grounded in Move's ability system, not name heuristics:
-/// - ALL Sui capabilities have `key + store` (TreasuryCap, UpgradeCap, etc.)
-/// - A capability without `store` couldn't be transferred - useless
-/// - A capability without `key` couldn't exist as an object - not a capability
-///
-/// # False Positives
-///
-/// This lint may fire on intentional shared state patterns (Kiosk, Pool objects).
-/// Use `#[ext(move_clippy(allow(share_owned_authority)))]` to suppress for intentional cases.
-///
-/// # Example (Dangerous)
-///
-/// ```move
-/// public fun init(ctx: &mut TxContext) {
-///     let cap = TreasuryCap { id: object::new(ctx) };
-///     transfer::share_object(cap);  // DANGEROUS: anyone can mint!
-/// }
-/// ```
-///
-/// # Correct Patterns
-///
-/// ```move
-/// // Transfer to owner
-/// public fun init(ctx: &mut TxContext) {
-///     let cap = TreasuryCap { id: object::new(ctx) };
-///     transfer::transfer(cap, tx_context::sender(ctx));
-/// }
-///
-/// // Or intentional sharing with suppression
-/// #[ext(move_clippy(allow(share_owned_authority)))]
-/// public fun init(ctx: &mut TxContext) {
-///     let kiosk = Kiosk { id: object::new(ctx) };
-///     transfer::share_object(kiosk);  // Intentional for marketplace
-/// }
-/// ```
+/// The important security case (sharing already-owned objects) is covered by Sui's
+/// built-in `share_owned` lint, which uses dataflow analysis to detect objects that
+/// came from function parameters or unpacking.
+#[allow(dead_code)]
 pub static SHARE_OWNED_AUTHORITY: LintDescriptor = LintDescriptor {
     name: "share_owned_authority",
     category: LintCategory::Security,
-    description: "Sharing key+store object makes it publicly accessible - dangerous for authority objects (type-based)",
-    group: RuleGroup::Experimental,
+    description: "DEPRECATED: Sharing key+store object - cannot distinguish capabilities from shared state",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::OwnershipViolation),
 };
 
-/// Detects sharing of capability-like objects.
+/// DEPRECATED: This lint cannot be implemented with principled detection.
 ///
-/// This lint is intentionally conservative and currently tiered as Preview because
-/// ability patterns alone may over-approximate what developers consider a "capability".
+/// Same issue as `share_owned_authority` - the ability pattern `key + store + !copy + !drop`
+/// matches all valuable Sui objects, not just capabilities. This produces high false
+/// positive rates on intentional shared state patterns (pools, registries, kiosks).
+///
+/// Sui's built-in `share_owned` lint provides principled detection using dataflow
+/// analysis to flag sharing of objects received as parameters (likely already owned).
+#[allow(dead_code)]
 pub static SHARED_CAPABILITY_OBJECT: LintDescriptor = LintDescriptor {
     name: "shared_capability_object",
     category: LintCategory::Security,
-    description: "Capability-like object is shared - potential authorization leak (type-based, preview)",
-    group: RuleGroup::Preview,
+    description: "DEPRECATED: Capability-like object shared - cannot distinguish from shared state",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::CapabilityEscape),
@@ -691,14 +666,14 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &WITNESS_ANTIPATTERNS,
     &STALE_ORACLE_PRICE_V2,
     // Security (preview, type-based)
-    &SHARED_CAPABILITY_OBJECT,
+    // NOTE: SHARED_CAPABILITY_OBJECT deprecated - cannot distinguish capabilities from shared state
     &CAPABILITY_TRANSFER_LITERAL_ADDRESS,
     &MUT_KEY_PARAM_MISSING_AUTHORITY,
     &UNBOUNDED_ITERATION_OVER_PARAM_VECTOR,
     // Security (experimental, type-based)
     &UNCHECKED_DIVISION,
     &UNUSED_RETURN_VALUE,
-    &SHARE_OWNED_AUTHORITY,
+    // NOTE: SHARE_OWNED_AUTHORITY deprecated - cannot distinguish capabilities from shared state
     &DROPPABLE_HOT_POTATO_V2,
     &DROPPABLE_FLASH_LOAN_RECEIPT,
     &RECEIPT_MISSING_PHANTOM_TYPE,
