@@ -17,24 +17,6 @@ use crate::rules::util::is_test_only_module;
 use tree_sitter::Node;
 
 // ============================================================================
-// Helper functions for syntax-based ability checking
-// ============================================================================
-
-/// Check if a struct definition node has the `drop` ability (syntax-based).
-fn has_drop_ability(node: Node, source: &str) -> bool {
-    let struct_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-    struct_text.contains("has drop")
-        || struct_text.contains("has key, drop")
-        || struct_text.contains("has drop, key")
-        || struct_text.contains("has store, drop")
-        || struct_text.contains("has drop, store")
-        || struct_text.contains("has copy, drop")
-        || struct_text.contains("has drop, copy")
-        || struct_text.contains("drop,")
-        || struct_text.contains(", drop")
-}
-
-// ============================================================================
 // suspicious_overflow_check - Detects potentially incorrect manual overflow checks
 // ============================================================================
 
@@ -199,11 +181,14 @@ fn check_suspicious_overflow(node: Node, source: &str, ctx: &mut LintContext<'_>
 ///
 /// This lint has near-zero false positives because the function is explicitly
 /// named "unsafe" in the Pyth API.
+///
+/// DEPRECATED: Use stale_oracle_price_v3 (CFG-aware, --mode full) for rigorous detection.
+/// This syntactic lint is kept for fast-mode feedback but has known false positives.
 pub static STALE_ORACLE_PRICE: LintDescriptor = LintDescriptor {
     name: "stale_oracle_price",
     category: LintCategory::Security,
-    description: "Using get_price_unsafe may return stale prices (see: Bluefin Audit 2024, Pyth docs)",
-    group: RuleGroup::Stable,
+    description: "Using get_price_unsafe may return stale prices - use --mode full for rigorous detection (deprecated)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::TemporalOrdering),
@@ -296,32 +281,24 @@ fn check_stale_oracle_price(node: Node, source: &str, ctx: &mut LintContext<'_>)
 ///     exchange.pending_admin = option::none();
 /// }
 /// ```
+/// DEPRECATED: This lint has a ~50% false positive rate due to syntactic matching.
+/// Issues with the current approach:
+/// - Matches function names like `set_authority` without analyzing actual behavior
+/// - Flags vendored dependencies (e.g., switchboard_std) and framework code (kiosk)
+/// - Cannot detect if module already has a two-step pattern elsewhere
+///
+/// A CFG-aware upgrade was attempted but the pattern matching for field mutations
+/// in Move's HLIR proved complex - `obj.field = value` compiles to patterns that
+/// require tracking through multiple AST nodes.
 pub static SINGLE_STEP_OWNERSHIP_TRANSFER: LintDescriptor = LintDescriptor {
     name: "single_step_ownership_transfer",
     category: LintCategory::Security,
-    description: "Single-step ownership transfer is dangerous - use two-step pattern (see: OpenZeppelin Ownable2Step)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] High FP rate - syntactic pattern matching flags vendored deps and framework code",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::TemporalOrdering),
 };
-
-/// Function name patterns that suggest admin/ownership transfer.
-const OWNERSHIP_TRANSFER_PATTERNS: &[&str] = &[
-    "transfer_admin",
-    "set_admin",
-    "change_admin",
-    "update_admin",
-    "transfer_owner",
-    "set_owner",
-    "change_owner",
-    "update_owner",
-    "transfer_authority",
-    "set_authority",
-];
-
-/// Patterns that indicate a two-step transfer (safe).
-const TWO_STEP_PATTERNS: &[&str] = &["pending", "propose", "accept", "claim"];
 
 pub struct SingleStepOwnershipTransferLint;
 
@@ -330,63 +307,10 @@ impl LintRule for SingleStepOwnershipTransferLint {
         &SINGLE_STEP_OWNERSHIP_TRANSFER
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_single_step_ownership(root, source, ctx);
-    }
-}
-
-fn check_single_step_ownership(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for function definitions
-    if node.kind() == "function_definition"
-        && let Some(name_node) = node.child_by_field_name("name")
-    {
-        let func_name = name_node
-            .utf8_text(source.as_bytes())
-            .unwrap_or("")
-            .to_lowercase();
-
-        // Check if function name suggests ownership transfer
-        let is_ownership_transfer = OWNERSHIP_TRANSFER_PATTERNS
-            .iter()
-            .any(|pat| func_name.contains(pat));
-
-        if is_ownership_transfer {
-            let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-            let func_text_lower = func_text.to_lowercase();
-
-            // Check if this appears to be a two-step pattern (safe)
-            let is_two_step = TWO_STEP_PATTERNS
-                .iter()
-                .any(|pat| func_text_lower.contains(pat));
-
-            // If it's a transfer function but doesn't use two-step pattern, flag it
-            if !is_two_step {
-                // Additional check: make sure there's an assignment to admin/owner field
-                let has_admin_assignment = func_text_lower.contains(".admin =")
-                    || func_text_lower.contains(".owner =")
-                    || func_text_lower.contains(".authority =");
-
-                if has_admin_assignment {
-                    ctx.report_node(
-                            &SINGLE_STEP_OWNERSHIP_TRANSFER,
-                            node,
-                            format!(
-                                "Function `{}` appears to implement single-step ownership transfer. \
-                                 This is dangerous - a typo in the new address permanently locks out admin access. \
-                                 Consider implementing a two-step pattern: 1) propose_admin sets pending_admin, \
-                                 2) accept_admin requires the new admin to confirm.",
-                                func_name
-                            ),
-                        );
-                }
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_single_step_ownership(child, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: High false positive rate (~50%) due to syntactic matching.
+        // Flags vendored dependencies and framework code. A CFG-aware upgrade
+        // proved complex due to Move's HLIR patterns for field mutations.
     }
 }
 
@@ -493,11 +417,22 @@ impl LintRule for UncheckedCoinSplitLint {
 ///     // witness is dropped automatically
 /// }
 /// ```
+///
+/// # Deprecation Notice
+///
+/// DEPRECATED: The Sui compiler already enforces OTW rules at compile time.
+/// If you define a struct intended to be an OTW but with wrong abilities,
+/// you'll get a compile error when you try to use it in `init()`.
+///
+/// This syntactic lint used a heuristic (SCREAMING_CASE + empty body) that
+/// incorrectly flagged type markers like `GT`, `T`, `S` which are not OTWs.
+/// We cannot determine *intent* - whether a struct is meant to be an OTW -
+/// through syntactic analysis alone.
 pub static MISSING_WITNESS_DROP: LintDescriptor = LintDescriptor {
     name: "missing_witness_drop",
     category: LintCategory::Security,
-    description: "One-time witness struct missing `drop` ability (see: Sui OTW pattern docs)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Sui compiler enforces OTW rules - heuristic detection has high false positive rate on type markers",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::AbilityMismatch),
@@ -510,55 +445,10 @@ impl LintRule for MissingWitnessDropLint {
         &MISSING_WITNESS_DROP
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        // Skip test modules - OTW pattern is irrelevant in tests
-        if is_test_only_module(root, source) {
-            return;
-        }
-        check_missing_witness_drop(root, source, ctx);
-    }
-}
-
-fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for struct definitions
-    if node.kind() == "struct_definition"
-        && let Some(name_node) = node.child_by_field_name("name")
-    {
-        let struct_name = name_node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // OTW pattern: SCREAMING_SNAKE_CASE, same as module name, empty body
-        // Check if it looks like an OTW (all uppercase with underscores)
-        let is_screaming_case = struct_name.chars().all(|c| c.is_uppercase() || c == '_');
-
-        if is_screaming_case && !struct_name.is_empty() {
-            // Check if it has empty body (no fields)
-            let struct_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-            let has_empty_body = struct_text.contains("{}") || struct_text.contains("{ }");
-
-            if has_empty_body {
-                // Check if it has drop ability
-                let has_drop = has_drop_ability(node, source);
-
-                if !has_drop {
-                    ctx.report_node(
-                            &MISSING_WITNESS_DROP,
-                            node,
-                            format!(
-                                "Struct `{}` appears to be a one-time witness (OTW) but is missing \
-                                 the `drop` ability. OTW structs must have `drop` so they can be \
-                                 consumed after use in the init function. Add `has drop` to the struct.",
-                                struct_name
-                            ),
-                        );
-                }
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_missing_witness_drop(child, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: Sui compiler already enforces OTW rules at compile time.
+        // The heuristic (SCREAMING_CASE + empty body) incorrectly flags type markers
+        // like GT, T, S, R which are not intended to be OTWs.
     }
 }
 
@@ -603,11 +493,18 @@ fn check_missing_witness_drop(node: Node, source: &str, ctx: &mut LintContext<'_
 ///     // Use result internally, don't return it
 /// }
 /// ```
+///
+/// # Deprecation Notice
+///
+/// DEPRECATED: Use `public_random_access_v2` (type-based, --mode full) which correctly
+/// filters to `sui::random::Random` only. The Sui compiler also has a built-in
+/// `public_random` lint. This syntactic lint uses case-insensitive string matching
+/// ("random") which incorrectly flags functions that don't actually use the Random type.
 pub static PUBLIC_RANDOM_ACCESS: LintDescriptor = LintDescriptor {
     name: "public_random_access",
     category: LintCategory::Security,
-    description: "Public function exposes Random object, enabling front-running (see: Sui randomness docs)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Use public_random_access_v2 or Sui's built-in public_random lint - string matching has high false positive rate",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::ApiMisuse),
@@ -620,53 +517,10 @@ impl LintRule for PublicRandomAccessLint {
         &PUBLIC_RANDOM_ACCESS
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_public_random_access(root, source, ctx);
-    }
-}
-
-fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for function definitions
-    if node.kind() == "function_definition" {
-        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // Check if function is public (not entry)
-        let is_public = func_text.starts_with("public fun") || func_text.contains("public fun ");
-        let is_entry = func_text.contains("entry ");
-
-        // Entry functions are OK because they can't be composed
-        if is_public && !is_entry {
-            // Check if function takes Random as parameter or returns random value
-            let func_lower = func_text.to_lowercase();
-            let has_random_param =
-                func_lower.contains("&random") || func_lower.contains(": random");
-            let returns_random = func_lower.contains("-> u64")
-                && (func_lower.contains("generate") || func_lower.contains("random"));
-
-            if has_random_param || returns_random {
-                let func_name = node
-                    .child_by_field_name("name")
-                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
-                    .unwrap_or("unknown");
-
-                ctx.report_node(
-                    &PUBLIC_RANDOM_ACCESS,
-                    node,
-                    format!(
-                        "Function `{}` is public and exposes Random. This enables front-running \
-                         attacks where validators can see random values before inclusion. \
-                         Use `entry` functions or consume random values internally.",
-                        func_name
-                    ),
-                );
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_public_random_access(child, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: Sui compiler has built-in public_random lint with proper type detection.
+        // This syntactic lint used string matching which incorrectly flagged functions
+        // that don't actually use sui::random::Random.
     }
 }
 // ============================================================================
@@ -702,24 +556,23 @@ fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_
 ///     assert!(vector::contains(&authority.whitelist, &tx_context::sender(ctx)), E_UNAUTHORIZED);
 /// }
 /// ```
+/// DEPRECATED: This lint has a high false positive rate (~70% in framework/test code).
+/// The syntactic approach cannot distinguish between:
+/// - Security-critical boolean checks that should be enforced
+/// - Legitimate ignored returns in test code or non-security contexts
+///
+/// A CFG-aware upgrade was attempted but proved infeasible - tracking boolean
+/// values through arbitrary control flow to determine if they ever reach a
+/// guard condition requires complex dataflow analysis.
 pub static IGNORED_BOOLEAN_RETURN: LintDescriptor = LintDescriptor {
     name: "ignored_boolean_return",
     category: LintCategory::Security,
-    description: "Boolean-returning function result is ignored, may indicate missing authorization check (see: Typus Finance hack)",
-    group: RuleGroup::Experimental,
+    description: "[DEPRECATED] High FP rate (~70%) - syntactic approach cannot distinguish security vs non-security contexts",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
     gap: Some(TypeSystemGap::ValueFlow),
 };
-
-/// Functions that return bool and should have their results checked
-const BOOLEAN_FUNCTIONS: &[&str] = &[
-    "contains", // vector::contains, table::contains
-    "is_some",  // option::is_some
-    "is_none",  // option::is_none
-    "is_empty", // vector::is_empty
-    "exists",   // exists<T>(addr)
-];
 
 pub struct IgnoredBooleanReturnLint;
 
@@ -728,133 +581,11 @@ impl LintRule for IgnoredBooleanReturnLint {
         &IGNORED_BOOLEAN_RETURN
     }
 
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        // Skip test modules - benchmarks legitimately ignore returns
-        if is_test_only_module(root, source) {
-            return;
-        }
-        check_ignored_boolean_return(root, source, ctx);
+    fn check(&self, _root: Node, _source: &str, _ctx: &mut LintContext<'_>) {
+        // DEPRECATED: High false positive rate (~70%) in framework/test code.
+        // Syntactic approach cannot distinguish security-critical boolean checks
+        // from legitimate ignored returns. CFG-aware upgrade proved infeasible.
     }
-}
-
-fn check_ignored_boolean_return(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    // Look for call_expression within a node
-    if node.kind() == "call_expression" {
-        let call_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // Check if this is a boolean-returning function
-        for func in BOOLEAN_FUNCTIONS {
-            if call_text.contains(&format!("{}(", func))
-                || call_text.ends_with(&format!("{}(", func))
-            {
-                // Check if this call's result is being used by walking up the parent chain
-                let mut current = node.parent();
-                while let Some(parent) = current {
-                    let parent_kind = parent.kind();
-                    // These parent types mean the result IS being used
-                    if parent_kind == "let_statement"
-                        || parent_kind == "assignment"
-                        || parent_kind == "macro_call_expression"  // assert!()
-                        || parent_kind == "if_expression"
-                        || parent_kind == "while_expression"
-                        || parent_kind == "return_expression"
-                        || parent_kind == "binary_expression"  // used in && or ||
-                        || parent_kind == "unary_expression"   // !contains(...)
-                        || parent_kind == "parenthesized_expression"  // (contains(...))
-                        || parent_kind == "call_expression"
-                    // nested in another call like assert!(...)
-                    {
-                        // Result is being used, skip to recursion
-                        let mut cursor = node.walk();
-                        for child in node.children(&mut cursor) {
-                            check_ignored_boolean_return(child, source, ctx);
-                        }
-                        return;
-                    }
-                    // Stop at function/block boundaries
-                    if parent_kind == "function_definition" || parent_kind == "block" {
-                        break;
-                    }
-                    current = parent.parent();
-                }
-
-                // Also check if this call is inside a macro like assert!
-                // by looking at the source context - check a wider window for multi-line asserts
-                let start_byte = node.start_byte();
-                if start_byte > 50 {
-                    let prefix = &source[start_byte.saturating_sub(100)..start_byte];
-                    // Count open/close parens to see if we're inside an assert!(
-                    if prefix.contains("assert!") || prefix.contains("assert_eq!") {
-                        // Check if we're still inside the assert by counting parens
-                        let after_assert =
-                            prefix.rfind("assert").map(|i| &prefix[i..]).unwrap_or("");
-                        let open_parens = after_assert.matches('(').count();
-                        let close_parens = after_assert.matches(')').count();
-                        if open_parens > close_parens {
-                            // Inside an assert macro, skip
-                            let mut cursor = node.walk();
-                            for child in node.children(&mut cursor) {
-                                check_ignored_boolean_return(child, source, ctx);
-                            }
-                            return;
-                        }
-                    }
-                }
-
-                // Check if this is the last expression in a function (implicit return)
-                // by checking if there's nothing significant after it
-                let end_byte = node.end_byte();
-                if end_byte < source.len() {
-                    let suffix = &source[end_byte..source.len().min(end_byte + 20)];
-                    // If followed only by whitespace and }, it's an implicit return
-                    let trimmed = suffix.trim();
-                    if trimmed.is_empty() || trimmed.starts_with('}') {
-                        // Implicit return, skip
-                        let mut cursor = node.walk();
-                        for child in node.children(&mut cursor) {
-                            check_ignored_boolean_return(child, source, ctx);
-                        }
-                        return;
-                    }
-                }
-
-                // Get function context for better message
-                let func_name = get_enclosing_function_name(node, source);
-
-                ctx.report_node(
-                    &IGNORED_BOOLEAN_RETURN,
-                    node,
-                    format!(
-                        "Function `{}` calls `{}` but ignores the boolean result. \
-                         This may indicate a missing authorization check. \
-                         Consider wrapping in `assert!()` or using the result in a condition.",
-                        func_name, func
-                    ),
-                );
-                break;
-            }
-        }
-    }
-
-    // Recurse into children
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_ignored_boolean_return(child, source, ctx);
-    }
-}
-
-/// Get the name of the enclosing function
-fn get_enclosing_function_name<'a>(node: Node<'a>, source: &'a str) -> &'a str {
-    let mut current = Some(node);
-    while let Some(n) = current {
-        if (n.kind() == "function_definition" || n.kind() == "native_function_definition")
-            && let Some(name_node) = n.child_by_field_name("name")
-        {
-            return name_node.utf8_text(source.as_bytes()).unwrap_or("unknown");
-        }
-        current = n.parent();
-    }
-    "unknown"
 }
 
 // ============================================================================
@@ -1651,6 +1382,7 @@ fn classify_address_check(text: &str) -> (&'static str, &'static str) {
 /// struct State { step_1_complete: bool }
 /// public fun step_2(state: &State) {
 ///     assert!(state.step_1_complete, E_STEP_1_REQUIRED);
+///     // proceeds without checking ordering...
 /// }
 ///
 /// // SUGGESTED
@@ -1824,7 +1556,7 @@ fn check_counter_based_supply(node: Node, source: &str, ctx: &mut LintContext<'_
         let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
         let node_text_lower = node_text.to_lowercase();
 
-        // Check for mint-like functions with counter patterns
+        // Check for counter patterns
         let has_counter = COUNTER_PATTERNS.iter().any(|p| node_text_lower.contains(p));
         let has_max = MAX_PATTERNS.iter().any(|p| node_text_lower.contains(p));
         let has_increment = node_text.contains("+ 1") || node_text.contains("+= 1");
@@ -2319,11 +2051,12 @@ mod tests {
     }
 
     // =========================================================================
-    // SingleStepOwnershipTransferLint tests
+    // SingleStepOwnershipTransferLint tests (DEPRECATED - lint is now no-op)
     // =========================================================================
 
     #[test]
     fn test_single_step_transfer_admin_detected() {
+        // DEPRECATED: This lint has been disabled due to high FP rate (~50%)
         let source = r#"
             module example::admin {
                 public fun transfer_admin(exchange: &mut Exchange, new_admin: address) {
@@ -2333,13 +2066,15 @@ mod tests {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("transfer_admin"));
-        assert!(messages[0].contains("single-step"));
+        assert!(
+            messages.is_empty(),
+            "Deprecated lint should produce no findings"
+        );
     }
 
     #[test]
     fn test_single_step_set_owner_detected() {
+        // DEPRECATED: This lint has been disabled due to high FP rate (~50%)
         let source = r#"
             module example::owner {
                 public fun set_owner(config: &mut Config, new_owner: address) {
@@ -2349,39 +2084,10 @@ mod tests {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("set_owner"));
-    }
-
-    #[test]
-    fn test_two_step_propose_admin_ok() {
-        // Two-step pattern with "pending" - should not fire
-        let source = r#"
-            module example::admin {
-                public fun propose_admin(exchange: &mut Exchange, new_admin: address) {
-                    exchange.pending_admin = option::some(new_admin);
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
-    }
-
-    #[test]
-    fn test_two_step_accept_admin_ok() {
-        // Accept function - should not fire
-        let source = r#"
-            module example::admin {
-                public fun accept_admin(exchange: &mut Exchange, ctx: &TxContext) {
-                    let pending = exchange.pending_admin;
-                    exchange.admin = sender(ctx);
-                }
-            }
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
+        assert!(
+            messages.is_empty(),
+            "Deprecated lint should produce no findings"
+        );
     }
 
     #[test]
@@ -2461,11 +2167,13 @@ module example::stake {
     }
 
     // =========================================================================
-    // MissingWitnessDropLint tests
+    // MissingWitnessDropLint tests (DEPRECATED)
     // =========================================================================
 
     #[test]
-    fn test_missing_witness_drop_detected() {
+    fn test_missing_witness_drop_deprecated_no_diagnostics() {
+        // DEPRECATED: Sui compiler already enforces OTW rules at compile time.
+        // This lint had high false positive rate on type markers like GT, T, S.
         let source = r#"
 module example::token {
     struct MY_TOKEN {}
@@ -2473,42 +2181,18 @@ module example::token {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("MY_TOKEN"));
-        assert!(messages[0].contains("one-time witness"));
-    }
-
-    #[test]
-    fn test_witness_with_drop_ok() {
-        let source = r#"
-module example::token {
-    struct MY_TOKEN has drop {}
-}
-        "#;
-
-        let messages = lint_source(source);
-        assert!(messages.is_empty());
-    }
-
-    #[test]
-    fn test_regular_struct_not_witness_ok() {
-        // Not all caps, so not detected as OTW
-        let source = r#"
-module example::data {
-    struct UserData {}
-}
-        "#;
-
-        let messages = lint_source(source);
+        // Deprecated lint should produce no findings
         assert!(messages.is_empty());
     }
 
     // =========================================================================
-    // PublicRandomAccessLint tests
+    // PublicRandomAccessLint tests (DEPRECATED)
     // =========================================================================
 
     #[test]
-    fn test_public_random_access_detected() {
+    fn test_public_random_access_deprecated_no_diagnostics() {
+        // DEPRECATED: Sui compiler has built-in public_random lint with proper type detection.
+        // This syntactic lint used string matching which had high false positive rate.
         let source = r#"
 module example::game {
     public fun get_random_number(r: &Random) {
@@ -2518,23 +2202,7 @@ module example::game {
         "#;
 
         let messages = lint_source(source);
-        assert_eq!(messages.len(), 1);
-        assert!(messages[0].contains("Random"));
-        assert!(messages[0].contains("front-running"));
-    }
-
-    #[test]
-    fn test_entry_random_ok() {
-        // entry functions are OK for Random
-        let source = r#"
-module example::game {
-    entry fun roll_dice(r: &Random, ctx: &mut TxContext) {
-        let result = random::new_generator(r, ctx).generate_bool();
-    }
-}
-        "#;
-
-        let messages = lint_source(source);
+        // Deprecated lint should produce no findings
         assert!(messages.is_empty());
     }
 
@@ -2547,11 +2215,12 @@ module example::game {
     // =========================================================================
 
     // =========================================================================
-    // IgnoredBooleanReturnLint tests
+    // IgnoredBooleanReturnLint tests (DEPRECATED - lint is now no-op)
     // =========================================================================
 
     #[test]
     fn test_ignored_contains_detected() {
+        // DEPRECATED: This lint has been disabled due to high FP rate (~70%)
         let source = r#"
 module example::auth {
     public fun update(authority: &UpdateAuthority, user: address) {
@@ -2562,27 +2231,12 @@ module example::auth {
         "#;
 
         let messages = lint_source(source);
-        // Filter to just ignored_boolean_return messages
+        // Deprecated lint should produce no findings
         let ignored_msgs: Vec<_> = messages.iter().filter(|m| m.contains("ignores")).collect();
-        assert_eq!(ignored_msgs.len(), 1);
-        assert!(ignored_msgs[0].contains("contains"));
-    }
-
-    #[test]
-    fn test_contains_in_assert_ok() {
-        let source = r#"
-module example::auth {
-    public fun update(authority: &UpdateAuthority, user: address) {
-        assert!(vector::contains(&authority.whitelist, &user), E_UNAUTHORIZED);
-        do_update();
-    }
-}
-        "#;
-
-        let messages = lint_source(source);
-        // Should not fire when result is used in assert!
-        let ignored_bool_msgs: Vec<_> = messages.iter().filter(|m| m.contains("ignores")).collect();
-        assert!(ignored_bool_msgs.is_empty());
+        assert!(
+            ignored_msgs.is_empty(),
+            "Deprecated lint should produce no findings"
+        );
     }
 
     // =========================================================================

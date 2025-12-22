@@ -382,20 +382,25 @@ fn golden_stale_oracle_price_negative() {
 
 #[test]
 fn golden_missing_witness_drop_positive() {
+    // DEPRECATED: This lint is now deprecated because:
+    // 1. Sui compiler already enforces OTW rules at compile time
+    // 2. Heuristic detection had high false positive rate on type markers (GT, T, S)
     let engine = create_default_engine();
     let src = include_str!("golden/missing_witness_drop/positive.move");
     let diags = engine.lint_source(src).expect("linting should succeed");
     let filtered = filter_lint(&diags, "missing_witness_drop");
 
+    // Deprecated lint should produce no findings
     assert!(
-        !filtered.is_empty(),
-        "missing_witness_drop should trigger on OTW without drop.\nAll diagnostics: {}",
-        format_diags(&diags)
+        filtered.is_empty(),
+        "missing_witness_drop is DEPRECATED and should not trigger.\nGot: {}",
+        format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
     );
 }
 
 #[test]
 fn golden_missing_witness_drop_negative() {
+    // DEPRECATED: This lint is now deprecated
     let engine = create_default_engine();
     let src = include_str!("golden/missing_witness_drop/negative.move");
     let diags = engine.lint_source(src).expect("linting should succeed");
@@ -403,7 +408,7 @@ fn golden_missing_witness_drop_negative() {
 
     assert!(
         filtered.is_empty(),
-        "missing_witness_drop should NOT trigger on proper OTW.\nGot: {}",
+        "missing_witness_drop is DEPRECATED and should not trigger.\nGot: {}",
         format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
     );
 }

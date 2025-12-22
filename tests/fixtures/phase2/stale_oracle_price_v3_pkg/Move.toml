@@ -1,0 +1,12 @@
+[package]
+name = "stale_oracle_price_v3_pkg"
+edition = "2024.beta"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/mainnet" }
+
+[addresses]
+stale_oracle_price_v3_pkg = "0x0"
+pyth = "0x1"
+switchboard = "0x2"
+supra = "0x3"

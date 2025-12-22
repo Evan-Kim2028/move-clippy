@@ -19,7 +19,8 @@ semantic_directives_pkg = "0x0"
 fn lint_pkg(source: &str, settings: LintSettings) -> Vec<move_clippy::diagnostics::Diagnostic> {
     let temp_dir =
         create_temp_package(MOVE_TOML, &[("test.move", source)]).expect("setup should succeed");
-    move_clippy::semantic::lint_package(temp_dir.path(), &settings, false, false)
+    // Enable preview mode since entry_function_returns_value is in Preview group
+    move_clippy::semantic::lint_package(temp_dir.path(), &settings, true, false)
         .expect("lint_package should succeed")
 }
 

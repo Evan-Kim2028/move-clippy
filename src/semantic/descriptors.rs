@@ -161,11 +161,12 @@ pub static UNUSED_RETURN_VALUE: LintDescriptor = LintDescriptor {
 /// Detects entry functions that return non-unit values.
 ///
 /// In Sui Move, entry function return values are discarded by the runtime.
+/// This is a principled, zero-false-positive lint based on compiler semantics.
 pub static ENTRY_FUNCTION_RETURNS_VALUE: LintDescriptor = LintDescriptor {
     name: "entry_function_returns_value",
     category: LintCategory::Suspicious,
     description: "Entry function returns a value that will be discarded by the runtime (type-based)",
-    group: RuleGroup::Preview,
+    group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::ValueFlow),
@@ -282,11 +283,13 @@ pub static SHARED_CAPABILITY_OBJECT: LintDescriptor = LintDescriptor {
 /// Detects capability-like transfers to literal addresses.
 ///
 /// Narrow by design: only flags literal recipients to keep false positives low.
+/// Uses ability-based detection (key+store, no copy/drop) combined with literal
+/// address check for principled, low-false-positive detection.
 pub static CAPABILITY_TRANSFER_LITERAL_ADDRESS: LintDescriptor = LintDescriptor {
     name: "capability_transfer_literal_address",
     category: LintCategory::Security,
-    description: "Capability-like object transferred to a literal address - likely authorization leak (type-based, preview)",
-    group: RuleGroup::Preview,
+    description: "Capability-like object transferred to a literal address - likely authorization leak (type-based)",
+    group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::CapabilityEscape),
@@ -379,11 +382,16 @@ pub static GENERIC_TYPE_WITNESS_UNUSED: LintDescriptor = LintDescriptor {
 ///     amount: u64,
 /// }
 /// ```
+///
+/// DEPRECATED: This lint has a ~67% false positive rate because it flags ALL structs
+/// with only `drop` ability, including legitimate drop-only types like RandomGenerator,
+/// Receiving<T>, etc. Use `droppable_flash_loan_receipt` instead, which detects the
+/// actual security-critical pattern: functions returning Coin/Balance with a droppable receipt.
 pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
     name: "droppable_hot_potato_v2",
     category: LintCategory::Security,
-    description: "Struct has only `drop` ability - likely a broken hot potato (type-based)",
-    group: RuleGroup::Experimental,
+    description: "Struct has only `drop` ability (deprecated: use droppable_flash_loan_receipt for accurate detection)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::ApiMisuse),
@@ -392,11 +400,13 @@ pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
 /// Detects droppable receipts returned alongside Coin/Balance values.
 ///
 /// Flash loan receipts should not have `drop`; otherwise borrowers can ignore repayment.
+/// This is the recommended lint for detecting broken hot potato patterns in flash loans,
+/// replacing the deprecated `droppable_hot_potato_v2` which had high false positive rates.
 pub static DROPPABLE_FLASH_LOAN_RECEIPT: LintDescriptor = LintDescriptor {
     name: "droppable_flash_loan_receipt",
     category: LintCategory::Security,
-    description: "Function returns Coin/Balance with a droppable receipt struct (type-based, experimental)",
-    group: RuleGroup::Experimental,
+    description: "Function returns Coin/Balance with a droppable receipt struct (type-based, requires --mode full --preview)",
+    group: RuleGroup::Preview,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::AbilityMismatch),
@@ -593,12 +603,25 @@ pub static WITNESS_ANTIPATTERNS: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
-/// Detects capability structs with security antipatterns.
+/// Detects public functions returning capability types.
+///
+/// DEPRECATED: This lint cannot be implemented with principled detection.
+///
+/// - Name-based detection (`*Cap`) produces false positives on non-capabilities
+///   and false negatives on capabilities with different naming conventions.
+/// - Ability-based detection (key+store, no copy/drop) is too broad - it flags
+///   ALL public object factory functions (pools, positions, accounts), not just
+///   security-sensitive capability creation.
+///
+/// The important security cases are covered by dedicated, principled lints:
+/// - `copyable_capability`: key+store+copy (allows duplication)
+/// - `droppable_capability`: key+store+drop (allows silent discard)
+/// - `capability_transfer_v2`: transfer to literal address
 pub static CAPABILITY_ANTIPATTERNS: LintDescriptor = LintDescriptor {
     name: "capability_antipatterns",
     category: LintCategory::Security,
-    description: "Capability struct has copy ability, public constructor, or missing key - security vulnerability (type-based)",
-    group: RuleGroup::Stable,
+    description: "[DEPRECATED] Public function returns capability - superseded by copyable_capability and droppable_capability",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::CapabilityEscape),
@@ -607,11 +630,14 @@ pub static CAPABILITY_ANTIPATTERNS: LintDescriptor = LintDescriptor {
 /// Detects usage of unsafe oracle price functions from known oracle providers.
 ///
 /// Uses type-based detection to verify the call is to a known oracle module.
+///
+/// DEPRECATED: Superseded by stale_oracle_price_v3 which uses CFG-aware dataflow
+/// analysis to track whether prices are validated before use.
 pub static STALE_ORACLE_PRICE_V2: LintDescriptor = LintDescriptor {
     name: "stale_oracle_price_v2",
     category: LintCategory::Security,
-    description: "Using get_price_unsafe from known oracle may return stale prices (type-based, requires --mode full)",
-    group: RuleGroup::Stable,
+    description: "Using get_price_unsafe from known oracle may return stale prices (deprecated: use v3 with --preview)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::TemporalOrdering),

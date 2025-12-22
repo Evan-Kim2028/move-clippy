@@ -168,7 +168,7 @@ fn shared_capability_object_pkg_preview() {
 }
 
 #[test]
-fn capability_transfer_literal_address_pkg_preview() {
+fn capability_transfer_literal_address_pkg_stable() {
     let out = lint_fixture_package(
         "tests/fixtures/phase4/capability_transfer_literal_address_pkg",
         true,
