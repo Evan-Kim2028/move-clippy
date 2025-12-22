@@ -1,0 +1,65 @@
+# Move-Clippy Benchmark Repository List
+# 50 curated repos for consistent ecosystem testing
+# Categories: Production DeFi, Framework, Infrastructure, Examples, Misc
+
+# === Production DeFi Protocols (15) ===
+deepbookv3
+cetus-clmm
+scallop-lend
+suilend
+alphalend
+bluefin-spot
+bluefin-pro
+bucket-interface
+aftermath-swap-sui
+steamm
+frostend
+wisp-lsdfi-contract
+dolaprotocol
+nft-protocol
+suins-contracts
+
+# === Framework & Core (8) ===
+sui
+move-book
+openzeppelin-sui
+suitears
+dubhe-framework
+move-framework
+sui-prover
+mys-core
+
+# === Infrastructure & Oracles (7) ===
+pyth-crosschain
+wormhole
+axelar-cgp-sui
+redstone-oracles-monorepo
+switchboard-xyz-sui
+stork-external
+oracle
+
+# === DApps & Examples (10) ===
+sui-smart-contracts
+monorepo
+ika
+hetracoin-sui
+infinite-sea
+sui-potatoes-app
+memez-gg
+unipump-contracts
+teleswap-on-sui
+omniswap
+
+# === Learning & Tutorials (5) ===
+move-sui-gas-optimization-patterns
+sui-move-bootcamp
+suimove-learning
+0-1-to-sui-fullstack
+basic-move
+
+# === Cross-chain & Misc (5) ===
+union
+xcall-multi
+deltaswap
+walrus
+movescriptions
