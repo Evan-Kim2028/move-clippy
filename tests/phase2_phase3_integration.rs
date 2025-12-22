@@ -140,8 +140,8 @@ mod phase2 {
         let visitors = absint_lints::create_visitors(true, true);
         assert_eq!(
             visitors.len(),
-            5,
-            "Should create 5 Phase II visitors when experimental is enabled"
+            6,
+            "Should create 6 Phase II visitors when experimental is enabled (4 preview + 2 experimental)"
         );
     }
 }
