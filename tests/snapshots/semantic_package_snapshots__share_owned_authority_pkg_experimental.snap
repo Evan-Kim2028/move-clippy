@@ -2,6 +2,11 @@
 source: tests/semantic_package_snapshots.rs
 expression: out
 ---
+capability_escape:sources/share_authority.move:138: 9: warning: Capability `cap#0#0` warning: capability transferred without authorization check
+capability_escape:sources/share_authority.move:171: 9: warning: Capability `kiosk#0#0` dangerous: capability stored in shared object
+capability_escape:sources/share_authority.move:73: 9: warning: Capability `cap#0#0` dangerous: capability stored in shared object
+capability_escape:sources/share_authority.move:79: 9: warning: Capability `cap#0#0` dangerous: capability stored in shared object
+capability_escape:sources/share_authority.move:85: 9: warning: Capability `auth#0#0` dangerous: capability stored in shared object
 capability_transfer_v2:sources/share_authority.move:138: 9: warning: Capability-like object `negative_cases::TransferableCap` transferred in `transfer_cap`. Ensure the recipient is authorized (e.g., tx_context::sender(ctx)).
 custom_state_change:sources/share_authority.move:136: 16: warning: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom transfer function.
 custom_state_change:sources/share_authority.move:147: 16: warning: potentially unenforceable custom transfer/share/freeze policy: Potential unintended implementation of a custom freeze function.

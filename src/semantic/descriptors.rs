@@ -379,11 +379,16 @@ pub static GENERIC_TYPE_WITNESS_UNUSED: LintDescriptor = LintDescriptor {
 ///     amount: u64,
 /// }
 /// ```
+/// 
+/// DEPRECATED: This lint has a ~67% false positive rate because it flags ALL structs
+/// with only `drop` ability, including legitimate drop-only types like RandomGenerator,
+/// Receiving<T>, etc. Use `droppable_flash_loan_receipt` instead, which detects the
+/// actual security-critical pattern: functions returning Coin/Balance with a droppable receipt.
 pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
     name: "droppable_hot_potato_v2",
     category: LintCategory::Security,
-    description: "Struct has only `drop` ability - likely a broken hot potato (type-based)",
-    group: RuleGroup::Experimental,
+    description: "Struct has only `drop` ability (deprecated: use droppable_flash_loan_receipt for accurate detection)",
+    group: RuleGroup::Deprecated,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::ApiMisuse),
@@ -392,11 +397,13 @@ pub static DROPPABLE_HOT_POTATO_V2: LintDescriptor = LintDescriptor {
 /// Detects droppable receipts returned alongside Coin/Balance values.
 ///
 /// Flash loan receipts should not have `drop`; otherwise borrowers can ignore repayment.
+/// This is the recommended lint for detecting broken hot potato patterns in flash loans,
+/// replacing the deprecated `droppable_hot_potato_v2` which had high false positive rates.
 pub static DROPPABLE_FLASH_LOAN_RECEIPT: LintDescriptor = LintDescriptor {
     name: "droppable_flash_loan_receipt",
     category: LintCategory::Security,
-    description: "Function returns Coin/Balance with a droppable receipt struct (type-based, experimental)",
-    group: RuleGroup::Experimental,
+    description: "Function returns Coin/Balance with a droppable receipt struct (type-based, requires --mode full --preview)",
+    group: RuleGroup::Preview,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,
     gap: Some(TypeSystemGap::AbilityMismatch),
