@@ -379,7 +379,7 @@ pub static GENERIC_TYPE_WITNESS_UNUSED: LintDescriptor = LintDescriptor {
 ///     amount: u64,
 /// }
 /// ```
-/// 
+///
 /// DEPRECATED: This lint has a ~67% false positive rate because it flags ALL structs
 /// with only `drop` ability, including legitimate drop-only types like RandomGenerator,
 /// Receiving<T>, etc. Use `droppable_flash_loan_receipt` instead, which detects the
@@ -614,7 +614,7 @@ pub static CAPABILITY_ANTIPATTERNS: LintDescriptor = LintDescriptor {
 /// Detects usage of unsafe oracle price functions from known oracle providers.
 ///
 /// Uses type-based detection to verify the call is to a known oracle module.
-/// 
+///
 /// DEPRECATED: Superseded by stale_oracle_price_v3 which uses CFG-aware dataflow
 /// analysis to track whether prices are validated before use.
 pub static STALE_ORACLE_PRICE_V2: LintDescriptor = LintDescriptor {

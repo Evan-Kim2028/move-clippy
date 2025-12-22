@@ -13,7 +13,7 @@ type Result<T> = ClippyResult<T>;
 
 // =========================================================================
 // Stale Oracle Price V2 Lint (type-based)
-// 
+//
 // DEPRECATED: This lint is superseded by stale_oracle_price_v3 in absint_lints.rs
 // which uses CFG-aware dataflow analysis for rigorous detection.
 // This version is kept for backwards compatibility but will be removed.

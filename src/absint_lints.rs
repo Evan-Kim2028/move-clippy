@@ -2705,9 +2705,7 @@ impl EscapeKind {
             EscapeKind::ToParameterAddress => {
                 "capability transferred to address from function parameter"
             }
-            EscapeKind::ToExternalModule => {
-                "capability passed to external module function"
-            }
+            EscapeKind::ToExternalModule => "capability passed to external module function",
             EscapeKind::ToSharedObject => "capability stored in shared object",
             EscapeKind::UnconditionalTransfer => {
                 "capability transferred without authorization check"
@@ -3291,16 +3289,17 @@ impl SimpleAbsInt for StaleOraclePriceVerifierAI<'_> {
             C::Assign(_case, lvalues, rhs) => {
                 // Evaluate RHS to get its price validation state
                 let rhs_values = self.exp(context, state, rhs);
-                
+
                 // Find if any RHS value is unvalidated
                 let rhs_unvalidated = rhs_values
                     .iter()
                     .find(|v| matches!(v, PriceValidationValue::Unvalidated(_)));
-                
+
                 // Propagate to LHS variables
                 for lvalue in lvalues {
                     if let LValue_::Var { var, .. } = &lvalue.value {
-                        if let Some(PriceValidationValue::Unvalidated(source_loc)) = rhs_unvalidated {
+                        if let Some(PriceValidationValue::Unvalidated(source_loc)) = rhs_unvalidated
+                        {
                             // Mark variable as holding unvalidated price
                             if let Some(local_state) = state.locals.get_mut(var) {
                                 if let LocalState::Available(avail_loc, _) = local_state {
@@ -3316,7 +3315,11 @@ impl SimpleAbsInt for StaleOraclePriceVerifierAI<'_> {
 
                 false // Let default handling continue
             }
-            C::JumpIf { cond, if_true, if_false } => {
+            C::JumpIf {
+                cond,
+                if_true,
+                if_false,
+            } => {
                 // Visit condition
                 self.exp(context, state, cond);
 
@@ -3378,10 +3381,15 @@ impl SimpleAbsInt for StaleOraclePriceVerifierAI<'_> {
                         let arg_values = self.exp(context, state, arg);
                         // Mark any variables passed as validated in state
                         if let Some(var) = self.extract_var(arg) {
-                            if let Some(LocalState::Available(avail_loc, _)) = state.locals.get(&var) {
+                            if let Some(LocalState::Available(avail_loc, _)) =
+                                state.locals.get(&var)
+                            {
                                 state.locals.insert(
                                     var,
-                                    LocalState::Available(*avail_loc, PriceValidationValue::Validated(e.exp.loc)),
+                                    LocalState::Available(
+                                        *avail_loc,
+                                        PriceValidationValue::Validated(e.exp.loc),
+                                    ),
                                 );
                             }
                         }
@@ -3436,11 +3444,7 @@ impl SimpleAbsInt for StaleOraclePriceVerifierAI<'_> {
                         module_name, func_name
                     );
                     let help = "Add freshness validation before using the price";
-                    let d = diag!(
-                        STALE_ORACLE_PRICE_V3_DIAG,
-                        (*loc, msg),
-                        (*source_loc, help),
-                    );
+                    let d = diag!(STALE_ORACLE_PRICE_V3_DIAG, (*loc, msg), (*source_loc, help),);
                     context.add_diag(d);
                 }
             }
@@ -3452,7 +3456,11 @@ impl SimpleAbsInt for StaleOraclePriceVerifierAI<'_> {
 
 impl StaleOraclePriceVerifierAI<'_> {
     fn is_root_source_loc(&self, loc: &Loc) -> bool {
-        let is_dependency = self.context.env.package_config(self.context.package).is_dependency;
+        let is_dependency = self
+            .context
+            .env
+            .package_config(self.context.package)
+            .is_dependency;
         !is_dependency
     }
 
@@ -3484,11 +3492,16 @@ impl StaleOraclePriceVerifierAI<'_> {
                     // Mark any price variables passed to this function as validated
                     for arg in &call.arguments {
                         if let Some(var) = self.extract_var(arg) {
-                            if let Some(LocalState::Available(avail_loc, val)) = state.locals.get(&var) {
+                            if let Some(LocalState::Available(avail_loc, val)) =
+                                state.locals.get(&var)
+                            {
                                 if matches!(val, PriceValidationValue::Unvalidated(_)) {
                                     state.locals.insert(
                                         var,
-                                        LocalState::Available(*avail_loc, PriceValidationValue::Validated(cond.exp.loc)),
+                                        LocalState::Available(
+                                            *avail_loc,
+                                            PriceValidationValue::Validated(cond.exp.loc),
+                                        ),
                                     );
                                 }
                             }

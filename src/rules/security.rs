@@ -199,7 +199,7 @@ fn check_suspicious_overflow(node: Node, source: &str, ctx: &mut LintContext<'_>
 ///
 /// This lint has near-zero false positives because the function is explicitly
 /// named "unsafe" in the Pyth API.
-/// 
+///
 /// DEPRECATED: Use stale_oracle_price_v3 (CFG-aware, --mode full) for rigorous detection.
 /// This syntactic lint is kept for fast-mode feedback but has known false positives.
 pub static STALE_ORACLE_PRICE: LintDescriptor = LintDescriptor {
@@ -304,7 +304,7 @@ fn check_stale_oracle_price(node: Node, source: &str, ctx: &mut LintContext<'_>)
 /// - Matches function names like `set_authority` without analyzing actual behavior
 /// - Flags vendored dependencies (e.g., switchboard_std) and framework code (kiosk)
 /// - Cannot detect if module already has a two-step pattern elsewhere
-/// 
+///
 /// A CFG-aware upgrade was attempted but the pattern matching for field mutations
 /// in Move's HLIR proved complex - `obj.field = value` compiles to patterns that
 /// require tracking through multiple AST nodes.
@@ -721,7 +721,7 @@ fn check_public_random_access(node: Node, source: &str, ctx: &mut LintContext<'_
 /// The syntactic approach cannot distinguish between:
 /// - Security-critical boolean checks that should be enforced
 /// - Legitimate ignored returns in test code or non-security contexts
-/// 
+///
 /// A CFG-aware upgrade was attempted but proved infeasible - tracking boolean
 /// values through arbitrary control flow to determine if they ever reach a
 /// guard condition requires complex dataflow analysis.
