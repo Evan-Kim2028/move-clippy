@@ -12,11 +12,11 @@ cargo run --features full --bin gen_lint_reference > docs/LINT_REFERENCE.md
 
 ## Summary
 
-- Total: 82
-- Stable: 51
+- Total: 84
+- Stable: 45
 - Preview: 8
 - Experimental: 20
-- Deprecated: 3
+- Deprecated: 11
 
 ## Lints
 
@@ -24,9 +24,10 @@ cargo run --features full --bin gen_lint_reference > docs/LINT_REFERENCE.md
 |------|------|-------|----------|----------|----------|-------------|
 | `abilities_order` | stable | syntactic | style | syntactic | `fast` | Struct abilities should be ordered: key, copy, drop, store |
 | `admin_cap_position` | stable | syntactic | style | syntactic | `fast` | Capability parameters should be first (or second after TxContext) |
-| `capability_antipatterns` | stable | semantic | security | type-based | `--mode full` | Capability struct has copy ability, public constructor, or missing key - security vulnerability (type-based) |
+| `capability_antipatterns` | deprecated | semantic | security | type-based | `--mode full --experimental` | [DEPRECATED] Public function returns capability - superseded by copyable_capability and droppable_capability |
+| `capability_escape` | experimental | absint | security | type-based-cfg | `--mode full --experimental` | Capability object escapes to potentially unauthorized context (CFG-aware, requires --mode full --experimental) |
 | `capability_leak` | deprecated | syntactic | security | syntactic | `--experimental` | [DEPRECATED] Superseded by capability_transfer_v2 which uses type-based detection |
-| `capability_transfer_literal_address` | preview | semantic | security | type-based | `--mode full --preview` | Capability-like object transferred to a literal address - likely authorization leak (type-based, preview) |
+| `capability_transfer_literal_address` | stable | semantic | security | type-based | `--mode full` | Capability-like object transferred to a literal address - likely authorization leak (type-based) |
 | `capability_transfer_v2` | experimental | semantic | security | type-based | `--mode full --experimental` | Capability transferred to non-sender address (type-based, requires --mode full --experimental) |
 | `coin_field` | stable | semantic | suspicious | type-based | `--mode full` | [Sui Linter] Use Balance instead of Coin in struct fields (from sui_mode::linters) |
 | `collection_equality` | stable | semantic | suspicious | type-based | `--mode full` | [Sui Linter] Avoid equality checks on collections (from sui_mode::linters) |
@@ -36,12 +37,11 @@ cargo run --features full --bin gen_lint_reference > docs/LINT_REFERENCE.md
 | `custom_state_change` | stable | semantic | suspicious | type-based | `--mode full` | [Sui Linter] Custom transfer/share/freeze should call private variants (from sui_mode::linters) |
 | `destroy_zero_unchecked` | experimental | syntactic | security | syntactic | `--experimental` | destroy_zero called without verifying value is zero - may abort unexpectedly (needs CFG for low FP) |
 | `destroy_zero_unchecked_v2` | preview | absint | security | type-based-cfg | `--mode full --preview` | destroy_zero called without verifying value is zero (CFG-aware, requires --mode full --preview) |
-| `digest_as_randomness` | experimental | syntactic | security | syntactic | `--experimental` | tx_context::digest used as randomness source - predictable and manipulable (needs taint analysis for low FP) |
+| `digest_as_randomness` | deprecated | syntactic | security | syntactic | `--experimental` | DEPRECATED: Use sui::random instead. tx_context::digest as randomness is insecure. |
 | `divide_by_zero_literal` | stable | syntactic | security | syntactic | `fast` | Division or modulo by literal zero - will always abort |
 | `doc_comment_style` | stable | syntactic | style | syntactic | `fast` | Use `///` for doc comments, not `/** */` or `/* */` |
 | `droppable_capability` | stable | semantic | security | type-based | `--mode full` | Struct is key+store+drop (and not copy) - transferable authority/asset can be silently discarded (type-based, zero FP) |
-| `droppable_flash_loan_receipt` | experimental | semantic | security | type-based | `--mode full --experimental` | Function returns Coin/Balance with a droppable receipt struct (type-based, experimental) |
-| `droppable_hot_potato_v2` | experimental | semantic | security | type-based | `--mode full --experimental` | Struct has only `drop` ability - likely a broken hot potato (type-based) |
+| `droppable_flash_loan_receipt` | preview | semantic | security | type-based | `--mode full --preview` | Function returns Coin/Balance with a droppable receipt struct (type-based, requires --mode full --preview) |
 | `empty_vector_literal` | stable | syntactic | modernization | syntactic | `fast` | Prefer `vector[]` over `vector::empty()` |
 | `entry_function_returns_value` | stable | semantic | suspicious | type-based | `--mode full` | Entry function returns a value that will be discarded by the runtime (type-based) |
 | `equality_in_assert` | stable | syntactic | style | syntactic | `fast` | Prefer `assert_eq!(a, b)` over `assert!(a == b)` for clearer failure messages |
@@ -56,13 +56,13 @@ cargo run --features full --bin gen_lint_reference > docs/LINT_REFERENCE.md
 | `fresh_address_reuse` | experimental | syntactic | security | syntactic | `--experimental` | fresh_object_address result appears to be reused - each UID needs a fresh address (needs usage tracking for low FP) |
 | `fresh_address_reuse_v2` | preview | absint | security | type-based-cfg | `--mode full --preview` | fresh_object_address result used multiple times (CFG-aware, requires --mode full --preview) |
 | `generic_type_witness_unused` | experimental | semantic | security | type-based | `--mode full --experimental` | Generic function takes TypeName witness but never uses it (type-based, experimental) |
-| `ignored_boolean_return` | stable | syntactic | security | syntactic | `fast` | Boolean-returning function result is ignored, may indicate missing authorization check (see: Typus Finance hack) |
+| `ignored_boolean_return` | deprecated | syntactic | security | syntactic | `--experimental` | [DEPRECATED] High FP rate (~70%) - syntactic approach cannot distinguish security vs non-security contexts |
 | `invalid_otw` | stable | semantic | security | type-based | `--mode full` | One-time witness violates Sui Adapter rules - has wrong abilities, fields, or is generic (type-based) |
 | `manual_loop_iteration` | stable | syntactic | modernization | syntactic | `fast` | Prefer loop macros (`do_ref!`, `fold!`) over manual while loops with index |
 | `manual_option_check` | stable | syntactic | modernization | syntactic | `fast` | Prefer option macros (`do!`, `destroy_or!`) over manual `is_some()` + `destroy_some()` patterns |
 | `merge_test_attributes` | stable | syntactic | test_quality | syntactic | `fast` | Merge stacked #[test] and #[expected_failure] into a single attribute list |
 | `missing_key` | stable | semantic | suspicious | type-based | `--mode full` | [Sui Linter] Shared/transferred object missing key ability (from sui_mode::linters) |
-| `missing_witness_drop` | stable | syntactic | security | syntactic | `fast` | One-time witness struct missing `drop` ability (see: Sui OTW pattern docs) |
+| `missing_witness_drop` | deprecated | syntactic | security | syntactic | `--experimental` | [DEPRECATED] Sui compiler enforces OTW rules - heuristic detection has high false positive rate on type markers |
 | `missing_witness_drop_v2` | stable | semantic | security | type-based | `--mode full` | OTW struct name doesn't match module name or missing drop (type-based, requires --mode full) |
 | `modern_method_syntax` | stable | syntactic | modernization | syntactic | `fast` | Prefer Move 2024 method call syntax for common allowlisted functions |
 | `modern_module_syntax` | stable | syntactic | modernization | syntactic | `fast` | Prefer Move 2024 module label syntax (module x::y;) over block form (module x::y { ... }) |
@@ -75,19 +75,21 @@ cargo run --features full --bin gen_lint_reference > docs/LINT_REFERENCE.md
 | `private_entry_function` | stable | semantic | suspicious | type-based | `--mode full` | Private entry function is unreachable - remove `entry` or make it public (type-based) |
 | `public_mut_tx_context` | stable | syntactic | modernization | syntactic | `fast` | TxContext parameters should be `&mut TxContext`, not `&TxContext` |
 | `public_random` | stable | semantic | suspicious | type-based | `--mode full` | [Sui Linter] Random state should remain private (from sui_mode::linters) |
-| `public_random_access` | stable | syntactic | security | syntactic | `fast` | Public function exposes Random object, enabling front-running (see: Sui randomness docs) |
+| `public_random_access` | deprecated | syntactic | security | syntactic | `--experimental` | [DEPRECATED] Use public_random_access_v2 or Sui's built-in public_random lint - string matching has high false positive rate |
 | `public_random_access_v2` | stable | semantic | security | type-based | `--mode full` | Public function exposes sui::random::Random object - enables front-running (type-based, requires --mode full) |
 | `pure_function_transfer` | experimental | syntactic | suspicious | syntactic | `--experimental` | Non-entry functions should not call transfer internally; return the object instead (experimental - many legitimate patterns) |
-| `receipt_missing_phantom_type` | experimental | semantic | security | type-based | `--mode full --experimental` | Receipt returned without phantom coin type enables type confusion (type-based, experimental) |
 | `redundant_self_import` | stable | syntactic | style | syntactic | `fast` | Use `pkg::mod` instead of `pkg::mod::{Self}` |
 | `redundant_test_prefix` | stable | syntactic | test_quality | syntactic | `fast` | In `*_tests` modules, omit redundant `test_` prefix from test functions |
 | `self_transfer` | experimental | semantic | suspicious | type-based | `--mode full --experimental` | [Sui Linter] Transferring object to self - consider returning instead (from sui_mode::linters) |
 | `share_owned` | experimental | semantic | suspicious | type-based | `--mode full --experimental` | [Sui Linter] Possible owned object share (from sui_mode::linters) |
-| `share_owned_authority` | experimental | semantic | security | type-based | `--mode full --experimental` | Sharing key+store object makes it publicly accessible - dangerous for authority objects (type-based) |
-| `shared_capability_object` | preview | semantic | security | type-based | `--mode full --preview` | Capability-like object is shared - potential authorization leak (type-based, preview) |
-| `single_step_ownership_transfer` | stable | syntactic | security | syntactic | `fast` | Single-step ownership transfer is dangerous - use two-step pattern (see: OpenZeppelin Ownable2Step) |
-| `stale_oracle_price` | stable | syntactic | security | syntactic | `fast` | Using get_price_unsafe may return stale prices (see: Bluefin Audit 2024, Pyth docs) |
-| `stale_oracle_price_v2` | stable | semantic | security | type-based | `--mode full` | Using get_price_unsafe from known oracle may return stale prices (type-based, requires --mode full) |
+| `single_step_ownership_transfer` | deprecated | syntactic | security | syntactic | `--experimental` | [DEPRECATED] High FP rate - syntactic pattern matching flags vendored deps and framework code |
+| `stale_oracle_price` | deprecated | syntactic | security | syntactic | `--experimental` | Using get_price_unsafe may return stale prices - use --mode full for rigorous detection (deprecated) |
+| `stale_oracle_price_v2` | deprecated | semantic | security | type-based | `--mode full --experimental` | Using get_price_unsafe from known oracle may return stale prices (deprecated: use v3 with --preview) |
+| `stale_oracle_price_v3` | preview | absint | security | type-based-cfg | `--mode full --preview` | Oracle price used without freshness validation (CFG-aware dataflow, requires --mode full --preview) |
+| `suggest_balanced_receipt` | experimental | syntactic | security | syntactic | `--experimental` | Bookend invariant check detected - consider using balanced receipt (hot potato) pattern for compiler-enforced verification |
+| `suggest_capability_pattern` | experimental | syntactic | security | syntactic | `--experimental` | Address-based authorization detected - consider using capability pattern for safer access control |
+| `suggest_counted_capability` | experimental | syntactic | security | syntactic | `--experimental` | Counter-based supply limiting detected - consider using counted capability pattern for linearity-enforced scarcity |
+| `suggest_sequenced_witness` | experimental | syntactic | security | syntactic | `--experimental` | Boolean state flag detected - consider using sequenced witness pattern for compile-time ordering enforcement |
 | `suspicious_overflow_check` | stable | syntactic | security | syntactic | `fast` | Manual overflow check detected - these are error-prone. Consider using built-in checked arithmetic (see Cetus $223M hack) |
 | `tainted_transfer_recipient` | preview | absint | security | type-based-cfg | `--mode full --preview` | Entry function address parameter flows to transfer recipient without validation (type-based CFG-aware, requires --mode full --preview) |
 | `test_abort_code` | stable | syntactic | test_quality | syntactic | `fast` | Avoid numeric abort codes in test assertions; they may collide with application error codes |

@@ -2,7 +2,24 @@
 
 A Move linter for Sui, inspired by Rust Clippy.
 
-> **Research Project** — This was built agentically with Claude Opus 4.5 and Factory Cli as the harness. Not a substitute for security audits.
+> **Research Project** — Built with AI assistance (Claude). Not a substitute for security audits.
+
+## Installation
+
+```bash
+git clone https://github.com/Evan-Kim2028/move-clippy.git
+cd move-clippy
+cargo build --release
+
+# Optional: add to PATH
+export PATH="$PATH:$(pwd)/target/release"
+```
+
+For `--mode full` (semantic analysis), clone Sui monorepo as sibling:
+```bash
+git clone https://github.com/MystenLabs/sui.git ../sui
+cargo build --release --features full
+```
 
 ## Quick Start
 
@@ -36,7 +53,7 @@ move-clippy list-rules
 - **Style**: naming, abilities ordering, modern syntax
 - **Modernization**: Move 2024 syntax, method calls
 
-Stable security lints validated against 100 repos with zero false positives.
+Stable security lints validated against 518 Sui Move repositories with zero false positives.
 
 Run `move-clippy list-rules` for the full list.
 

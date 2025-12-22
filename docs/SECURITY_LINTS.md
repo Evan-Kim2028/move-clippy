@@ -9,7 +9,7 @@ Move Clippy includes security lints based on real audit findings and published s
 | Lint | Category | Detection Method | Source | Status |
 |------|----------|-----------------|--------|--------|
 | `droppable_hot_potato` | Security | Fast (tree-sitter) | Trail of Bits 2025, Mirage Audits 2025 | **Stable** |
-| `droppable_hot_potato_v2` | Security | Semantic (--mode full) | Type-based detection | **Stable** |
+| `droppable_hot_potato_v2` | Security | Semantic (--mode full) | Type-based detection | **⚠️ Deprecated** |
 | `excessive_token_abilities` | Security | Fast (tree-sitter) | Mirage Audits 2025, MoveBit 2023 | **⚠️ Deprecated** |
 | `shared_capability` | Security | Fast (tree-sitter) | OtterSec 2024, MoveBit 2023 | **Stable** |
 | `stale_oracle_price` | Security | Fast (tree-sitter) | Bluefin Audit 2024 | **Stable** |
