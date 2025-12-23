@@ -48,7 +48,18 @@ move-clippy list-rules
 
 ## What's Included
 
-75 lints across 4 tiers: 45 stable, 3 preview, 16 experimental, 11 deprecated.
+45 stable lints enabled by default:
+
+| Category | Count |
+|----------|-------|
+| Security | 11 |
+| Suspicious | 9 |
+| Style | 11 |
+| Modernization | 9 |
+| Test Quality | 3 |
+| Naming | 2 |
+
+Additional lints available with `--preview` (3) and `--experimental` (16).
 
 ### Security & Suspicious (Stable)
 
