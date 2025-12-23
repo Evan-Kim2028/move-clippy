@@ -14,20 +14,23 @@ pub use conventions::AdminCapPositionLint;
 // Modernization lints
 pub use modernization::{
     EqualityInAssertLint, ManualLoopIterationLint, ManualOptionCheckLint, ModernMethodSyntaxLint,
-    ModernModuleSyntaxLint, PreferVectorMethodsLint, PublicMutTxContextLint,
-    PureFunctionTransferLint, UnnecessaryPublicEntryLint, UnsafeArithmeticLint,
-    WhileTrueToLoopLint,
+    ModernModuleSyntaxLint, PreferVectorMethodsLint,
 };
+// REMOVED from modernization:
+// - WhileTrueToLoopLint, UnnecessaryPublicEntryLint, PublicMutTxContextLint (compiler-redundant)
+// - PureFunctionTransferLint, UnsafeArithmeticLint (experimental, questionable value)
 
 // Security lints (audit-backed)
 pub use security::{
-    CapabilityLeakLint, DestroyZeroUncheckedLint, DigestAsRandomnessLint, DivideByZeroLiteralLint,
-    FreshAddressReuseLint, IgnoredBooleanReturnLint, MissingWitnessDropLint,
-    OtwPatternViolationLint, PublicRandomAccessLint, SingleStepOwnershipTransferLint,
-    StaleOraclePriceLint, SuggestBalancedReceiptLint, SuggestCapabilityPatternLint,
-    SuggestCountedCapabilityLint, SuggestSequencedWitnessLint, SuspiciousOverflowCheckLint,
-    UncheckedCoinSplitLint, UncheckedWithdrawalLint,
+    DestroyZeroUncheckedLint, DivideByZeroLiteralLint, FreshAddressReuseLint,
+    SuggestBalancedReceiptLint, SuggestCapabilityPatternLint, SuggestCountedCapabilityLint,
+    SuggestSequencedWitnessLint, SuspiciousOverflowCheckLint,
 };
+// REMOVED deprecated/superseded lints:
+// - StaleOraclePriceLint, SingleStepOwnershipTransferLint, UncheckedCoinSplitLint
+// - MissingWitnessDropLint, PublicRandomAccessLint, IgnoredBooleanReturnLint
+// - UncheckedWithdrawalLint, CapabilityLeakLint, DigestAsRandomnessLint
+// - OtwPatternViolationLint (duplicates Sui Verifier)
 
 // Style lints
 pub use style::{

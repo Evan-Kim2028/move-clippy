@@ -176,34 +176,6 @@ fn golden_empty_vector_literal_negative() {
 }
 
 #[test]
-fn golden_while_true_to_loop_positive() {
-    let engine = create_default_engine();
-    let src = include_str!("golden/while_true_to_loop/positive.move");
-    let diags = engine.lint_source(src).expect("linting should succeed");
-    let filtered = filter_lint(&diags, "while_true_to_loop");
-
-    assert!(
-        !filtered.is_empty(),
-        "while_true_to_loop should trigger on while(true).\nAll diagnostics: {}",
-        format_diags(&diags)
-    );
-}
-
-#[test]
-fn golden_while_true_to_loop_negative() {
-    let engine = create_default_engine();
-    let src = include_str!("golden/while_true_to_loop/negative.move");
-    let diags = engine.lint_source(src).expect("linting should succeed");
-    let filtered = filter_lint(&diags, "while_true_to_loop");
-
-    assert!(
-        filtered.is_empty(),
-        "while_true_to_loop should NOT trigger on loop keyword.\nGot: {}",
-        format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
-    );
-}
-
-#[test]
 fn golden_unneeded_return_positive() {
     let engine = create_default_engine();
     let src = include_str!("golden/unneeded_return/positive.move");
@@ -641,12 +613,7 @@ fn experimental_capability_leak_negative() {
 
 #[test]
 fn golden_test_summary() {
-    let lints_to_test = vec![
-        "abilities_order",
-        "empty_vector_literal",
-        "while_true_to_loop",
-        "unneeded_return",
-    ];
+    let lints_to_test = vec!["abilities_order", "empty_vector_literal", "unneeded_return"];
 
     println!("\n=== Golden Test Summary ===\n");
     println!("{:<25} {:>8} {:>8} {:>8}", "Lint", "Pos", "Neg", "FP Rate");
@@ -879,41 +846,5 @@ fn golden_typed_abort_code_negative() {
     assert!(
         !result.negative_triggered,
         "typed_abort_code should not trigger on negative.move"
-    );
-}
-
-#[test]
-fn golden_unnecessary_public_entry_positive() {
-    let result = run_golden_test("unnecessary_public_entry");
-    assert!(
-        result.positive_triggered,
-        "Expected unnecessary_public_entry to trigger on positive.move"
-    );
-}
-
-#[test]
-fn golden_unnecessary_public_entry_negative() {
-    let result = run_golden_test("unnecessary_public_entry");
-    assert!(
-        !result.negative_triggered,
-        "unnecessary_public_entry should not trigger on negative.move"
-    );
-}
-
-#[test]
-fn golden_public_mut_tx_context_positive() {
-    let result = run_golden_test("public_mut_tx_context");
-    assert!(
-        result.positive_triggered,
-        "Expected public_mut_tx_context to trigger on positive.move"
-    );
-}
-
-#[test]
-fn golden_public_mut_tx_context_negative() {
-    let result = run_golden_test("public_mut_tx_context");
-    assert!(
-        !result.negative_triggered,
-        "public_mut_tx_context should not trigger on negative.move"
     );
 }

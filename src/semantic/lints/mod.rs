@@ -33,6 +33,6 @@ pub(super) use value_flow::{
     lint_share_owned_authority, lint_unchecked_division, lint_unused_return_value,
 };
 pub(super) use witness::{
-    lint_generic_type_witness_unused, lint_invalid_otw, lint_missing_witness_drop_v2,
-    lint_witness_antipatterns,
+    lint_generic_type_witness_unused, lint_missing_witness_drop_v2, lint_witness_antipatterns,
 };
+// lint_invalid_otw removed - duplicates Sui Verifier

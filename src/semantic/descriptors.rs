@@ -563,16 +563,10 @@ pub static MISSING_WITNESS_DROP_V2: LintDescriptor = LintDescriptor {
     gap: Some(TypeSystemGap::AbilityMismatch),
 };
 
-/// Detects one-time witness (OTW) structs that violate Sui Adapter rules.
-pub static INVALID_OTW: LintDescriptor = LintDescriptor {
-    name: "invalid_otw",
-    category: LintCategory::Security,
-    description: "One-time witness violates Sui Adapter rules - has wrong abilities, fields, or is generic (type-based)",
-    group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::TypeBased,
-    gap: Some(TypeSystemGap::AbilityMismatch),
-};
+// REMOVED: INVALID_OTW
+// This lint duplicated the Sui Verifier's one_time_witness_verifier.rs which
+// is authoritative and will reject modules at publish time.
+// See: sui-execution/v0/sui-verifier/src/one_time_witness_verifier.rs
 
 /// Detects witness structs with antipatterns that may indicate security issues.
 pub static WITNESS_ANTIPATTERNS: LintDescriptor = LintDescriptor {
@@ -669,7 +663,7 @@ static DESCRIPTORS: &[&LintDescriptor] = &[
     &NON_TRANSFERABLE_FUNGIBLE_OBJECT,
     &PUBLIC_RANDOM_ACCESS_V2,
     &MISSING_WITNESS_DROP_V2,
-    &INVALID_OTW,
+    // &INVALID_OTW - REMOVED: duplicates Sui Verifier
     &WITNESS_ANTIPATTERNS,
     &STALE_ORACLE_PRICE_V2,
     // Security (preview, type-based)

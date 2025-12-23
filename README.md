@@ -48,18 +48,18 @@ move-clippy list-rules
 
 ## What's Included
 
-45 stable lints enabled by default:
+41 stable lints enabled by default:
 
 | Category | Count |
 |----------|-------|
-| Security | 11 |
+| Security | 10 |
 | Suspicious | 9 |
 | Style | 11 |
-| Modernization | 9 |
+| Modernization | 6 |
 | Test Quality | 3 |
 | Naming | 2 |
 
-Additional lints available with `--preview` (3) and `--experimental` (16).
+Additional lints available with `--preview` (3) and `--experimental` (13).
 
 ### Security & Suspicious (Stable)
 
@@ -70,7 +70,6 @@ Additional lints available with `--preview` (3) and `--experimental` (16).
 | `capability_transfer_literal_address` | Capability transferred to literal address like `@0x1` |
 | `divide_by_zero_literal` | Division by literal zero — will always abort |
 | `suspicious_overflow_check` | Manual bit-shift overflow patterns (Cetus $223M hack pattern) |
-| `invalid_otw` | One-time witness violates Sui Adapter rules |
 | `public_random_access_v2` | Public function exposes `sui::random::Random` — enables front-running |
 | `witness_antipatterns` | Witness struct has `copy/store/key` or public constructor |
 | `coin_field` | Use `Balance` instead of `Coin` in struct fields |
@@ -100,7 +99,15 @@ Additional lints available with `--preview` (3) and `--experimental` (16).
 
 Run `move-clippy list-rules` for the complete list with descriptions.
 
-Stable security lints validated against 518 Sui Move repositories with zero false positives.
+### Sui Linter Pass-throughs
+
+Several lints are pass-throughs from the Sui compiler's built-in linter (`sui_mode::linters`), exposed through Move Clippy for unified output formatting:
+- `coin_field`, `collection_equality`, `custom_state_change`, `freeze_wrapped`
+- `freezing_capability`, `missing_key`, `public_random`, `self_transfer`, `share_owned`
+
+### Validation
+
+Stable security lints have been validated against ecosystem repositories. Note: Lint counts and validation statistics may change between versions as lints are added, refined, or deprecated.
 
 ## Background
 

@@ -7,8 +7,6 @@ expression: messages
     "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
     "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
     "modern_method_syntax: Prefer method syntax: `ctx.sender(...)`",
-    "public_mut_tx_context: TxContext parameters should use `&mut TxContext`",
-    "public_mut_tx_context: TxContext parameters should use `&mut TxContext`",
     "typed_abort_code: Prefer named error constant over numeric abort code `1`",
     "typed_abort_code: Prefer named error constant over numeric abort code `2`",
     "suggest_capability_pattern: Stored address comparison detected for authorization. While checking against a stored address is better than hardcoded, capability pattern is still preferred. Consider storing an AdminCap in the owner's account instead of an address in your shared object.",

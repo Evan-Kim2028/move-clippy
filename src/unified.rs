@@ -232,9 +232,7 @@ pub(crate) fn build_syntactic_registry() -> LintRegistry {
         .with_rule(crate::rules::MergeTestAttributesLint)
         .with_rule(crate::rules::ConstantNamingLint)
         .with_rule(crate::rules::UnneededReturnLint)
-        .with_rule(crate::rules::UnnecessaryPublicEntryLint)
-        .with_rule(crate::rules::PublicMutTxContextLint)
-        .with_rule(crate::rules::WhileTrueToLoopLint)
+        // REMOVED: UnnecessaryPublicEntryLint, PublicMutTxContextLint, WhileTrueToLoopLint
         // P0 lints
         .with_rule(crate::rules::AbilitiesOrderLint)
         .with_rule(crate::rules::DocCommentStyleLint)
@@ -252,23 +250,17 @@ pub(crate) fn build_syntactic_registry() -> LintRegistry {
         .with_rule(crate::rules::TypedAbortCodeLint)
         .with_rule(crate::rules::ErrorConstNamingLint)
         // Security lints (audit-backed)
-        .with_rule(crate::rules::StaleOraclePriceLint)
-        .with_rule(crate::rules::SingleStepOwnershipTransferLint)
-        .with_rule(crate::rules::MissingWitnessDropLint)
-        .with_rule(crate::rules::PublicRandomAccessLint)
         .with_rule(crate::rules::SuspiciousOverflowCheckLint)
-        .with_rule(crate::rules::IgnoredBooleanReturnLint)
         .with_rule(crate::rules::DivideByZeroLiteralLint)
         // Preview/experimental lints
-        .with_rule(crate::rules::PureFunctionTransferLint)
-        .with_rule(crate::rules::UnsafeArithmeticLint)
-        .with_rule(crate::rules::UncheckedCoinSplitLint)
-        .with_rule(crate::rules::UncheckedWithdrawalLint)
-        .with_rule(crate::rules::CapabilityLeakLint)
         .with_rule(crate::rules::DestroyZeroUncheckedLint)
-        .with_rule(crate::rules::OtwPatternViolationLint)
-        .with_rule(crate::rules::DigestAsRandomnessLint)
         .with_rule(crate::rules::FreshAddressReuseLint)
+        // REMOVED deprecated/superseded lints:
+        // - StaleOraclePriceLint, SingleStepOwnershipTransferLint, MissingWitnessDropLint
+        // - PublicRandomAccessLint, IgnoredBooleanReturnLint, UncheckedCoinSplitLint
+        // - UncheckedWithdrawalLint, CapabilityLeakLint, DigestAsRandomnessLint
+        // - PureFunctionTransferLint, UnsafeArithmeticLint
+        // - OtwPatternViolationLint (duplicates Sui Verifier)
         // Anti-pattern detection (Issue #65)
         .with_rule(crate::rules::SuggestCapabilityPatternLint)
         .with_rule(crate::rules::SuggestSequencedWitnessLint)
