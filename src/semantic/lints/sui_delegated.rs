@@ -2,7 +2,7 @@ use crate::diagnostics::Diagnostic;
 use crate::error::{Error, Result as ClippyResult};
 use crate::level::LintLevel;
 use crate::lint::{LintDescriptor, LintSettings};
-use crate::rules::modernization::{PUBLIC_MUT_TX_CONTEXT, UNNECESSARY_PUBLIC_ENTRY};
+// REMOVED: PUBLIC_MUT_TX_CONTEXT, UNNECESSARY_PUBLIC_ENTRY - now handled directly by Sui compiler
 use crate::suppression;
 use move_compiler::naming::ast as N;
 use move_compiler::typing::ast as T;
@@ -134,8 +134,7 @@ fn descriptor_for_sui_code(code: u8) -> Option<&'static LintDescriptor> {
         x if x == PublicRandom as u8 => Some(&PUBLIC_RANDOM),
         x if x == MissingKey as u8 => Some(&MISSING_KEY),
         x if x == FreezingCapability as u8 => Some(&FREEZING_CAPABILITY),
-        x if x == PreferMutableTxContext as u8 => Some(&PUBLIC_MUT_TX_CONTEXT),
-        x if x == UnnecessaryPublicEntry as u8 => Some(&UNNECESSARY_PUBLIC_ENTRY),
+        // PreferMutableTxContext and UnnecessaryPublicEntry removed - handled by Sui compiler
         _ => None,
     }
 }

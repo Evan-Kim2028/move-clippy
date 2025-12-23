@@ -8,9 +8,8 @@ use move_compiler::shared::{files::MappedFiles, program_info::TypingProgramInfo}
 use move_compiler::typing::ast as T;
 
 use super::super::util::{diag_from_loc, push_diag};
-use super::super::{
-    GENERIC_TYPE_WITNESS_UNUSED, INVALID_OTW, MISSING_WITNESS_DROP_V2, WITNESS_ANTIPATTERNS,
-};
+use super::super::{GENERIC_TYPE_WITNESS_UNUSED, MISSING_WITNESS_DROP_V2, WITNESS_ANTIPATTERNS};
+// INVALID_OTW removed - duplicates Sui Verifier's one_time_witness_verifier.rs
 use super::shared::{format_type, strip_refs};
 
 type Result<T> = ClippyResult<T>;
@@ -249,164 +248,16 @@ pub(crate) fn lint_missing_witness_drop_v2(
 }
 
 // =========================================================================
-// Invalid OTW Lint (type-based)
+// REMOVED: Invalid OTW Lint
 // =========================================================================
-
-pub(crate) fn lint_invalid_otw(
-    out: &mut Vec<Diagnostic>,
-    settings: &LintSettings,
-    file_map: &MappedFiles,
-    info: &TypingProgramInfo,
-    prog: &T::Program,
-) -> Result<()> {
-    use crate::type_classifier::{has_copy_ability, has_key_ability, has_store_ability};
-
-    for (mident, minfo) in info.modules.key_cloned_iter() {
-        match minfo.target_kind {
-            TargetKind::Source {
-                is_root_package: true,
-            } => {}
-            _ => continue,
-        }
-
-        let module_name = mident.value.module.value();
-        let module_name_str = module_name.as_str();
-        let expected_otw_name = module_name_str.to_uppercase();
-
-        let mut otw_in_init = false;
-        if let Some(mdef) = prog.modules.get(&mident) {
-            for (fname, fdef) in mdef.functions.key_cloned_iter() {
-                if fname.value().as_str() != "init" {
-                    continue;
-                }
-
-                for (_, _, param_ty) in fdef.signature.parameters.iter() {
-                    if let N::Type_::Apply(_, type_name, _) = strip_refs(&param_ty.value)
-                        && let N::TypeName_::ModuleType(param_mident, param_struct) =
-                            &type_name.value
-                        && param_mident.value.module.value() == module_name
-                        && param_struct.value().as_str() == expected_otw_name
-                    {
-                        otw_in_init = true;
-                        break;
-                    }
-                }
-
-                if otw_in_init {
-                    break;
-                }
-            }
-        }
-
-        if !otw_in_init {
-            continue;
-        }
-
-        for (sname, sdef) in minfo.structs.key_cloned_iter() {
-            let struct_name_sym = sname.value();
-            let struct_name = struct_name_sym.as_str();
-
-            if struct_name != expected_otw_name {
-                continue;
-            }
-
-            let abilities = &sdef.abilities;
-            let has_copy = has_copy_ability(abilities);
-            let has_key = has_key_ability(abilities);
-            let has_store = has_store_ability(abilities);
-
-            if has_copy || has_key || has_store {
-                let loc = sname.loc();
-                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                    continue;
-                };
-                let anchor = loc.start() as usize;
-
-                let mut bad_abilities = Vec::new();
-                if has_copy {
-                    bad_abilities.push("copy");
-                }
-                if has_key {
-                    bad_abilities.push("key");
-                }
-                if has_store {
-                    bad_abilities.push("store");
-                }
-
-                push_diag(
-                    out,
-                    settings,
-                    &INVALID_OTW,
-                    file,
-                    span,
-                    contents.as_ref(),
-                    anchor,
-                    format!(
-                        "Struct `{struct_name}` appears to be a one-time witness (OTW) but has \
-                         invalid abilities: {}. OTW must have ONLY `drop` ability. \
-                         This will cause `sui::types::is_one_time_witness()` to return false.",
-                        bad_abilities.join(", ")
-                    ),
-                );
-                continue;
-            }
-
-            let has_fields = match &sdef.fields {
-                N::StructFields::Defined(_, fields) => !fields.is_empty(),
-                N::StructFields::Native(_) => false,
-            };
-
-            if has_fields {
-                let loc = sname.loc();
-                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                    continue;
-                };
-                let anchor = loc.start() as usize;
-
-                push_diag(
-                    out,
-                    settings,
-                    &INVALID_OTW,
-                    file,
-                    span,
-                    contents.as_ref(),
-                    anchor,
-                    format!(
-                        "Struct `{struct_name}` appears to be a one-time witness (OTW) but has fields. \
-                         OTW must be an empty struct with no fields. \
-                         This will cause `sui::types::is_one_time_witness()` to return false."
-                    ),
-                );
-                continue;
-            }
-
-            if !sdef.type_parameters.is_empty() {
-                let loc = sname.loc();
-                let Some((file, span, contents)) = diag_from_loc(file_map, &loc) else {
-                    continue;
-                };
-                let anchor = loc.start() as usize;
-
-                push_diag(
-                    out,
-                    settings,
-                    &INVALID_OTW,
-                    file,
-                    span,
-                    contents.as_ref(),
-                    anchor,
-                    format!(
-                        "Struct `{struct_name}` appears to be a one-time witness (OTW) but is generic. \
-                         OTW must not have type parameters. \
-                         This will cause `sui::types::is_one_time_witness()` to return false."
-                    ),
-                );
-            }
-        }
-    }
-
-    Ok(())
-}
+// This lint duplicates the Sui Verifier's one_time_witness_verifier.rs which
+// is authoritative and will reject modules at publish time. The Sui verifier
+// checks:
+// - OTW must have only `drop` ability
+// - OTW must have only one boolean field
+// - OTW must not be generic
+// - OTW must not be instantiated in the module
+// See: sui-execution/v0/sui-verifier/src/one_time_witness_verifier.rs
 
 // =========================================================================
 // Witness Antipatterns Lint (type-based)

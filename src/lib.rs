@@ -104,7 +104,7 @@ use crate::visitor::walk_tree;
 ///
 /// let engine = LintEngine::builder()
 ///     .preview(true)
-///     .skip(["while_true_to_loop".to_string()])
+///     .skip(["empty_vector_literal".to_string()])
 ///     .build()
 ///     .expect("failed to build engine");
 /// ```
@@ -217,7 +217,7 @@ impl LintEngine {
 ///
 /// // Build with specific lints only
 /// let engine = LintEngineBuilder::new()
-///     .only(["abilities_order".to_string(), "while_true_to_loop".to_string()])
+///     .only(["abilities_order".to_string(), "empty_vector_literal".to_string()])
 ///     .build()
 ///     .expect("failed to build engine");
 /// ```
