@@ -281,7 +281,6 @@ fn count_ignored_fields(text: &str) -> usize {
     text.matches(": _").count()
 }
 
-
 // ============================================================================
 // REMOVED: EventSuffixLint
 // The Move Book recommends past-tense naming for events (e.g., UserRegistered)

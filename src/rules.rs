@@ -35,8 +35,8 @@ pub use security::{
 // Style lints
 pub use style::{
     AbilitiesOrderLint, ConstantNamingLint, DocCommentStyleLint, EmptyVectorLiteralLint,
-    ErrorConstNamingLint, ExplicitSelfAssignmentsLint, PreferToStringLint,
-    RedundantSelfImportLint, TypedAbortCodeLint, UnneededReturnLint,
+    ErrorConstNamingLint, ExplicitSelfAssignmentsLint, PreferToStringLint, RedundantSelfImportLint,
+    TypedAbortCodeLint, UnneededReturnLint,
 };
 // REMOVED: EventSuffixLint (not backed by Move Book)
 
