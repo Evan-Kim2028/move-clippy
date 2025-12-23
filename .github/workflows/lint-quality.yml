@@ -17,6 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          df -h
+          
       - name: Checkout code
         uses: actions/checkout@v4
         
