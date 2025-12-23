@@ -9,6 +9,7 @@ use move_compiler::typing::ast as T;
 use super::super::STALE_ORACLE_PRICE_V2;
 use super::super::util::{diag_from_loc, push_diag};
 
+#[allow(dead_code)]
 type Result<T> = ClippyResult<T>;
 
 // =========================================================================
@@ -19,6 +20,7 @@ type Result<T> = ClippyResult<T>;
 // This version is kept for backwards compatibility but will be removed.
 // =========================================================================
 
+#[allow(dead_code)]
 const ORACLE_MODULES: &[(&str, &[&str])] = &[
     ("pyth", &["get_price_unsafe", "price_unsafe"]),
     ("price_info", &["get_price_unsafe"]),
@@ -26,6 +28,7 @@ const ORACLE_MODULES: &[(&str, &[&str])] = &[
     ("supra", &["get_price_unsafe"]),
 ];
 
+#[allow(dead_code)]
 pub(crate) fn lint_stale_oracle_price_v2(
     out: &mut Vec<Diagnostic>,
     settings: &LintSettings,
@@ -57,6 +60,7 @@ pub(crate) fn lint_stale_oracle_price_v2(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn check_stale_oracle_in_seq_item(
     item: &T::SequenceItem,
     out: &mut Vec<Diagnostic>,
@@ -75,6 +79,7 @@ fn check_stale_oracle_in_seq_item(
     }
 }
 
+#[allow(dead_code)]
 fn check_stale_oracle_in_exp(
     exp: &T::Exp,
     out: &mut Vec<Diagnostic>,

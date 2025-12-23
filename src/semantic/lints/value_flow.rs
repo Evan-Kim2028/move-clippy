@@ -15,6 +15,7 @@ type Result<T> = ClippyResult<T>;
 ///
 /// Division by zero will abort the transaction. This lint detects divisions
 /// where the divisor hasn't been validated as non-zero.
+#[allow(dead_code)]
 pub(crate) fn lint_unchecked_division(
     out: &mut Vec<Diagnostic>,
     settings: &LintSettings,

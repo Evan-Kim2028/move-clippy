@@ -29,7 +29,7 @@ type Result<T> = ClippyResult<T>;
 /// - `copyable_capability`: key+store+copy (allows duplication)
 /// - `droppable_capability`: key+store+drop (allows silent discard)
 /// - `capability_transfer_v2`: transfer to literal address
-#[allow(unused_variables)]
+#[allow(unused_variables, dead_code)]
 pub(crate) fn lint_capability_antipatterns(
     _out: &mut Vec<Diagnostic>,
     _settings: &LintSettings,
