@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2025-12-23
+### Removed
+- `divide_by_zero_literal`: Obvious issue - no developer writes `x / 0` intentionally.
+- `destroy_zero_unchecked`: Obvious issue - needs CFG for accuracy.
+- `event_suffix`: Not in Move Book (only past-tense naming is recommended).
+
+### Deprecated
+- `capability_antipatterns`: High false positive rate, deprecated.
+- `stale_oracle_price_v2`: Superseded by `stale_oracle_price_v3`.
+- `unchecked_division`: Experimental duplicate with high noise.
+
+### Added
+- Move Book citations to all lints backed by official documentation.
+
+### Stats
+- **56 total lints** (39 stable, 3 preview, 12 experimental, 2 deprecated)
+
+## [0.5.0] - 2025-12-22
+### Removed
+Major cleanup removing 17 lints that were duplicating Sui compiler/verifier checks, had high false positive rates, or were superseded by better implementations.
+
+**From security.rs (9 lints):**
+- `StaleOraclePriceLint`: Syntactic version superseded by CFG-based `stale_oracle_price_v3`.
+- `SingleStepOwnershipTransferLint`: Pattern too narrow, many false negatives.
+- `UncheckedCoinSplitLint`: Duplicates Sui verifier checks.
+- `MissingWitnessDropLint`: Superseded by `witness_antipatterns`.
+- `PublicRandomAccessLint`: Duplicates Sui's built-in `public_random` lint.
+- `IgnoredBooleanReturnLint`: High false positive rate on legitimate patterns.
+- `UncheckedWithdrawalLint`: Too many false positives without CFG analysis.
+- `CapabilityLeakLint`: Superseded by `capability_transfer_literal_address`.
+- `DigestAsRandomnessLint`: Rare pattern, low value.
+
+**From modernization.rs (5 lints):**
+- `UnnecessaryPublicEntryLint`: Subjective style preference.
+- `PublicMutTxContextLint`: Duplicates Sui verifier checks.
+- `WhileTrueToLoopLint`: Trivial pattern, not worth linting.
+- `PureFunctionTransferLint`: High false positive rate.
+- `UnsafeArithmeticLint`: Too noisy without proper taint analysis.
+
+**From absint_lints.rs (1 lint):**
+- `TaintedTransferRecipient`: Dead code, 100% false positive rate.
+
+**From semantic (2 lints):**
+- `invalid_otw`: Duplicates Sui verifier's OTW validation.
+- `otw_pattern_violation`: Duplicates Sui verifier's OTW validation.
+
+### Stats
+- 2,686 lines removed across 18 files
+- **59 total lints** (41 stable, 3 preview, 13 experimental, 2 deprecated)
+
 ## [0.4.1] - 2025-12-22
 ### Deprecated
 - `share_owned_authority`: High false positive rate (~78%). The ability pattern `key + store + !copy + !drop` describes ALL valuable Sui objects, not just capabilities. Use Sui's built-in `share_owned` lint which uses dataflow analysis.
