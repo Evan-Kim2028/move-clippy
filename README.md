@@ -48,18 +48,20 @@ move-clippy list-rules
 
 ## What's Included
 
-41 stable lints enabled by default:
+39 stable lints enabled by default:
 
 | Category | Count |
 |----------|-------|
-| Security | 10 |
+| Security | 8 |
 | Suspicious | 9 |
 | Style | 11 |
 | Modernization | 6 |
 | Test Quality | 3 |
 | Naming | 2 |
 
-Additional lints available with `--preview` (3) and `--experimental` (13).
+Additional lints available with `--preview` (3) and `--experimental` (12).
+
+Many lints are backed by the official [Move Book Code Quality Checklist](https://move-book.com/guides/code-quality-checklist/).
 
 ### Security & Suspicious (Stable)
 
@@ -68,7 +70,6 @@ Additional lints available with `--preview` (3) and `--experimental` (13).
 | `copyable_capability` | Detects `key+store+copy` structs — transferable authority can be duplicated |
 | `droppable_capability` | Detects `key+store+drop` structs — authority can be silently discarded |
 | `capability_transfer_literal_address` | Capability transferred to literal address like `@0x1` |
-| `divide_by_zero_literal` | Division by literal zero — will always abort |
 | `suspicious_overflow_check` | Manual bit-shift overflow patterns (Cetus $223M hack pattern) |
 | `public_random_access_v2` | Public function exposes `sui::random::Random` — enables front-running |
 | `witness_antipatterns` | Witness struct has `copy/store/key` or public constructor |
