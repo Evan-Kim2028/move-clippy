@@ -21,14 +21,14 @@ All notable changes to this project will be documented in this file.
 
 ## [0.5.0] - 2025-12-22
 ### Removed
-Major cleanup removing 17 lints that were duplicating Sui compiler/verifier checks, had high false positive rates, or were superseded by better implementations.
+Major cleanup removing 17 lints that were duplicating Move compiler checks, had high false positive rates, or were superseded by better implementations.
 
 **From security.rs (9 lints):**
 - `StaleOraclePriceLint`: Syntactic version superseded by CFG-based `stale_oracle_price_v3`.
 - `SingleStepOwnershipTransferLint`: Pattern too narrow, many false negatives.
-- `UncheckedCoinSplitLint`: Duplicates Sui verifier checks.
+- `UncheckedCoinSplitLint`: Duplicates Move compiler checks.
 - `MissingWitnessDropLint`: Superseded by `witness_antipatterns`.
-- `PublicRandomAccessLint`: Duplicates Sui's built-in `public_random` lint.
+- `PublicRandomAccessLint`: Duplicates the Move compiler's built-in `public_random` lint.
 - `IgnoredBooleanReturnLint`: High false positive rate on legitimate patterns.
 - `UncheckedWithdrawalLint`: Too many false positives without CFG analysis.
 - `CapabilityLeakLint`: Superseded by `capability_transfer_literal_address`.
@@ -36,7 +36,7 @@ Major cleanup removing 17 lints that were duplicating Sui compiler/verifier chec
 
 **From modernization.rs (5 lints):**
 - `UnnecessaryPublicEntryLint`: Subjective style preference.
-- `PublicMutTxContextLint`: Duplicates Sui verifier checks.
+- `PublicMutTxContextLint`: Duplicates Move compiler checks.
 - `WhileTrueToLoopLint`: Trivial pattern, not worth linting.
 - `PureFunctionTransferLint`: High false positive rate.
 - `UnsafeArithmeticLint`: Too noisy without proper taint analysis.
@@ -45,8 +45,8 @@ Major cleanup removing 17 lints that were duplicating Sui compiler/verifier chec
 - `TaintedTransferRecipient`: Dead code, 100% false positive rate.
 
 **From semantic (2 lints):**
-- `invalid_otw`: Duplicates Sui verifier's OTW validation.
-- `otw_pattern_violation`: Duplicates Sui verifier's OTW validation.
+- `invalid_otw`: Duplicates Move compiler's OTW validation.
+- `otw_pattern_violation`: Duplicates Move compiler's OTW validation.
 
 ### Stats
 - 2,686 lines removed across 18 files
