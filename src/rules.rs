@@ -22,22 +22,23 @@ pub use modernization::{
 
 // Security lints (audit-backed)
 pub use security::{
-    DestroyZeroUncheckedLint, DivideByZeroLiteralLint, FreshAddressReuseLint,
-    SuggestBalancedReceiptLint, SuggestCapabilityPatternLint, SuggestCountedCapabilityLint,
-    SuggestSequencedWitnessLint, SuspiciousOverflowCheckLint,
+    FreshAddressReuseLint, SuggestBalancedReceiptLint, SuggestCapabilityPatternLint,
+    SuggestCountedCapabilityLint, SuggestSequencedWitnessLint, SuspiciousOverflowCheckLint,
 };
-// REMOVED deprecated/superseded lints:
+// REMOVED deprecated/superseded/obvious lints:
 // - StaleOraclePriceLint, SingleStepOwnershipTransferLint, UncheckedCoinSplitLint
 // - MissingWitnessDropLint, PublicRandomAccessLint, IgnoredBooleanReturnLint
 // - UncheckedWithdrawalLint, CapabilityLeakLint, DigestAsRandomnessLint
 // - OtwPatternViolationLint (duplicates Sui Verifier)
+// - DestroyZeroUncheckedLint, DivideByZeroLiteralLint (obvious/trivial)
 
 // Style lints
 pub use style::{
     AbilitiesOrderLint, ConstantNamingLint, DocCommentStyleLint, EmptyVectorLiteralLint,
-    ErrorConstNamingLint, EventSuffixLint, ExplicitSelfAssignmentsLint, PreferToStringLint,
+    ErrorConstNamingLint, ExplicitSelfAssignmentsLint, PreferToStringLint,
     RedundantSelfImportLint, TypedAbortCodeLint, UnneededReturnLint,
 };
+// REMOVED: EventSuffixLint (not backed by Move Book)
 
 // Test quality lints
 pub use test_quality::{MergeTestAttributesLint, RedundantTestPrefixLint, TestAbortCodeLint};

@@ -152,13 +152,13 @@ mod full {
             lint_event_past_tense(&mut out, settings, &file_map, &typing_ast)?;
             lint_copyable_capability(&mut out, settings, &file_map, &typing_info)?;
             lint_droppable_capability(&mut out, settings, &file_map, &typing_info)?;
-            lint_capability_antipatterns(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
+            // lint_capability_antipatterns removed - deprecated, superseded by copyable/droppable_capability
             lint_non_transferable_fungible_object(&mut out, settings, &file_map, &typing_info)?;
             lint_public_random_access_v2(&mut out, settings, &file_map, &typing_ast)?;
             lint_missing_witness_drop_v2(&mut out, settings, &file_map, &typing_info)?;
             // lint_invalid_otw removed - duplicates Sui Verifier's one_time_witness_verifier.rs
             lint_witness_antipatterns(&mut out, settings, &file_map, &typing_info, &typing_ast)?;
-            lint_stale_oracle_price_v2(&mut out, settings, &file_map, &typing_ast)?;
+            // lint_stale_oracle_price_v2 removed - deprecated, use v3 in absint_lints
             // Phase 4 security lints (type-based, preview)
             if preview {
                 lint_shared_capability_object(&mut out, settings, &file_map, &typing_ast)?;
@@ -178,7 +178,7 @@ mod full {
             }
             // Phase 4 security lints (type-based, experimental)
             if experimental {
-                lint_unchecked_division(&mut out, settings, &file_map, &typing_ast)?;
+                // lint_unchecked_division removed - experimental, obvious lint
                 lint_unused_return_value(&mut out, settings, &file_map, &typing_ast)?;
                 lint_share_owned_authority(&mut out, settings, &file_map, &typing_ast)?;
                 lint_droppable_hot_potato_v2(&mut out, settings, &file_map, &typing_info)?;

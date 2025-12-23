@@ -159,105 +159,11 @@ fn check_suspicious_overflow(node: Node, source: &str, ctx: &mut LintContext<'_>
 // ============================================================================
 
 // ============================================================================
-// destroy_zero_unchecked - Detects destroy_zero without prior zero-check
+
 // ============================================================================
-
-/// Detects calls to `destroy_zero` without a prior check that the value is zero.
-///
-/// # Type System Gap: ValueFlow
-///
-/// The type system allows `destroy_zero(balance)` without verifying the balance
-/// is actually zero. This causes a runtime abort if the balance is non-zero,
-/// potentially leading to fund loss in error handling paths.
-///
-/// # Why This Matters
-///
-/// If `destroy_zero` is called on a non-zero balance:
-/// 1. The transaction aborts
-/// 2. If this is in an error path, the original error is masked
-/// 3. Non-zero balances are lost if the abort is caught incorrectly
-///
-/// # Example (Bad)
-///
-/// ```move
-/// public fun cleanup(b: Balance<SUI>) {
-///     balance::destroy_zero(b);  // Will abort if b > 0!
-/// }
-/// ```
-///
-/// # Correct Pattern
-///
-/// ```move
-/// public fun cleanup(b: Balance<SUI>) {
-///     assert!(balance::value(&b) == 0, E_NOT_EMPTY);
-///     balance::destroy_zero(b);
-/// }
-/// ```
-pub static DESTROY_ZERO_UNCHECKED: LintDescriptor = LintDescriptor {
-    name: "destroy_zero_unchecked",
-    category: LintCategory::Security,
-    description: "destroy_zero called without verifying value is zero - may abort unexpectedly (needs CFG for low FP)",
-    group: RuleGroup::Experimental,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-    gap: Some(TypeSystemGap::ValueFlow),
-};
-
-pub struct DestroyZeroUncheckedLint;
-
-impl LintRule for DestroyZeroUncheckedLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &DESTROY_ZERO_UNCHECKED
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        // Skip test modules - test cleanup code may legitimately skip checks
-        if is_test_only_module(root, source) {
-            return;
-        }
-        check_destroy_zero_unchecked(root, source, ctx);
-    }
-}
-
-fn check_destroy_zero_unchecked(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    if node.kind() == "function_definition" {
-        let func_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-        // Check if function calls destroy_zero
-        if func_text.contains("destroy_zero") {
-            // Check if there's a zero-check pattern before it
-            let has_zero_check = func_text.contains("== 0")
-                || func_text.contains("value(&") && func_text.contains("== 0")
-                || func_text.contains("is_zero")
-                || func_text.contains("assert!")
-                    && (func_text.contains("value") || func_text.contains("== 0"));
-
-            if !has_zero_check {
-                let func_name = node
-                    .child_by_field_name("name")
-                    .and_then(|n| n.utf8_text(source.as_bytes()).ok())
-                    .unwrap_or("unknown");
-
-                ctx.report_node(
-                    &DESTROY_ZERO_UNCHECKED,
-                    node,
-                    format!(
-                        "Function `{}` calls `destroy_zero` without verifying the value is zero. \
-                         This will abort if the balance/coin is non-zero. \
-                         Add `assert!(value(&x) == 0, E_NOT_ZERO)` before destroy_zero.",
-                        func_name
-                    ),
-                );
-            }
-        }
-    }
-
-    // Recurse
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_destroy_zero_unchecked(child, source, ctx);
-    }
-}
+// REMOVED: destroy_zero_unchecked - Detects destroy_zero without prior zero-check
+// This lint was removed as it catches only obvious/trivial cases.
+// ============================================================================
 
 // ============================================================================
 // REMOVED: otw_pattern_violation
@@ -273,101 +179,11 @@ fn check_destroy_zero_unchecked(node: Node, source: &str, ctx: &mut LintContext<
 // REMOVED: DigestAsRandomnessLint - deprecated, use sui::random instead
 
 // ============================================================================
-// divide_by_zero_literal - Detects division by literal zero
+
 // ============================================================================
-
-/// Detects division or modulo by zero or by a variable that could be zero.
-///
-/// # Type System Gap: ArithmeticSafety
-///
-/// Move allows division by zero which causes a runtime abort. While
-/// `unchecked_division_v2` handles the general case with CFG analysis,
-/// this lint catches obvious cases with literal zeros or suspicious patterns.
-///
-/// # Example (Bad)
-///
-/// ```move
-/// public fun bad_divide(x: u64): u64 {
-///     x / 0  // Always aborts!
-/// }
-///
-/// public fun bad_modulo(x: u64, n: u64): u64 {
-///     coin::divide_into_n(&mut c, 0, ctx)  // n=0 aborts!
-/// }
-/// ```
-pub static DIVIDE_BY_ZERO_LITERAL: LintDescriptor = LintDescriptor {
-    name: "divide_by_zero_literal",
-    category: LintCategory::Security,
-    description: "Division or modulo by literal zero - will always abort",
-    group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-    gap: Some(TypeSystemGap::ArithmeticSafety),
-};
-
-pub struct DivideByZeroLiteralLint;
-
-impl LintRule for DivideByZeroLiteralLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &DIVIDE_BY_ZERO_LITERAL
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        check_divide_by_zero(root, source, ctx);
-    }
-}
-
-fn check_divide_by_zero(node: Node, source: &str, ctx: &mut LintContext<'_>) {
-    let node_text = node.utf8_text(source.as_bytes()).unwrap_or("");
-
-    // Check for division/modulo by literal 0
-    if node.kind() == "binary_expression" {
-        // Strip comments from node text before checking to avoid false positives
-        // e.g., "// 0-9" in a comment should not trigger
-        let code_only = node_text
-            .lines()
-            .map(|line| {
-                if let Some(pos) = line.find("//") {
-                    &line[..pos]
-                } else {
-                    line
-                }
-            })
-            .collect::<Vec<_>>()
-            .join(" ");
-
-        // Look for patterns like "/ 0" or "% 0"
-        if (code_only.contains("/ 0") || code_only.contains("% 0"))
-            && !code_only.contains("/ 0x") // Exclude hex
-            && !code_only.contains("% 0x")
-        {
-            ctx.report_node(
-                &DIVIDE_BY_ZERO_LITERAL,
-                node,
-                "Division or modulo by literal zero - this will always abort at runtime."
-                    .to_string(),
-            );
-        }
-    }
-
-    // Check for divide_into_n with literal 0
-    if node.kind() == "call_expression" && node_text.contains("divide_into_n") {
-        // Simple check: if the call contains ", 0," or ", 0)" as the n parameter
-        if node_text.contains(", 0,") || node_text.contains(", 0)") {
-            ctx.report_node(
-                &DIVIDE_BY_ZERO_LITERAL,
-                node,
-                "divide_into_n called with n=0 - this will abort at runtime.".to_string(),
-            );
-        }
-    }
-
-    // Recurse
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        check_divide_by_zero(child, source, ctx);
-    }
-}
+// REMOVED: divide_by_zero_literal - Detects division by literal zero
+// This lint was removed as it catches only obvious/trivial cases.
+// ============================================================================
 
 // ============================================================================
 // fresh_address_reuse - Detects fresh_object_address used multiple times

@@ -129,7 +129,9 @@ pub struct DocCommentStyleLint;
 static DOC_COMMENT_STYLE: LintDescriptor = LintDescriptor {
     name: "doc_comment_style",
     category: LintCategory::Style,
-    description: "Use `///` for doc comments, not `/** */` or `/* */`",
+    // Move Book: "Doc Comments Start With `///`"
+    // https://move-book.com/guides/code-quality-checklist/#doc-comments-start-with-
+    description: "Use `///` for doc comments, not `/** */` or `/* */` (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
@@ -223,7 +225,9 @@ pub struct ExplicitSelfAssignmentsLint;
 static EXPLICIT_SELF_ASSIGNMENTS: LintDescriptor = LintDescriptor {
     name: "explicit_self_assignments",
     category: LintCategory::Style,
-    description: "Use `..` to ignore multiple struct fields instead of explicit `: _` bindings",
+    // Move Book: "Ignored Values In Unpack Can Be Ignored Altogether"
+    // https://move-book.com/guides/code-quality-checklist/#ignored-values-in-unpack-can-be-ignored-altogether
+    description: "Use `..` to ignore multiple struct fields instead of explicit `: _` bindings (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
@@ -277,82 +281,12 @@ fn count_ignored_fields(text: &str) -> usize {
     text.matches(": _").count()
 }
 
+
 // ============================================================================
-// EventSuffixLint - Stable (Zero FP)
+// REMOVED: EventSuffixLint
+// The Move Book recommends past-tense naming for events (e.g., UserRegistered)
+// but does NOT require an "Event" suffix. This lint was not backed by docs.
 // ============================================================================
-
-pub struct EventSuffixLint;
-
-static EVENT_SUFFIX: LintDescriptor = LintDescriptor {
-    name: "event_suffix",
-    category: LintCategory::Naming,
-    description: "Event structs should end with `Event` suffix",
-    group: RuleGroup::Stable,
-    fix: FixDescriptor::none(),
-    analysis: AnalysisKind::Syntactic,
-    gap: None,
-};
-
-impl LintRule for EventSuffixLint {
-    fn descriptor(&self) -> &'static LintDescriptor {
-        &EVENT_SUFFIX
-    }
-
-    fn check(&self, root: Node, source: &str, ctx: &mut LintContext<'_>) {
-        walk(root, &mut |node| {
-            // Look for struct definitions
-            if node.kind() != "struct_definition" && node.kind() != "datatype_definition" {
-                return;
-            }
-
-            // Get the struct name
-            let Some(name_node) = node.child_by_field_name("name") else {
-                return;
-            };
-            let name = slice(source, name_node).trim();
-
-            // Find abilities - events have copy + drop but NOT key
-            let mut has_copy = false;
-            let mut has_drop = false;
-            let mut has_key = false;
-
-            let mut cursor = node.walk();
-            for child in node.children(&mut cursor) {
-                if child.kind() == "ability_decls" {
-                    let abilities_text = slice(source, child).to_lowercase();
-                    has_copy = abilities_text.contains("copy");
-                    has_drop = abilities_text.contains("drop");
-                    has_key = abilities_text.contains("key");
-                }
-            }
-
-            // Event pattern: copy + drop, but NOT key (key would make it an object)
-            let is_event_pattern = has_copy && has_drop && !has_key;
-
-            if is_event_pattern && !name.ends_with("Event") {
-                // Check for past-tense naming (alternative convention from Move Book)
-                let is_past_tense = name.ends_with("ed")
-                    || name.ends_with("Created")
-                    || name.ends_with("Updated")
-                    || name.ends_with("Deleted")
-                    || name.ends_with("Transferred")
-                    || name.ends_with("Minted")
-                    || name.ends_with("Burned");
-
-                if !is_past_tense {
-                    ctx.report_node(
-                        self.descriptor(),
-                        name_node,
-                        format!(
-                            "Event struct `{}` should end with `Event` suffix (e.g., `{}Event`)",
-                            name, name
-                        ),
-                    );
-                }
-            }
-        });
-    }
-}
 
 // ============================================================================
 // EmptyVectorLiteralLint - Stable (Zero FP)
@@ -363,7 +297,9 @@ pub struct EmptyVectorLiteralLint;
 static EMPTY_VECTOR_LITERAL: LintDescriptor = LintDescriptor {
     name: "empty_vector_literal",
     category: LintCategory::Modernization,
-    description: "Prefer `vector[]` over `vector::empty()`",
+    // Move Book: "Vector Has a Literal. And Associated Functions"
+    // https://move-book.com/guides/code-quality-checklist/#vector-has-a-literal-and-associated-functions
+    description: "Prefer `vector[]` over `vector::empty()` (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Replace with `vector[]`"),
     analysis: AnalysisKind::Syntactic,
@@ -597,7 +533,9 @@ pub struct RedundantSelfImportLint;
 static REDUNDANT_SELF_IMPORT: LintDescriptor = LintDescriptor {
     name: "redundant_self_import",
     category: LintCategory::Style,
-    description: "Use `pkg::mod` instead of `pkg::mod::{Self}`",
+    // Move Book: "No Single Self in use Statements"
+    // https://move-book.com/guides/code-quality-checklist/#no-single-self-in-use-statements
+    description: "Use `pkg::mod` instead of `pkg::mod::{Self}` (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Remove redundant `{Self}`"),
     analysis: AnalysisKind::Syntactic,
@@ -678,7 +616,9 @@ pub struct PreferToStringLint;
 static PREFER_TO_STRING: LintDescriptor = LintDescriptor {
     name: "prefer_to_string",
     category: LintCategory::Style,
-    description: "Prefer b\"...\".to_string() over std::string::utf8(b\"...\") (import-only check)",
+    // Move Book: "Do Not Import std::string::utf8"
+    // https://move-book.com/guides/code-quality-checklist/#do-not-import-stdstringutf8
+    description: "Prefer b\"...\".to_string() over std::string::utf8(b\"...\") (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
@@ -715,7 +655,10 @@ pub struct ConstantNamingLint;
 static CONSTANT_NAMING: LintDescriptor = LintDescriptor {
     name: "constant_naming",
     category: LintCategory::Naming,
-    description: "Error constants should use EPascalCase; other constants should be SCREAMING_SNAKE_CASE",
+    // Move Book: "Error Constants are in EPascalCase" + "Regular Constant are ALL_CAPS"
+    // https://move-book.com/guides/code-quality-checklist/#error-constants-are-in-epascalcase
+    // https://move-book.com/guides/code-quality-checklist/#regular-constant-are-all_caps
+    description: "Error constants should use EPascalCase; other constants should be SCREAMING_SNAKE_CASE (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Rename to correct case"),
     analysis: AnalysisKind::Syntactic,
@@ -1034,7 +977,9 @@ pub struct ErrorConstNamingLint;
 static ERROR_CONST_NAMING: LintDescriptor = LintDescriptor {
     name: "error_const_naming",
     category: LintCategory::Style,
-    description: "Error constants should use EPascalCase (e.g., `ENotAuthorized`)",
+    // Move Book: "Error Constants are in EPascalCase"
+    // https://move-book.com/guides/code-quality-checklist/#error-constants-are-in-epascalcase
+    description: "Error constants should use EPascalCase (e.g., `ENotAuthorized`) (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(), // Renaming requires updating all usages
     analysis: AnalysisKind::Syntactic,

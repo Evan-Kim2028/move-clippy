@@ -74,7 +74,9 @@ pub struct EqualityInAssertLint;
 static EQUALITY_IN_ASSERT: LintDescriptor = LintDescriptor {
     name: "equality_in_assert",
     category: LintCategory::Style,
-    description: "Prefer `assert_eq!(a, b)` over `assert!(a == b)` for clearer failure messages",
+    // Move Book: "Use assert_eq! Whenever Possible"
+    // https://move-book.com/guides/code-quality-checklist/#use-assert_eq-whenever-possible
+    description: "Prefer `assert_eq!(a, b)` over `assert!(a == b)` for clearer failure messages (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Replace `assert!(a == b)` with `assert_eq!(a, b)`"),
     analysis: AnalysisKind::Syntactic,
@@ -459,7 +461,9 @@ pub struct ModernModuleSyntaxLint;
 static MODERN_MODULE_SYNTAX: LintDescriptor = LintDescriptor {
     name: "modern_module_syntax",
     category: LintCategory::Modernization,
-    description: "Prefer Move 2024 module label syntax (module x::y;) over block form (module x::y { ... })",
+    // Move Book: "Using Module Label"
+    // https://move-book.com/guides/code-quality-checklist/#using-module-label
+    description: "Prefer Move 2024 module label syntax (module x::y;) over block form (module x::y { ... }) (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Convert to Move 2024 module label syntax"),
     analysis: AnalysisKind::Syntactic,

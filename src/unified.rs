@@ -245,22 +245,20 @@ pub(crate) fn build_syntactic_registry() -> LintRegistry {
         .with_rule(crate::rules::ManualOptionCheckLint)
         .with_rule(crate::rules::ManualLoopIterationLint)
         // Additional stable lints
-        .with_rule(crate::rules::EventSuffixLint)
         .with_rule(crate::rules::EmptyVectorLiteralLint)
         .with_rule(crate::rules::TypedAbortCodeLint)
         .with_rule(crate::rules::ErrorConstNamingLint)
         // Security lints (audit-backed)
         .with_rule(crate::rules::SuspiciousOverflowCheckLint)
-        .with_rule(crate::rules::DivideByZeroLiteralLint)
         // Preview/experimental lints
-        .with_rule(crate::rules::DestroyZeroUncheckedLint)
         .with_rule(crate::rules::FreshAddressReuseLint)
-        // REMOVED deprecated/superseded lints:
+        // REMOVED deprecated/superseded/obvious lints:
         // - StaleOraclePriceLint, SingleStepOwnershipTransferLint, MissingWitnessDropLint
         // - PublicRandomAccessLint, IgnoredBooleanReturnLint, UncheckedCoinSplitLint
         // - UncheckedWithdrawalLint, CapabilityLeakLint, DigestAsRandomnessLint
         // - PureFunctionTransferLint, UnsafeArithmeticLint
         // - OtwPatternViolationLint (duplicates Sui Verifier)
+        // - DivideByZeroLiteralLint, DestroyZeroUncheckedLint (obvious/trivial)
         // Anti-pattern detection (Issue #65)
         .with_rule(crate::rules::SuggestCapabilityPatternLint)
         .with_rule(crate::rules::SuggestSequencedWitnessLint)
