@@ -197,10 +197,13 @@ pub static EVENT_EMIT_TYPE_SANITY: LintDescriptor = LintDescriptor {
 };
 
 /// Detects event structs named with present tense verbs instead of past tense.
+///
+/// Move Book: "Events Should Be Named in Past Tense"
+/// https://move-book.com/guides/code-quality-checklist/#events-should-be-named-in-past-tense
 pub static EVENT_PAST_TENSE: LintDescriptor = LintDescriptor {
     name: "event_past_tense",
     category: LintCategory::Style,
-    description: "Event name uses present tense instead of past tense (type-based, requires --mode full)",
+    description: "Event name uses present tense instead of past tense (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::TypeBased,

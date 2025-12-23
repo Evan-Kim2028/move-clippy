@@ -723,23 +723,9 @@ fn golden_equality_in_assert_negative() {
     );
 }
 
-#[test]
-fn golden_event_suffix_positive() {
-    let result = run_golden_test("event_suffix");
-    assert!(
-        result.positive_triggered,
-        "Expected event_suffix to trigger on positive.move"
-    );
-}
-
-#[test]
-fn golden_event_suffix_negative() {
-    let result = run_golden_test("event_suffix");
-    assert!(
-        !result.negative_triggered,
-        "event_suffix should not trigger on negative.move"
-    );
-}
+// REMOVED: event_suffix tests
+// The lint was removed as it wasn't backed by Move Book documentation.
+// Move Book recommends past-tense event naming but not the "Event" suffix.
 
 #[test]
 fn golden_explicit_self_assignments_positive() {

@@ -202,7 +202,9 @@ pub struct RedundantTestPrefixLint;
 static REDUNDANT_TEST_PREFIX: LintDescriptor = LintDescriptor {
     name: "redundant_test_prefix",
     category: LintCategory::TestQuality,
-    description: "In `*_tests` modules, omit redundant `test_` prefix from test functions",
+    // Move Book: "Do Not Prefix Tests With test_ in Testing Modules"
+    // https://move-book.com/guides/code-quality-checklist/#do-not-prefix-tests-with-test_-in-testing-modules
+    description: "In `*_tests` modules, omit redundant `test_` prefix from test functions (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::none(),
     analysis: AnalysisKind::Syntactic,
@@ -303,7 +305,9 @@ pub struct MergeTestAttributesLint;
 static MERGE_TEST_ATTRIBUTES: LintDescriptor = LintDescriptor {
     name: "merge_test_attributes",
     category: LintCategory::TestQuality,
-    description: "Merge stacked #[test] and #[expected_failure] into a single attribute list",
+    // Move Book: "Merge #[test] and #[expected_failure(...)]"
+    // https://move-book.com/guides/code-quality-checklist/#merge-test-and-expected_failure
+    description: "Merge stacked #[test] and #[expected_failure] into a single attribute list (Move Book: code-quality-checklist)",
     group: RuleGroup::Stable,
     fix: FixDescriptor::safe("Merge into single attribute"),
     analysis: AnalysisKind::Syntactic,
