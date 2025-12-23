@@ -39,9 +39,6 @@ inherits = "release"
 lto = true
 codegen-units = 1
 
-[profile.test]
-panic = "abort"
-
 [package]
 name = "move-clippy"
 version.workspace = true

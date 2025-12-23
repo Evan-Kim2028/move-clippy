@@ -354,20 +354,24 @@ fn golden_constant_naming_negative() {
 
 #[test]
 fn golden_stale_oracle_price_positive() {
+    // DEPRECATED: This lint is now deprecated in favor of stale_oracle_price_v3 (CFG-aware)
+    // Deprecated lints require --experimental flag and don't fire by default
     let engine = create_default_engine();
     let src = include_str!("golden/stale_oracle_price/positive.move");
     let diags = engine.lint_source(src).expect("linting should succeed");
     let filtered = filter_lint(&diags, "stale_oracle_price");
 
+    // Deprecated lint should produce no findings with default engine
     assert!(
-        !filtered.is_empty(),
-        "stale_oracle_price should trigger on get_price_unsafe.\nAll diagnostics: {}",
-        format_diags(&diags)
+        filtered.is_empty(),
+        "stale_oracle_price is deprecated and should not fire by default.\nGot: {}",
+        format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
     );
 }
 
 #[test]
 fn golden_stale_oracle_price_negative() {
+    // DEPRECATED: This lint is now deprecated
     let engine = create_default_engine();
     let src = include_str!("golden/stale_oracle_price/negative.move");
     let diags = engine.lint_source(src).expect("linting should succeed");
@@ -375,7 +379,7 @@ fn golden_stale_oracle_price_negative() {
 
     assert!(
         filtered.is_empty(),
-        "stale_oracle_price should NOT trigger on validated price.\nGot: {}",
+        "stale_oracle_price should NOT trigger (deprecated).\nGot: {}",
         format_diags(&filtered.into_iter().cloned().collect::<Vec<_>>())
     );
 }

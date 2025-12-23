@@ -1128,6 +1128,7 @@ impl LintRegistry {
             match descriptor.group {
                 RuleGroup::Preview if !effective_preview => continue,
                 RuleGroup::Experimental if !experimental => continue,
+                RuleGroup::Deprecated if !experimental => continue, // Deprecated lints require --experimental
                 _ => {}
             }
 

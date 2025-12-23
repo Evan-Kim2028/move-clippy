@@ -13,7 +13,6 @@ use super::shared::{format_type, is_coin_or_balance_type, strip_refs};
 
 type Result<T> = ClippyResult<T>;
 
-#[allow(dead_code)]
 fn flatten_return_types(ret: &N::Type) -> Vec<&N::Type> {
     match &ret.value {
         N::Type_::Apply(_, type_name, type_args)
@@ -22,46 +21,6 @@ fn flatten_return_types(ret: &N::Type) -> Vec<&N::Type> {
             type_args.iter().collect()
         }
         _ => vec![ret],
-    }
-}
-
-#[allow(dead_code)]
-fn is_root_module_type(prog: &T::Program, type_name: &N::TypeName_) -> bool {
-    let N::TypeName_::ModuleType(mident, _) = type_name else {
-        return false;
-    };
-    prog.modules.get(mident).is_some_and(|mdef| {
-        matches!(
-            mdef.target_kind,
-            TargetKind::Source {
-                is_root_package: true
-            }
-        )
-    })
-}
-
-#[allow(dead_code)]
-fn type_param_ids_in_type(ty: &N::Type_) -> std::collections::BTreeSet<N::TParamID> {
-    use std::collections::BTreeSet;
-    match ty {
-        N::Type_::Param(tp) => BTreeSet::from([tp.id]),
-        N::Type_::Ref(_, inner) => type_param_ids_in_type(&inner.value),
-        N::Type_::Apply(_, _name, args) => {
-            let mut out = BTreeSet::new();
-            for arg in args {
-                out.extend(type_param_ids_in_type(&arg.value));
-            }
-            out
-        }
-        N::Type_::Fun(args, ret) => {
-            let mut out = BTreeSet::new();
-            for arg in args {
-                out.extend(type_param_ids_in_type(&arg.value));
-            }
-            out.extend(type_param_ids_in_type(&ret.value));
-            out
-        }
-        _ => BTreeSet::new(),
     }
 }
 
