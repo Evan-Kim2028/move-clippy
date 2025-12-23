@@ -63,40 +63,48 @@ Additional lints available with `--preview` (3) and `--experimental` (12).
 
 Many lints are backed by the official [Move Book Code Quality Checklist](https://move-book.com/guides/code-quality-checklist/).
 
+### Analysis Types
+
+| Type | Description | Mode |
+|------|-------------|------|
+| **syntactic** | Pattern matching on AST — fast, no type info needed | `fast` (default) |
+| **type-based** | Uses Move compiler type information | `--mode full` |
+| **CFG** | Control-flow graph analysis for data flow tracking | `--mode full` |
+
 ### Security & Suspicious (Stable)
 
-| Lint | Description |
-|------|-------------|
-| `copyable_capability` | Detects `key+store+copy` structs — transferable authority can be duplicated |
-| `droppable_capability` | Detects `key+store+drop` structs — authority can be silently discarded |
-| `capability_transfer_literal_address` | Capability transferred to literal address like `@0x1` |
-| `suspicious_overflow_check` | Manual bit-shift overflow patterns (Cetus $223M hack pattern) |
-| `public_random_access_v2` | Public function exposes `sui::random::Random` — enables front-running |
-| `witness_antipatterns` | Witness struct has `copy/store/key` or public constructor |
-| `coin_field` | Use `Balance` instead of `Coin` in struct fields |
-| `freeze_wrapped` | Don't freeze objects containing wrapped objects |
-| `entry_function_returns_value` | Entry function return value is discarded by runtime |
-| `private_entry_function` | Private entry function is unreachable |
+| Lint | Analysis | Description |
+|------|----------|-------------|
+| `copyable_capability` | type-based | Detects `key+store+copy` structs — transferable authority can be duplicated |
+| `droppable_capability` | type-based | Detects `key+store+drop` structs — authority can be silently discarded |
+| `capability_transfer_literal_address` | type-based | Capability transferred to literal address like `@0x1` |
+| `suspicious_overflow_check` | syntactic | Manual bit-shift overflow patterns (Cetus $223M hack pattern) |
+| `public_random_access_v2` | type-based | Public function exposes `sui::random::Random` — enables front-running |
+| `witness_antipatterns` | type-based | Witness struct has `copy/store/key` or public constructor |
+| `coin_field` | type-based | Use `Balance` instead of `Coin` in struct fields |
+| `freeze_wrapped` | type-based | Don't freeze objects containing wrapped objects |
+| `entry_function_returns_value` | type-based | Entry function return value is discarded by runtime |
+| `private_entry_function` | type-based | Private entry function is unreachable |
 
 ### Style & Modernization (Stable)
 
-| Lint | Description |
-|------|-------------|
-| `modern_method_syntax` | Prefer `v.push_back(x)` over `vector::push_back(&mut v, x)` |
-| `modern_module_syntax` | Prefer `module pkg::mod;` over block form |
-| `prefer_vector_methods` | Prefer `v.length()` over `vector::length(&v)` |
-| `empty_vector_literal` | Prefer `vector[]` over `vector::empty()` |
-| `abilities_order` | Struct abilities should be ordered: `key, copy, drop, store` |
-| `equality_in_assert` | Prefer `assert_eq!(a, b)` for clearer failure messages |
-| `typed_abort_code` | Prefer named error constants over numeric abort codes |
+| Lint | Analysis | Description |
+|------|----------|-------------|
+| `modern_method_syntax` | syntactic | Prefer `v.push_back(x)` over `vector::push_back(&mut v, x)` |
+| `modern_module_syntax` | syntactic | Prefer `module pkg::mod;` over block form |
+| `prefer_vector_methods` | syntactic | Prefer `v.length()` over `vector::length(&v)` |
+| `empty_vector_literal` | syntactic | Prefer `vector[]` over `vector::empty()` |
+| `abilities_order` | syntactic | Struct abilities should be ordered: `key, copy, drop, store` |
+| `equality_in_assert` | syntactic | Prefer `assert_eq!(a, b)` for clearer failure messages |
+| `typed_abort_code` | syntactic | Prefer named error constants over numeric abort codes |
 
 ### Preview (--preview)
 
-| Lint | Description |
-|------|-------------|
-| `stale_oracle_price_v3` | CFG-aware: oracle price used without freshness validation |
-| `droppable_flash_loan_receipt` | Function returns Coin/Balance with droppable receipt |
-| `mut_key_param_missing_authority` | Public entry takes `&mut` key object without authority param |
+| Lint | Analysis | Description |
+|------|----------|-------------|
+| `stale_oracle_price_v3` | CFG | Oracle price used without freshness validation |
+| `droppable_flash_loan_receipt` | type-based | Function returns Coin/Balance with droppable receipt |
+| `mut_key_param_missing_authority` | type-based | Public entry takes `&mut` key object without authority param |
 
 Run `move-clippy list-rules` for the complete list with descriptions.
 
